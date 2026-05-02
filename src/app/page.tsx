@@ -445,6 +445,26 @@ export default function Home() {
       paid: totalByState("Paid"),
     };
   }, [ledgerRows]);
+  const paperRows = useMemo(
+    () =>
+      questList.flatMap((quest, questIndex) =>
+        quest.papers.map((paper, paperIndex) => ({
+          ...paper,
+          kind: paper.meta.toLowerCase().includes("image") || paper.meta.toLowerCase().includes("photo") ? "image" as const : "file" as const,
+          paperIndex,
+          questIndex,
+          questName: quest.name,
+          questType: quest.type,
+        })),
+      ),
+    [questList],
+  );
+  const paperSummary = useMemo(() => {
+    const reviewCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("review") || paper.state.toLowerCase().includes("draft")).length;
+    const filedCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("filed")).length;
+    const readyCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("ready")).length;
+    return { filedCount, readyCount, reviewCount };
+  }, [paperRows]);
   const assetSummary = useMemo(() => {
     const monthlyProjected = assetList.reduce((total, asset) => total + getMonthlyProjection(asset), 0);
     return {
@@ -624,15 +644,24 @@ export default function Home() {
   }
 
   function cyclePaperState(paperIndex: number) {
+    cyclePaperStateAt(selectedQuestIndex, paperIndex);
+  }
+
+  function cyclePaperStateAt(questIndex: number, paperIndex: number) {
     const order = ["Review", "Ready", "Filed"];
-    updateSelectedQuest((quest) => ({
-      ...quest,
-      papers: quest.papers.map((paper, index) => {
-        if (index !== paperIndex) return paper;
-        const currentIndex = order.findIndex((state) => state.toLowerCase() === paper.state.toLowerCase());
-        return { ...paper, state: order[((currentIndex === -1 ? 0 : currentIndex) + 1) % order.length] };
+    setQuestList((current) =>
+      current.map((quest, index) => {
+        if (index !== questIndex) return quest;
+        return {
+          ...quest,
+          papers: quest.papers.map((paper, currentPaperIndex) => {
+            if (currentPaperIndex !== paperIndex) return paper;
+            const currentIndex = order.findIndex((state) => state.toLowerCase() === paper.state.toLowerCase());
+            return { ...paper, state: order[((currentIndex === -1 ? 0 : currentIndex) + 1) % order.length] };
+          }),
+        };
       }),
-    }));
+    );
   }
 
   function advanceStep(stepIndex: number) {
@@ -969,7 +998,86 @@ export default function Home() {
         </section>
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" ? (
+        {activeView === "Paper Trail" ? (
+        <section className="paper-workspace panel">
+          <div className="panel-header">
+            <h2>Paper Trail</h2>
+            <span>{paperRows.length} items</span>
+          </div>
+
+          <div className="paper-board">
+            <form className="paper-form" onSubmit={addPaperItem}>
+              <select
+                aria-label="Paper trail quest"
+                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
+                value={selectedQuestIndex}
+              >
+                {questList.map((quest, index) => (
+                  <option key={quest.name} value={index}>{quest.name}</option>
+                ))}
+              </select>
+              <input
+                aria-label="Paper trail label"
+                onChange={(event) => setPaperDraft((draft) => ({ ...draft, label: event.target.value }))}
+                placeholder="Receipt, photo, PDF..."
+                value={paperDraft.label}
+              />
+              <input
+                aria-label="Paper trail meta"
+                onChange={(event) => setPaperDraft((draft) => ({ ...draft, meta: event.target.value }))}
+                placeholder="Photo, PDF, screenshot..."
+                value={paperDraft.meta}
+              />
+              <select
+                aria-label="Paper trail state"
+                onChange={(event) => setPaperDraft((draft) => ({ ...draft, state: event.target.value }))}
+                value={paperDraft.state}
+              >
+                <option>Review</option>
+                <option>Ready</option>
+                <option>Filed</option>
+                <option>Draft</option>
+              </select>
+              <button type="submit">Add</button>
+            </form>
+
+            <div className="paper-total-strip">
+              <div>
+                <span>Needs review</span>
+                <strong>{paperSummary.reviewCount}</strong>
+              </div>
+              <div>
+                <span>Ready</span>
+                <strong>{paperSummary.readyCount}</strong>
+              </div>
+              <div>
+                <span>Filed</span>
+                <strong>{paperSummary.filedCount}</strong>
+              </div>
+            </div>
+
+            <div className="paper-workspace-list">
+              {paperRows.map((paper) => (
+                <article className="paper-workspace-row" key={`${paper.questName}-${paper.label}-${paper.paperIndex}`}>
+                  <span className="paper-icon"><Icon name={paper.kind === "image" ? "image" : "file"} /></span>
+                  <div>
+                    <span>{paper.questType}</span>
+                    <strong>{paper.questName}</strong>
+                  </div>
+                  <div>
+                    <span>{paper.label}</span>
+                    <strong>{paper.meta}</strong>
+                  </div>
+                  <button data-state={paper.state} onClick={() => cyclePaperStateAt(paper.questIndex, paper.paperIndex)} type="button">{paper.state}</button>
+                  <button className="open-quest-button" onClick={() => { setSelectedQuestIndex(paper.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+        ) : null}
+
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" ? (
         <section className="quest-section">
           <div className="section-heading">
             <div>
