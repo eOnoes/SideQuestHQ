@@ -886,6 +886,120 @@ h3 {
   color: var(--red);
 }
 
+.people-workspace {
+  min-height: 0;
+}
+
+.people-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  padding: 0 20px 20px;
+}
+
+.people-workspace-form {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.8fr) minmax(140px, 0.75fr) minmax(160px, 0.9fr) 64px;
+  gap: 8px;
+}
+
+.people-workspace-form input,
+.people-workspace-form select,
+.people-workspace-form button {
+  height: 34px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.people-workspace-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
+.people-total-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.people-total-strip div {
+  display: grid;
+  align-content: center;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.people-total-strip span,
+.people-workspace-row span {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.people-total-strip strong {
+  color: var(--yellow);
+  font-size: 16px;
+}
+
+.people-workspace-list {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+
+.people-workspace-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.people-workspace-row div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.people-workspace-row strong,
+.people-workspace-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.people-workspace-row strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.people-workspace-row button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.people-workspace-row button[data-status="Active"] {
+  color: var(--green);
+}
+
+.people-workspace-row button[data-status="Waiting"],
+.remove-person-workspace {
+  color: var(--red);
+}
+
 .panel-header {
   display: flex;
   align-items: center;
@@ -1670,6 +1784,29 @@ h3 {
     padding: 6px 9px;
   }
 
+  .people-board {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 8px;
+    padding: 0 14px 10px;
+  }
+
+  .people-workspace-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1fr) 50px;
+    gap: 6px;
+  }
+
+  .people-workspace-form input,
+  .people-workspace-form select,
+  .people-workspace-form button {
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .people-workspace-row {
+    min-height: 42px;
+    padding: 6px 9px;
+  }
+
   .quest-composer {
     margin: -4px 0 10px;
     padding: 9px;
@@ -1848,6 +1985,9 @@ h3 {
   .reminders-board,
   .reminders-workspace-form,
   .reminder-workspace-row,
+  .people-board,
+  .people-workspace-form,
+  .people-workspace-row,
   .quest-grid,
   .quest-focus-grid,
   .detail-columns,
@@ -1875,7 +2015,8 @@ h3 {
   .asset-summary,
   .ledger-total-strip,
   .paper-total-strip,
-  .reminder-total-strip {
+  .reminder-total-strip,
+  .people-total-strip {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1946,7 +2087,8 @@ h3 {
   .asset-summary,
   .ledger-total-strip,
   .paper-total-strip,
-  .reminder-total-strip {
+  .reminder-total-strip,
+  .people-total-strip {
     grid-template-columns: 1fr;
   }
 

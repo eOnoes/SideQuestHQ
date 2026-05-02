@@ -422,6 +422,23 @@ export default function Home() {
   const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
+  const peopleRows = useMemo(
+    () =>
+      peopleList.map((person, personIndex) => ({
+        ...person,
+        personIndex,
+        questIndex: questList.findIndex((quest) => quest.name === person.quest),
+      })),
+    [peopleList, questList],
+  );
+  const peopleSummary = useMemo(
+    () => ({
+      active: peopleRows.filter((person) => person.status === "Active").length,
+      quiet: peopleRows.filter((person) => person.status === "Quiet").length,
+      waiting: peopleRows.filter((person) => person.status === "Waiting").length,
+    }),
+    [peopleRows],
+  );
   const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
   const reminderRows = useMemo(
     () =>
@@ -722,7 +739,6 @@ export default function Home() {
   }
 
   function cyclePersonStatus(personIndex: number) {
-    const order: Person["status"][] = ["Active", "Waiting", "Quiet"];
     const selectedIndexes = peopleList
       .map((person, index) => ({ person, index }))
       .filter(({ person }) => person.quest === selectedQuest.name)
@@ -730,11 +746,13 @@ export default function Home() {
     const targetIndex = selectedIndexes[personIndex];
     if (targetIndex === undefined) return;
 
+    cyclePersonStatusAt(targetIndex);
+  }
+
+  function cyclePersonStatusAt(personIndex: number) {
+    const order: Person["status"][] = ["Active", "Waiting", "Quiet"];
     setPeopleList((current) =>
-      current.map((person, index) => {
-        if (index !== targetIndex) return person;
-        return { ...person, status: order[(order.indexOf(person.status) + 1) % order.length] };
-      }),
+      current.map((person, index) => (index === personIndex ? { ...person, status: order[(order.indexOf(person.status) + 1) % order.length] } : person)),
     );
   }
 
@@ -747,6 +765,10 @@ export default function Home() {
     if (targetIndex === undefined) return;
 
     setPeopleList((current) => current.filter((_, index) => index !== targetIndex));
+  }
+
+  function removePersonAt(personIndex: number) {
+    setPeopleList((current) => current.filter((_, index) => index !== personIndex));
   }
 
   function addReminder(event: FormEvent<HTMLFormElement>) {
@@ -1173,7 +1195,82 @@ export default function Home() {
         </section>
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" ? (
+        {activeView === "People" ? (
+        <section className="people-workspace panel">
+          <div className="panel-header">
+            <h2>People</h2>
+            <span>{peopleRows.length} contacts</span>
+          </div>
+
+          <div className="people-board">
+            <form className="people-workspace-form" onSubmit={addPerson}>
+              <select
+                aria-label="Person quest"
+                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
+                value={selectedQuestIndex}
+              >
+                {questList.map((quest, index) => (
+                  <option key={quest.name} value={index}>{quest.name}</option>
+                ))}
+              </select>
+              <input
+                aria-label="Person name"
+                onChange={(event) => setPersonDraft((draft) => ({ ...draft, name: event.target.value }))}
+                placeholder="Name"
+                value={personDraft.name}
+              />
+              <input
+                aria-label="Person role"
+                onChange={(event) => setPersonDraft((draft) => ({ ...draft, role: event.target.value }))}
+                placeholder="Role"
+                value={personDraft.role}
+              />
+              <input
+                aria-label="Next touch"
+                onChange={(event) => setPersonDraft((draft) => ({ ...draft, nextTouch: event.target.value }))}
+                placeholder="Next touch"
+                value={personDraft.nextTouch}
+              />
+              <button type="submit">Add</button>
+            </form>
+
+            <div className="people-total-strip">
+              <div>
+                <span>Active</span>
+                <strong>{peopleSummary.active}</strong>
+              </div>
+              <div>
+                <span>Waiting</span>
+                <strong>{peopleSummary.waiting}</strong>
+              </div>
+              <div>
+                <span>Quiet</span>
+                <strong>{peopleSummary.quiet}</strong>
+              </div>
+            </div>
+
+            <div className="people-workspace-list">
+              {peopleRows.map((person) => (
+                <article className="people-workspace-row" key={`${person.name}-${person.role}-${person.personIndex}`}>
+                  <div>
+                    <span>{person.quest}</span>
+                    <strong>{person.name}</strong>
+                  </div>
+                  <div>
+                    <span>{person.role}</span>
+                    <strong>{person.nextTouch}</strong>
+                  </div>
+                  <button data-status={person.status} onClick={() => cyclePersonStatusAt(person.personIndex)} type="button">{person.status}</button>
+                  <button className="open-quest-button" onClick={() => { if (person.questIndex >= 0) setSelectedQuestIndex(person.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
+                  <button className="remove-person-workspace" onClick={() => removePersonAt(person.personIndex)} type="button" aria-label={`Remove ${person.name}`}>Remove</button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+        ) : null}
+
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
         <section className="quest-section">
           <div className="section-heading">
             <div>
