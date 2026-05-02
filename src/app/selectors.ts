@@ -123,6 +123,8 @@ export function getAssetSummary(assetList: Asset[]) {
   return {
     activeCount: assetList.filter((asset) => asset.status === "Producing").length,
     monthlyProjected,
+    planningCount: assetList.filter((asset) => asset.status === "Planning").length,
+    watchingCount: assetList.filter((asset) => asset.status === "Watching").length,
     annualProjected: monthlyProjected * 12,
   };
 }

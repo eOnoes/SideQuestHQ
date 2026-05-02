@@ -209,6 +209,50 @@ export default function Home() {
     );
   }
 
+  function removeAsset(assetIndex: number) {
+    setAssetList((current) => current.filter((_, index) => index !== assetIndex));
+  }
+
+  function openAssetQuest(assetIndex: number) {
+    const asset = assetList[assetIndex];
+    if (!asset) return;
+
+    const existingQuestIndex = questList.findIndex((quest) => quest.name.toLowerCase() === asset.name.toLowerCase());
+    if (existingQuestIndex !== -1) {
+      setSelectedQuestIndex(existingQuestIndex);
+      setActiveView("Quests");
+      return;
+    }
+
+    const questType: QuestType =
+      asset.type === "Rental" ? "Rental Property" :
+      asset.type === "Build" ? "Build Project" :
+      asset.type === "Other" ? "Side Quest" :
+      "Investment";
+    const preset = getQuestTypePreset(questType);
+    const nextQuest: Quest = {
+      name: asset.name,
+      type: preset.type,
+      status: asset.status,
+      nextMove: "Review asset plan and confirm the next move.",
+      value: asset.value || "$0 tracked",
+      progress: asset.status === "Producing" ? 35 : 10,
+      tone: asset.status === "Producing" ? "active" : "discovery",
+      owner: preset.owner,
+      target: asset.projected ? `${asset.projected} ${asset.frequency.toLowerCase()}` : preset.target,
+      due: "Next check: Asset review",
+      summary: `${asset.type} asset tracked from Assets. Projected return: ${asset.projected || "$0"} ${asset.frequency.toLowerCase()}.`,
+      ledger: asset.projected ? [{ label: "Projected return", amount: asset.projected, state: "Draft" }] : [],
+      papers: [],
+      steps: preset.steps,
+      notes: ["Created from Assets. Add receipts, updates, and next actions as this asset moves."],
+    };
+
+    setQuestList((current) => [...current, nextQuest]);
+    setSelectedQuestIndex(questList.length);
+    setActiveView("Quests");
+  }
+
   function cycleLedgerState(entryIndex: number) {
     cycleLedgerStateAt(selectedQuestIndex, entryIndex);
   }
@@ -489,6 +533,8 @@ export default function Home() {
             onAddAsset={addAsset}
             onAssetDraftChange={setAssetDraft}
             onCycleAssetStatus={cycleAssetStatus}
+            onOpenAssetQuest={openAssetQuest}
+            onRemoveAsset={removeAsset}
           />
         ) : null}
       </section>

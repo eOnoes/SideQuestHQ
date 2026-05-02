@@ -9,13 +9,26 @@ type AssetsWorkspaceProps = {
     activeCount: number;
     annualProjected: number;
     monthlyProjected: number;
+    planningCount: number;
+    watchingCount: number;
   };
   onAddAsset: (event: FormEvent<HTMLFormElement>) => void;
   onAssetDraftChange: (draft: Asset) => void;
   onCycleAssetStatus: (assetIndex: number) => void;
+  onOpenAssetQuest: (assetIndex: number) => void;
+  onRemoveAsset: (assetIndex: number) => void;
 };
 
-export function AssetsWorkspace({ assetDraft, assetList, assetSummary, onAddAsset, onAssetDraftChange, onCycleAssetStatus }: AssetsWorkspaceProps) {
+export function AssetsWorkspace({
+  assetDraft,
+  assetList,
+  assetSummary,
+  onAddAsset,
+  onAssetDraftChange,
+  onCycleAssetStatus,
+  onOpenAssetQuest,
+  onRemoveAsset,
+}: AssetsWorkspaceProps) {
   return (
     <section className="asset-section panel">
       <div className="panel-header">
@@ -71,13 +84,21 @@ export function AssetsWorkspace({ assetDraft, assetList, assetSummary, onAddAsse
             <strong>{assetSummary.activeCount}</strong>
           </div>
           <div>
+            <span>Watching</span>
+            <strong>{assetSummary.watchingCount}</strong>
+          </div>
+          <div>
+            <span>Planning</span>
+            <strong>{assetSummary.planningCount}</strong>
+          </div>
+          <div>
             <span>Projected yearly</span>
             <strong>{formatMoney(assetSummary.annualProjected)}</strong>
           </div>
         </div>
 
         <div className="asset-list">
-          {assetList.slice(0, 4).map((asset, index) => (
+          {assetList.map((asset, index) => (
             <article className="asset-row" key={`${asset.name}-${asset.type}`}>
               <div>
                 <span>{asset.type}</span>
@@ -88,6 +109,8 @@ export function AssetsWorkspace({ assetDraft, assetList, assetSummary, onAddAsse
                 <strong>{asset.projected} {asset.frequency.toLowerCase()}</strong>
               </div>
               <button data-status={asset.status} onClick={() => onCycleAssetStatus(index)} type="button">{asset.status}</button>
+              <button className="open-quest-button" onClick={() => onOpenAssetQuest(index)} type="button">Quest</button>
+              <button className="remove-asset-button" onClick={() => onRemoveAsset(index)} type="button" aria-label={`Remove ${asset.name}`}>Remove</button>
             </article>
           ))}
         </div>

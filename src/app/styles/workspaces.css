@@ -4,7 +4,7 @@
 
 .asset-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 210px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 14px;
   padding: 0 20px 18px;
 }
@@ -33,7 +33,7 @@
 
 .asset-summary {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -60,13 +60,14 @@
 .asset-list {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
 .asset-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr) auto auto auto;
+  align-items: center;
   gap: 4px 10px;
   min-height: 58px;
   padding: 9px 10px;
@@ -93,8 +94,6 @@
 }
 
 .asset-row button {
-  grid-column: 3;
-  grid-row: 1 / 2;
   align-self: center;
   padding: 4px 7px;
   border: 0;
@@ -112,6 +111,10 @@
 
 .asset-row button[data-status="Planning"] {
   color: var(--red);
+}
+
+.remove-asset-button {
+  color: var(--red) !important;
 }
 
 .ledger-section {

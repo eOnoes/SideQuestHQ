@@ -37,7 +37,7 @@
   }
 
   .asset-body {
-    grid-template-columns: minmax(0, 1fr) 186px;
+    grid-template-columns: minmax(0, 1fr) 246px;
     gap: 8px;
     padding: 0 14px 10px;
   }
@@ -59,6 +59,8 @@
   }
 
   .asset-row {
+    gap: 4px 6px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto auto auto;
     min-height: 48px;
     padding: 7px 9px;
   }
