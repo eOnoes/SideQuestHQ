@@ -35,6 +35,7 @@ type QuestWorkspaceProps = {
   onPaperDraftChange: Dispatch<SetStateAction<PaperDraft>>;
   onPersonDraftChange: Dispatch<SetStateAction<PersonDraft>>;
   onRemoveLedgerEntry: (entryIndex: number) => void;
+  onRemoveNote: (noteIndex: number) => void;
   onRemovePaperItem: (paperIndex: number) => void;
   onRemovePerson: (personIndex: number) => void;
   onSelectedQuestIndexChange: (questIndex: number) => void;
@@ -62,6 +63,7 @@ export function QuestWorkspace({
   onPaperDraftChange,
   onPersonDraftChange,
   onRemoveLedgerEntry,
+  onRemoveNote,
   onRemovePaperItem,
   onRemovePerson,
   onSelectedQuestIndexChange,
@@ -273,8 +275,11 @@ export function QuestWorkspace({
               />
               <button type="submit">Add</button>
             </form>
-            {selectedQuest.notes.map((note) => (
-              <span key={note}>{note}</span>
+            {selectedQuest.notes.map((note, index) => (
+              <div className="note-item" key={`${note}-${index}`}>
+                <span>{note}</span>
+                <button onClick={() => onRemoveNote(index)} type="button" aria-label={`Remove note ${index + 1}`}>x</button>
+              </div>
             ))}
           </div>
         </article>

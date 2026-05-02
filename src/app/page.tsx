@@ -337,6 +337,10 @@ export default function Home() {
     setNoteDraft("");
   }
 
+  function removeNote(noteIndex: number) {
+    updateSelectedQuest((quest) => ({ ...quest, notes: quest.notes.filter((_, index) => index !== noteIndex) }));
+  }
+
   function addPerson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = personDraft.name.trim();
@@ -542,6 +546,7 @@ export default function Home() {
             onPaperDraftChange={setPaperDraft}
             onPersonDraftChange={setPersonDraft}
             onRemoveLedgerEntry={removeLedgerEntry}
+            onRemoveNote={removeNote}
             onRemovePaperItem={removePaperItem}
             onRemovePerson={removePerson}
             onSelectedQuestIndexChange={setSelectedQuestIndex}
