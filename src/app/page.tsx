@@ -6,6 +6,9 @@ import { AssetsWorkspace } from "./components/AssetsWorkspace";
 import { CommandWorkspace } from "./components/CommandWorkspace";
 import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
+import { PeopleWorkspace } from "./components/PeopleWorkspace";
+import { QuestWorkspace } from "./components/QuestWorkspace";
+import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, Topbar } from "./components/Topbar";
 import {
@@ -481,365 +484,67 @@ export default function Home() {
           />
         ) : null}
         {activeView === "Reminders" ? (
-        <section className="reminders-workspace panel">
-          <div className="panel-header">
-            <h2>Reminders</h2>
-            <span>{reminderSummary.active} active</span>
-          </div>
-
-          <div className="reminders-board">
-            <form className="reminders-workspace-form" onSubmit={addReminder}>
-              <select
-                aria-label="Reminder quest"
-                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
-                value={selectedQuestIndex}
-              >
-                {questList.map((quest, index) => (
-                  <option key={quest.name} value={index}>{quest.name}</option>
-                ))}
-              </select>
-              <input
-                aria-label="Reminder label"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, label: event.target.value }))}
-                placeholder="Reminder"
-                value={reminderDraft.label}
-              />
-              <input
-                aria-label="Reminder due"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, due: event.target.value }))}
-                placeholder="Due"
-                value={reminderDraft.due}
-              />
-              <select
-                aria-label="Reminder priority"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, priority: event.target.value as Reminder["priority"] }))}
-                value={reminderDraft.priority}
-              >
-                <option>Quiet</option>
-                <option>Normal</option>
-                <option>Important</option>
-              </select>
-              <button type="submit">Add</button>
-            </form>
-
-            <div className="reminder-total-strip">
-              <div>
-                <span>Important</span>
-                <strong>{reminderSummary.important}</strong>
-              </div>
-              <div>
-                <span>Active</span>
-                <strong>{reminderSummary.active}</strong>
-              </div>
-              <div>
-                <span>Done</span>
-                <strong>{reminderSummary.done}</strong>
-              </div>
-            </div>
-
-            <div className="reminder-workspace-list">
-              {reminderRows.map((reminder) => (
-                <article className="reminder-workspace-row" data-done={reminder.done} key={`${reminder.quest}-${reminder.label}-${reminder.reminderIndex}`}>
-                  <button className="task-check" onClick={() => toggleReminderDoneAt(reminder.reminderIndex)} type="button" aria-label={`${reminder.done ? "Reopen" : "Complete"} ${reminder.label}`} />
-                  <div>
-                    <span>{reminder.quest}</span>
-                    <strong>{reminder.label}</strong>
-                  </div>
-                  <div>
-                    <span>{reminder.due}</span>
-                    <strong data-priority={reminder.priority}>{reminder.priority}</strong>
-                  </div>
-                  <button data-state={reminder.done ? "Done" : "Open"} onClick={() => toggleReminderDoneAt(reminder.reminderIndex)} type="button">{reminder.done ? "Done" : "Open"}</button>
-                  <button className="open-quest-button" onClick={() => { if (reminder.questIndex >= 0) setSelectedQuestIndex(reminder.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <RemindersWorkspace
+            draft={reminderDraft}
+            onAddReminder={addReminder}
+            onDraftChange={setReminderDraft}
+            onOpenQuest={(questIndex) => {
+              if (questIndex >= 0) setSelectedQuestIndex(questIndex);
+              setActiveView("Quests");
+            }}
+            onSelectedQuestIndexChange={setSelectedQuestIndex}
+            onToggleReminder={toggleReminderDoneAt}
+            questList={questList}
+            reminderRows={reminderRows}
+            reminderSummary={reminderSummary}
+            selectedQuestIndex={selectedQuestIndex}
+          />
         ) : null}
 
         {activeView === "People" ? (
-        <section className="people-workspace panel">
-          <div className="panel-header">
-            <h2>People</h2>
-            <span>{peopleRows.length} contacts</span>
-          </div>
-
-          <div className="people-board">
-            <form className="people-workspace-form" onSubmit={addPerson}>
-              <select
-                aria-label="Person quest"
-                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
-                value={selectedQuestIndex}
-              >
-                {questList.map((quest, index) => (
-                  <option key={quest.name} value={index}>{quest.name}</option>
-                ))}
-              </select>
-              <input
-                aria-label="Person name"
-                onChange={(event) => setPersonDraft((draft) => ({ ...draft, name: event.target.value }))}
-                placeholder="Name"
-                value={personDraft.name}
-              />
-              <input
-                aria-label="Person role"
-                onChange={(event) => setPersonDraft((draft) => ({ ...draft, role: event.target.value }))}
-                placeholder="Role"
-                value={personDraft.role}
-              />
-              <input
-                aria-label="Next touch"
-                onChange={(event) => setPersonDraft((draft) => ({ ...draft, nextTouch: event.target.value }))}
-                placeholder="Next touch"
-                value={personDraft.nextTouch}
-              />
-              <button type="submit">Add</button>
-            </form>
-
-            <div className="people-total-strip">
-              <div>
-                <span>Active</span>
-                <strong>{peopleSummary.active}</strong>
-              </div>
-              <div>
-                <span>Waiting</span>
-                <strong>{peopleSummary.waiting}</strong>
-              </div>
-              <div>
-                <span>Quiet</span>
-                <strong>{peopleSummary.quiet}</strong>
-              </div>
-            </div>
-
-            <div className="people-workspace-list">
-              {peopleRows.map((person) => (
-                <article className="people-workspace-row" key={`${person.name}-${person.role}-${person.personIndex}`}>
-                  <div>
-                    <span>{person.quest}</span>
-                    <strong>{person.name}</strong>
-                  </div>
-                  <div>
-                    <span>{person.role}</span>
-                    <strong>{person.nextTouch}</strong>
-                  </div>
-                  <button data-status={person.status} onClick={() => cyclePersonStatusAt(person.personIndex)} type="button">{person.status}</button>
-                  <button className="open-quest-button" onClick={() => { if (person.questIndex >= 0) setSelectedQuestIndex(person.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
-                  <button className="remove-person-workspace" onClick={() => removePersonAt(person.personIndex)} type="button" aria-label={`Remove ${person.name}`}>Remove</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <PeopleWorkspace
+            draft={personDraft}
+            onAddPerson={addPerson}
+            onCyclePersonStatus={cyclePersonStatusAt}
+            onDraftChange={setPersonDraft}
+            onOpenQuest={(questIndex) => {
+              if (questIndex >= 0) setSelectedQuestIndex(questIndex);
+              setActiveView("Quests");
+            }}
+            onRemovePerson={removePersonAt}
+            onSelectedQuestIndexChange={setSelectedQuestIndex}
+            peopleRows={peopleRows}
+            peopleSummary={peopleSummary}
+            questList={questList}
+            selectedQuestIndex={selectedQuestIndex}
+          />
         ) : null}
 
         {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
-        <section className="quest-section">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Active Quests</p>
-              <h2>Work, rentals, builds, investments</h2>
-            </div>
-            <button type="button" className="ghost-button">View All</button>
-          </div>
-
-          <div className="quest-focus-grid">
-            <div className="quest-picker" aria-label="Quest selector">
-              {questList.map((quest, index) => (
-                <button
-                  className="quest-card"
-                  data-selected={index === selectedQuestIndex}
-                  key={quest.name}
-                  onClick={() => setSelectedQuestIndex(index)}
-                  type="button"
-                >
-                  <div className="quest-card-top">
-                    <span>{quest.type}</span>
-                    <b data-status={quest.tone}>{quest.status}</b>
-                  </div>
-                  <h3>{quest.name}</h3>
-                  <p>{quest.nextMove}</p>
-                  <div className="progress-bar" aria-label={`${quest.name} progress`}>
-                    <span style={{ width: `${quest.progress}%` }} />
-                  </div>
-                  <div className="quest-card-bottom">
-                    <span>{quest.due}</span>
-                    <strong>{quest.value}</strong>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <article className="quest-detail" aria-live="polite">
-              <div className="quest-detail-main">
-                <div>
-                  <span className="detail-kicker">{selectedQuest.owner}</span>
-                  <h3>{selectedQuest.name}</h3>
-                  <p>{selectedQuest.summary}</p>
-                  <form className="inline-note-form" onSubmit={addNote}>
-                    <input
-                      aria-label="Quest note"
-                      onChange={(event) => setNoteDraft(event.target.value)}
-                      placeholder="Add quick note"
-                      value={noteDraft}
-                    />
-                    <button type="submit">Add</button>
-                  </form>
-                </div>
-                <div className="detail-value">
-                  <span>{selectedQuest.target}</span>
-                  <strong>{selectedQuest.progress}%</strong>
-                </div>
-              </div>
-
-              <div className="detail-columns">
-                <section className="detail-column">
-                  <div className="detail-column-head">
-                    <h4>Ledger</h4>
-                    <span>{selectedQuest.ledger.length}</span>
-                  </div>
-                  <form className="mini-form" onSubmit={addLedgerEntry}>
-                    <input
-                      aria-label="Ledger label"
-                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, label: event.target.value }))}
-                      placeholder="Label"
-                      value={ledgerDraft.label}
-                    />
-                    <input
-                      aria-label="Ledger amount"
-                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, amount: event.target.value }))}
-                      placeholder="$0"
-                      value={ledgerDraft.amount}
-                    />
-                    <select
-                      aria-label="Ledger state"
-                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, state: event.target.value as LedgerState }))}
-                      value={ledgerDraft.state}
-                    >
-                      <option>Draft</option>
-                      <option>Open</option>
-                      <option>Paid</option>
-                    </select>
-                    <button aria-label="Add ledger entry" type="submit">+</button>
-                  </form>
-                  {selectedQuest.ledger.map((entry, index) => (
-                    <div className="mini-row" key={entry.label}>
-                      <span>{entry.label}</span>
-                      <strong>{entry.amount}</strong>
-                      <button data-state={entry.state} onClick={() => cycleLedgerState(index)} type="button">{entry.state}</button>
-                    </div>
-                  ))}
-                </section>
-
-                <section className="detail-column">
-                  <div className="detail-column-head">
-                    <h4>Paper Trail</h4>
-                    <span>{selectedQuest.papers.length}</span>
-                  </div>
-                  <form className="mini-form" onSubmit={addPaperItem}>
-                    <input
-                      aria-label="Paper trail label"
-                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, label: event.target.value }))}
-                      placeholder="Receipt/photo"
-                      value={paperDraft.label}
-                    />
-                    <input
-                      aria-label="Paper trail meta"
-                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, meta: event.target.value }))}
-                      placeholder="Photo, PDF..."
-                      value={paperDraft.meta}
-                    />
-                    <input
-                      aria-label="Paper trail state"
-                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, state: event.target.value }))}
-                      placeholder="Review"
-                      value={paperDraft.state}
-                    />
-                    <button aria-label="Add paper trail item" type="submit">+</button>
-                  </form>
-                  {selectedQuest.papers.map((paper, index) => (
-                    <div className="mini-row" key={paper.label}>
-                      <span>{paper.label}</span>
-                      <strong>{paper.meta}</strong>
-                      <button data-state={paper.state} onClick={() => cyclePaperState(index)} type="button">{paper.state}</button>
-                    </div>
-                  ))}
-                </section>
-
-                <section className="detail-column" id="people">
-                  <div className="detail-column-head">
-                    <h4>People</h4>
-                    <span>{selectedPeople.length}</span>
-                  </div>
-                  <form className="people-form" onSubmit={addPerson}>
-                    <input
-                      aria-label="Person name"
-                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, name: event.target.value }))}
-                      placeholder="Name"
-                      value={personDraft.name}
-                    />
-                    <input
-                      aria-label="Person role"
-                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, role: event.target.value }))}
-                      placeholder="Role"
-                      value={personDraft.role}
-                    />
-                    <input
-                      aria-label="Next touch"
-                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, nextTouch: event.target.value }))}
-                      placeholder="Next touch"
-                      value={personDraft.nextTouch}
-                    />
-                    <button aria-label="Add person" type="submit">+</button>
-                  </form>
-                  {selectedPeople.length > 0 ? selectedPeople.map((person, index) => (
-                    <div className="person-row" key={`${person.name}-${person.role}`}>
-                      <span>{person.name}</span>
-                      <div className="person-actions">
-                        <strong>{person.role}</strong>
-                        <button data-status={person.status} onClick={() => cyclePersonStatus(index)} type="button">{person.status}</button>
-                        <button className="remove-person" onClick={() => removePerson(index)} type="button" aria-label={`Remove ${person.name}`}>x</button>
-                      </div>
-                      <em>{person.nextTouch}</em>
-                    </div>
-                  )) : (
-                    <p className="empty-detail">No people linked yet.</p>
-                  )}
-                </section>
-
-                <section className="detail-column">
-                  <div className="detail-column-head">
-                    <h4>Next Steps</h4>
-                    <span>{selectedQuest.steps.length}</span>
-                  </div>
-                  {selectedQuest.steps.map((step, index) => (
-                    <div className="step-row" data-step={step.state} key={step.label}>
-                      <span />
-                      <strong>{step.label}</strong>
-                      <button onClick={() => advanceStep(index)} type="button">{step.state}</button>
-                    </div>
-                  ))}
-                </section>
-              </div>
-
-              <div className="note-strip">
-                <form className="note-form" onSubmit={addNote}>
-                  <input
-                    aria-label="Quest note"
-                    onChange={(event) => setNoteDraft(event.target.value)}
-                    placeholder="Add quick note"
-                    value={noteDraft}
-                  />
-                  <button type="submit">Add</button>
-                </form>
-                {selectedQuest.notes.map((note) => (
-                  <span key={note}>{note}</span>
-                ))}
-              </div>
-            </article>
-          </div>
-        </section>
-
+          <QuestWorkspace
+            ledgerDraft={ledgerDraft}
+            noteDraft={noteDraft}
+            onAddLedgerEntry={addLedgerEntry}
+            onAddNote={addNote}
+            onAddPaperItem={addPaperItem}
+            onAddPerson={addPerson}
+            onAdvanceStep={advanceStep}
+            onCycleLedgerState={cycleLedgerState}
+            onCyclePaperState={cyclePaperState}
+            onCyclePersonStatus={cyclePersonStatus}
+            onLedgerDraftChange={setLedgerDraft}
+            onNoteDraftChange={setNoteDraft}
+            onPaperDraftChange={setPaperDraft}
+            onPersonDraftChange={setPersonDraft}
+            onRemovePerson={removePerson}
+            onSelectedQuestIndexChange={setSelectedQuestIndex}
+            paperDraft={paperDraft}
+            personDraft={personDraft}
+            questList={questList}
+            selectedPeople={selectedPeople}
+            selectedQuest={selectedQuest}
+            selectedQuestIndex={selectedQuestIndex}
+          />
         ) : null}
 
         {activeView === "Assets" ? (
