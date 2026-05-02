@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 
 type LedgerState = "Paid" | "Open" | "Draft";
 type StepState = "Done" | "Now" | "Next";
+type QuestType = "Rental Property" | "Customer Build" | "Build Project" | "Investment" | "Personal Plan" | "Side Quest";
 
 type Quest = {
   name: string;
@@ -50,6 +51,85 @@ type Person = {
 const STORAGE_KEY = "sidequest-hq:quests:v1";
 const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
 const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
+
+const questTypePresets: Array<{
+  type: QuestType;
+  owner: string;
+  target: string;
+  summary: string;
+  steps: Array<{ label: string; state: StepState }>;
+}> = [
+  {
+    type: "Rental Property",
+    owner: "Rental property",
+    target: "Property health",
+    summary: "Track rent, repairs, lease docs, reminders, and the people tied to this property.",
+    steps: [
+      { label: "Property profile", state: "Now" },
+      { label: "Rent ledger", state: "Next" },
+      { label: "Paper trail", state: "Next" },
+    ],
+  },
+  {
+    type: "Customer Build",
+    owner: "Customer build",
+    target: "Scope and payment lock",
+    summary: "Track quote, deposits, customer updates, files, build costs, and delivery steps.",
+    steps: [
+      { label: "Scope captured", state: "Now" },
+      { label: "Quote drafted", state: "Next" },
+      { label: "Customer update", state: "Next" },
+    ],
+  },
+  {
+    type: "Build Project",
+    owner: "Build project",
+    target: "Materials and delivery",
+    summary: "Track materials, labor, receipts, open balances, and next build actions.",
+    steps: [
+      { label: "Project created", state: "Done" },
+      { label: "Materials tracked", state: "Now" },
+      { label: "Final balance", state: "Next" },
+    ],
+  },
+  {
+    type: "Investment",
+    owner: "Investment",
+    target: "Track position notes",
+    summary: "Track expected gains, contribution notes, check-ins, and paper trail without finance portal links.",
+    steps: [
+      { label: "Position noted", state: "Now" },
+      { label: "Check-in reminder", state: "Next" },
+      { label: "Paper trail", state: "Next" },
+    ],
+  },
+  {
+    type: "Personal Plan",
+    owner: "Personal plan",
+    target: "Keep the plan moving",
+    summary: "Track tasks, reminders, notes, and supporting files for a personal goal.",
+    steps: [
+      { label: "Plan captured", state: "Now" },
+      { label: "Next move", state: "Next" },
+      { label: "Review date", state: "Next" },
+    ],
+  },
+  {
+    type: "Side Quest",
+    owner: "Side quest",
+    target: "Get it organized",
+    summary: "Fresh quest. Add ledger rows, paper trail items, people, reminders, and next steps as the work gets clearer.",
+    steps: [
+      { label: "Quest created", state: "Done" },
+      { label: "First ledger item", state: "Now" },
+      { label: "Paper trail", state: "Next" },
+    ],
+  },
+];
+
+function getQuestTypePreset(type: QuestType) {
+  return questTypePresets.find((preset) => preset.type === type) ?? questTypePresets[questTypePresets.length - 1];
+}
 
 const seedQuests: Quest[] = [
   {
@@ -287,7 +367,7 @@ export default function Home() {
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
   const [hasLoadedStoredData, setHasLoadedStoredData] = useState(false);
   const [showQuestComposer, setShowQuestComposer] = useState(false);
-  const [questDraft, setQuestDraft] = useState({ name: "", type: "Build Project", value: "", due: "" });
+  const [questDraft, setQuestDraft] = useState<{ name: string; type: QuestType; value: string; due: string }>({ name: "", type: "Rental Property", value: "", due: "" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
   const [peopleList, setPeopleList] = useState<Person[]>(seedPeople);
@@ -363,32 +443,29 @@ export default function Home() {
     event.preventDefault();
     const name = questDraft.name.trim();
     if (!name) return;
+    const preset = getQuestTypePreset(questDraft.type);
 
     const nextQuest: Quest = {
       name,
-      type: questDraft.type.trim() || "Side Quest",
+      type: preset.type,
       status: "Discovery",
-      nextMove: "Capture the first move and attach the first ledger item.",
+      nextMove: preset.steps.find((step) => step.state === "Now")?.label ?? "Capture the first move.",
       value: questDraft.value.trim() || "$0 tracked",
       progress: 10,
       tone: "discovery",
-      owner: "New quest",
-      target: "Get it organized",
+      owner: preset.owner,
+      target: preset.target,
       due: questDraft.due.trim() || "Next check: Soon",
-      summary: "Fresh quest. Add ledger rows, paper trail items, and next steps as the work gets clearer.",
+      summary: preset.summary,
       ledger: [],
       papers: [],
-      steps: [
-        { label: "Quest created", state: "Done" },
-        { label: "First ledger item", state: "Now" },
-        { label: "Paper trail", state: "Next" },
-      ],
-      notes: ["Use this as the command card until we build the full edit screen."],
+      steps: preset.steps,
+      notes: ["Fresh quest created. Add the first note when the next move is clear."],
     };
 
     setQuestList((current) => [...current, nextQuest]);
     setSelectedQuestIndex(questList.length);
-    setQuestDraft({ name: "", type: "Build Project", value: "", due: "" });
+    setQuestDraft({ name: "", type: "Rental Property", value: "", due: "" });
     setShowQuestComposer(false);
   }
 
@@ -582,12 +659,15 @@ export default function Home() {
               placeholder="Quest name"
               value={questDraft.name}
             />
-            <input
+            <select
               aria-label="Quest type"
-              onChange={(event) => setQuestDraft((draft) => ({ ...draft, type: event.target.value }))}
-              placeholder="Rental, build, investment..."
+              onChange={(event) => setQuestDraft((draft) => ({ ...draft, type: event.target.value as QuestType }))}
               value={questDraft.type}
-            />
+            >
+              {questTypePresets.map((preset) => (
+                <option key={preset.type}>{preset.type}</option>
+              ))}
+            </select>
             <input
               aria-label="Tracked value"
               onChange={(event) => setQuestDraft((draft) => ({ ...draft, value: event.target.value }))}
