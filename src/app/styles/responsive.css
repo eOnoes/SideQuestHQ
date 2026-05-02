@@ -162,9 +162,19 @@
 
   .quest-composer input,
   .quest-composer select,
-  .quest-composer button {
+  .quest-composer button,
+  .scan-intake input,
+  .scan-intake select,
+  .scan-intake button {
     min-height: 30px;
     font-size: 12px;
+  }
+
+  .scan-intake {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) 86px 86px 86px minmax(0, 0.85fr) minmax(0, 1fr) 50px;
+    gap: 6px;
+    margin: -4px 0 10px;
+    padding: 9px;
   }
 
   .metric {
@@ -373,6 +383,10 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .scan-intake {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .asset-form,
   .asset-summary,
   .ledger-total-strip,
@@ -437,11 +451,13 @@
   }
 
   .topbar-actions,
-  .quest-composer {
+  .quest-composer,
+  .scan-intake {
     width: 100%;
   }
 
-  .quest-composer {
+  .quest-composer,
+  .scan-intake {
     grid-template-columns: 1fr;
   }
 

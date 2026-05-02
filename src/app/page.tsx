@@ -10,7 +10,7 @@ import { PeopleWorkspace } from "./components/PeopleWorkspace";
 import { QuestWorkspace } from "./components/QuestWorkspace";
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
-import { QuestComposer, Topbar } from "./components/Topbar";
+import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
 import { getQuestTypePreset, seedAssets, seedPeople, seedQuests, seedReminders } from "./data";
 import { loadStoredAppData, saveStoredAppData } from "./persistence";
 import {
@@ -36,8 +36,10 @@ export default function Home() {
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
   const [hasLoadedStoredData, setHasLoadedStoredData] = useState(false);
   const [showQuestComposer, setShowQuestComposer] = useState(false);
+  const [showScanIntake, setShowScanIntake] = useState(false);
   const [activeView, setActiveView] = useState<AppView>("Command");
   const [questDraft, setQuestDraft] = useState<{ name: string; type: QuestType; value: string; due: string }>({ name: "", type: "Rental Property", value: "", due: "" });
+  const [scanDraft, setScanDraft] = useState<ScanDraft>({ amount: "", fileName: "", label: "", notes: "", questIndex: 0, source: "Receipt", state: "Review" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
   const [peopleList, setPeopleList] = useState<Person[]>(seedPeople);
@@ -71,6 +73,13 @@ export default function Home() {
     [assetSummary.monthlyProjected, ledgerSummary.open, paperSummary.reviewCount, peopleSummary.waiting],
   );
   const paperQueue = useMemo(() => getPaperQueue(questList), [questList]);
+
+  useEffect(() => {
+    setScanDraft((draft) => {
+      const nextQuestIndex = Math.min(draft.questIndex, Math.max(questList.length - 1, 0));
+      return nextQuestIndex === draft.questIndex ? draft : { ...draft, questIndex: nextQuestIndex };
+    });
+  }, [questList.length]);
 
   useEffect(() => {
     const storedData = loadStoredAppData();
@@ -144,6 +153,36 @@ export default function Home() {
       papers: [...quest.papers, { label, meta: paperDraft.meta.trim() || "Manual entry", state: paperDraft.state.trim() || "Review" }],
     }));
     setPaperDraft({ label: "", meta: "", state: "Review" });
+  }
+
+  function addScanIntake(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = scanDraft.label.trim();
+    if (!label) return;
+
+    const targetQuestIndex = Math.max(0, Math.min(scanDraft.questIndex, questList.length - 1));
+    const fileName = scanDraft.fileName.trim();
+    const notes = scanDraft.notes.trim();
+    const metaParts = [scanDraft.source, fileName, notes].filter(Boolean);
+    const amount = scanDraft.amount.trim();
+
+    setQuestList((current) =>
+      current.map((quest, index) => {
+        if (index !== targetQuestIndex) return quest;
+
+        return {
+          ...quest,
+          ledger: amount ? [{ label, amount, state: "Draft" }, ...quest.ledger] : quest.ledger,
+          papers: [{ label, meta: metaParts.join(" / ") || scanDraft.source, state: scanDraft.state }, ...quest.papers],
+          notes: notes ? [`Paper intake: ${notes}`, ...quest.notes].slice(0, 4) : quest.notes,
+        };
+      }),
+    );
+
+    setSelectedQuestIndex(targetQuestIndex);
+    setScanDraft({ amount: "", fileName: "", label: "", notes: "", questIndex: targetQuestIndex, source: "Receipt", state: "Review" });
+    setShowScanIntake(false);
+    setActiveView("Paper Trail");
   }
 
   function addAsset(event: FormEvent<HTMLFormElement>) {
@@ -319,10 +358,21 @@ export default function Home() {
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
       <section className="workspace">
-        <Topbar activeView={activeView} onToggleQuestComposer={() => setShowQuestComposer((isOpen) => !isOpen)} />
+        <Topbar
+          activeView={activeView}
+          onToggleQuestComposer={() => setShowQuestComposer((isOpen) => !isOpen)}
+          onToggleScanIntake={() => {
+            setScanDraft((draft) => ({ ...draft, questIndex: selectedQuestIndex }));
+            setShowScanIntake((isOpen) => !isOpen);
+          }}
+        />
 
         {showQuestComposer ? (
           <QuestComposer draft={questDraft} onChange={setQuestDraft} onSubmit={addQuest} />
+        ) : null}
+
+        {showScanIntake ? (
+          <ScanIntake draft={scanDraft} onChange={setScanDraft} onSubmit={addScanIntake} questList={questList} />
         ) : null}
 
         {activeView === "Command" ? (

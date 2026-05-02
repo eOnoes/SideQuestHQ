@@ -288,6 +288,60 @@ h3 {
   font-weight: 900;
 }
 
+.scan-intake {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(160px, 1.15fr) 112px 110px 108px minmax(140px, 0.9fr) minmax(180px, 1fr) 64px;
+  gap: 10px;
+  margin: -8px 0 14px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--corner);
+  background:
+    linear-gradient(135deg, rgba(255, 211, 61, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(45, 45, 45, 0.9);
+}
+
+.scan-intake-head {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 2px;
+}
+
+.scan-intake-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.scan-intake-head strong {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.scan-intake input,
+.scan-intake select,
+.scan-intake button {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.scan-intake button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
 .primary-button,
 .ghost-button,
 .icon-button {
