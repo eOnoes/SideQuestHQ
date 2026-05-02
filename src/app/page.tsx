@@ -273,6 +273,7 @@ export default function Home() {
   const [questDraft, setQuestDraft] = useState({ name: "", type: "Build Project", value: "", due: "" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
+  const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const paperQueue = useMemo<PaperItem[]>(() => {
@@ -370,6 +371,52 @@ export default function Home() {
       papers: [...quest.papers, { label, meta: paperDraft.meta.trim() || "Manual entry", state: paperDraft.state.trim() || "Review" }],
     }));
     setPaperDraft({ label: "", meta: "", state: "Review" });
+  }
+
+  function cycleLedgerState(entryIndex: number) {
+    const order: LedgerState[] = ["Draft", "Open", "Paid"];
+    updateSelectedQuest((quest) => ({
+      ...quest,
+      ledger: quest.ledger.map((entry, index) => {
+        if (index !== entryIndex) return entry;
+        const nextState = order[(order.indexOf(entry.state) + 1) % order.length];
+        return { ...entry, state: nextState };
+      }),
+    }));
+  }
+
+  function cyclePaperState(paperIndex: number) {
+    const order = ["Review", "Ready", "Filed"];
+    updateSelectedQuest((quest) => ({
+      ...quest,
+      papers: quest.papers.map((paper, index) => {
+        if (index !== paperIndex) return paper;
+        const currentIndex = order.findIndex((state) => state.toLowerCase() === paper.state.toLowerCase());
+        return { ...paper, state: order[((currentIndex === -1 ? 0 : currentIndex) + 1) % order.length] };
+      }),
+    }));
+  }
+
+  function advanceStep(stepIndex: number) {
+    const order: StepState[] = ["Next", "Now", "Done"];
+    updateSelectedQuest((quest) => ({
+      ...quest,
+      steps: quest.steps.map((step, index) => {
+        if (index !== stepIndex) return step;
+        const nextState = order[(order.indexOf(step.state) + 1) % order.length];
+        return { ...step, state: nextState };
+      }),
+      progress: Math.round((quest.steps.filter((step, index) => (index === stepIndex ? order[(order.indexOf(step.state) + 1) % order.length] === "Done" : step.state === "Done")).length / Math.max(quest.steps.length, 1)) * 100),
+    }));
+  }
+
+  function addNote(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const note = noteDraft.trim();
+    if (!note) return;
+
+    updateSelectedQuest((quest) => ({ ...quest, notes: [note, ...quest.notes].slice(0, 4) }));
+    setNoteDraft("");
   }
 
   return (
@@ -538,6 +585,15 @@ export default function Home() {
                   <span className="detail-kicker">{selectedQuest.owner}</span>
                   <h3>{selectedQuest.name}</h3>
                   <p>{selectedQuest.summary}</p>
+                  <form className="inline-note-form" onSubmit={addNote}>
+                    <input
+                      aria-label="Quest note"
+                      onChange={(event) => setNoteDraft(event.target.value)}
+                      placeholder="Add quick note"
+                      value={noteDraft}
+                    />
+                    <button type="submit">Add</button>
+                  </form>
                 </div>
                 <div className="detail-value">
                   <span>{selectedQuest.target}</span>
@@ -575,11 +631,11 @@ export default function Home() {
                     </select>
                     <button aria-label="Add ledger entry" type="submit">+</button>
                   </form>
-                  {selectedQuest.ledger.map((entry) => (
+                  {selectedQuest.ledger.map((entry, index) => (
                     <div className="mini-row" key={entry.label}>
                       <span>{entry.label}</span>
                       <strong>{entry.amount}</strong>
-                      <b data-state={entry.state}>{entry.state}</b>
+                      <button data-state={entry.state} onClick={() => cycleLedgerState(index)} type="button">{entry.state}</button>
                     </div>
                   ))}
                 </section>
@@ -610,11 +666,11 @@ export default function Home() {
                     />
                     <button aria-label="Add paper trail item" type="submit">+</button>
                   </form>
-                  {selectedQuest.papers.map((paper) => (
+                  {selectedQuest.papers.map((paper, index) => (
                     <div className="mini-row" key={paper.label}>
                       <span>{paper.label}</span>
                       <strong>{paper.meta}</strong>
-                      <b data-state={paper.state}>{paper.state}</b>
+                      <button data-state={paper.state} onClick={() => cyclePaperState(index)} type="button">{paper.state}</button>
                     </div>
                   ))}
                 </section>
@@ -624,17 +680,26 @@ export default function Home() {
                     <h4>Next Steps</h4>
                     <span>{selectedQuest.steps.length}</span>
                   </div>
-                  {selectedQuest.steps.map((step) => (
+                  {selectedQuest.steps.map((step, index) => (
                     <div className="step-row" data-step={step.state} key={step.label}>
                       <span />
                       <strong>{step.label}</strong>
-                      <b>{step.state}</b>
+                      <button onClick={() => advanceStep(index)} type="button">{step.state}</button>
                     </div>
                   ))}
                 </section>
               </div>
 
               <div className="note-strip">
+                <form className="note-form" onSubmit={addNote}>
+                  <input
+                    aria-label="Quest note"
+                    onChange={(event) => setNoteDraft(event.target.value)}
+                    placeholder="Add quick note"
+                    value={noteDraft}
+                  />
+                  <button type="submit">Add</button>
+                </form>
                 {selectedQuest.notes.map((note) => (
                   <span key={note}>{note}</span>
                 ))}

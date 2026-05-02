@@ -699,6 +699,29 @@ h3 {
   line-height: 1.45;
 }
 
+.inline-note-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  gap: 6px;
+  max-width: 520px;
+  margin-top: 10px;
+}
+
+.inline-note-form input,
+.inline-note-form button {
+  height: 30px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+.inline-note-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
 .detail-value {
   min-width: 148px;
   padding: 12px 14px;
@@ -812,24 +835,26 @@ h3 {
   font-size: 12px;
 }
 
-.mini-row b,
-.step-row b {
+.mini-row button,
+.step-row button {
   padding: 3px 7px;
+  border: 0;
   border-radius: var(--corner);
   background: rgba(255, 255, 255, 0.08);
   color: var(--yellow);
   font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
-.mini-row b[data-state="Paid"],
-.mini-row b[data-state="Filed"],
-.mini-row b[data-state="Ready"] {
+.mini-row button[data-state="Paid"],
+.mini-row button[data-state="Filed"],
+.mini-row button[data-state="Ready"] {
   color: var(--green);
 }
 
-.mini-row b[data-state="Open"],
-.mini-row b[data-state="Review"] {
+.mini-row button[data-state="Open"],
+.mini-row button[data-state="Review"] {
   color: var(--red);
 }
 
@@ -855,8 +880,29 @@ h3 {
 
 .note-strip {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 0.9fr repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.note-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 6px;
+}
+
+.note-form input,
+.note-form button {
+  min-height: 42px;
+  padding: 0 10px;
+}
+
+.note-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .note-strip span {
@@ -1010,6 +1056,10 @@ h3 {
     line-height: 1.3;
   }
 
+  .inline-note-form {
+    margin-top: 7px;
+  }
+
   .detail-value {
     padding: 9px 12px;
   }
@@ -1061,6 +1111,14 @@ h3 {
   .detail-columns,
   .note-strip {
     grid-template-columns: 1fr;
+  }
+
+  .note-form {
+    grid-template-columns: minmax(0, 1fr) 64px;
+  }
+
+  .inline-note-form {
+    display: none;
   }
 
   .quest-picker {
