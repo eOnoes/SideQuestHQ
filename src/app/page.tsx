@@ -497,6 +497,17 @@ export default function Home() {
     );
   }
 
+  function removePerson(personIndex: number) {
+    const selectedIndexes = peopleList
+      .map((person, index) => ({ person, index }))
+      .filter(({ person }) => person.quest === selectedQuest.name)
+      .map(({ index }) => index);
+    const targetIndex = selectedIndexes[personIndex];
+    if (targetIndex === undefined) return;
+
+    setPeopleList((current) => current.filter((_, index) => index !== targetIndex));
+  }
+
   function addReminder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const label = reminderDraft.label.trim();
@@ -834,9 +845,12 @@ export default function Home() {
                   {selectedPeople.length > 0 ? selectedPeople.map((person, index) => (
                     <div className="person-row" key={`${person.name}-${person.role}`}>
                       <span>{person.name}</span>
-                      <strong>{person.role}</strong>
+                      <div className="person-actions">
+                        <strong>{person.role}</strong>
+                        <button data-status={person.status} onClick={() => cyclePersonStatus(index)} type="button">{person.status}</button>
+                        <button className="remove-person" onClick={() => removePerson(index)} type="button" aria-label={`Remove ${person.name}`}>×</button>
+                      </div>
                       <em>{person.nextTouch}</em>
-                      <button data-status={person.status} onClick={() => cyclePersonStatus(index)} type="button">{person.status}</button>
                     </div>
                   )) : (
                     <p className="empty-detail">No people linked yet.</p>
