@@ -11,19 +11,26 @@ import { QuestWorkspace } from "./components/QuestWorkspace";
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, Topbar } from "./components/Topbar";
+import { getQuestTypePreset, seedAssets, seedPeople, seedQuests, seedReminders } from "./data";
+import { loadStoredAppData, saveStoredAppData } from "./persistence";
 import {
-  ASSETS_STORAGE_KEY,
-  getQuestTypePreset,
-  PEOPLE_STORAGE_KEY,
-  REMINDERS_STORAGE_KEY,
-  seedAssets,
-  seedPeople,
-  seedQuests,
-  seedReminders,
-  STORAGE_KEY,
-} from "./data";
-import type { AppView, Asset, LedgerState, PaperItem, Person, Quest, QuestType, Reminder, StepState } from "./types";
-import { formatMoney, getMoneyRows, getMonthlyProjection, parseMoney } from "./utils";
+  getActiveReminders,
+  getAssetSummary,
+  getCommandPulse,
+  getLedgerRows,
+  getLedgerSummary,
+  getPaperQueue,
+  getPaperRows,
+  getPaperSummary,
+  getPeopleRows,
+  getPeopleSummary,
+  getReminderRows,
+  getReminderSummary,
+  getSelectedPeople,
+  getSelectedQuest,
+} from "./selectors";
+import type { AppView, Asset, LedgerState, Person, Quest, QuestType, Reminder, StepState } from "./types";
+import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
@@ -40,166 +47,43 @@ export default function Home() {
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
   const [noteDraft, setNoteDraft] = useState("");
-  const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
+  const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
-  const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
-  const peopleRows = useMemo(
-    () =>
-      peopleList.map((person, personIndex) => ({
-        ...person,
-        personIndex,
-        questIndex: questList.findIndex((quest) => quest.name === person.quest),
-      })),
-    [peopleList, questList],
-  );
-  const peopleSummary = useMemo(
-    () => ({
-      active: peopleRows.filter((person) => person.status === "Active").length,
-      quiet: peopleRows.filter((person) => person.status === "Quiet").length,
-      waiting: peopleRows.filter((person) => person.status === "Waiting").length,
-    }),
-    [peopleRows],
-  );
-  const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
-  const reminderRows = useMemo(
-    () =>
-      reminderList.map((reminder, reminderIndex) => ({
-        ...reminder,
-        reminderIndex,
-        questIndex: questList.findIndex((quest) => quest.name === reminder.quest),
-      })),
-    [questList, reminderList],
-  );
-  const reminderSummary = useMemo(
-    () => ({
-      active: reminderRows.filter((reminder) => !reminder.done).length,
-      done: reminderRows.filter((reminder) => reminder.done).length,
-      important: reminderRows.filter((reminder) => !reminder.done && reminder.priority === "Important").length,
-    }),
-    [reminderRows],
-  );
-  const ledgerRows = useMemo(
-    () =>
-      questList.flatMap((quest, questIndex) =>
-        quest.ledger.map((entry, entryIndex) => ({
-          ...entry,
-          entryIndex,
-          questIndex,
-          questName: quest.name,
-          questType: quest.type,
-        })),
-      ),
-    [questList],
-  );
-  const ledgerSummary = useMemo(() => {
-    const totalByState = (state: LedgerState) =>
-      ledgerRows.filter((entry) => entry.state === state).reduce((total, entry) => total + parseMoney(entry.amount), 0);
-    return {
-      draft: totalByState("Draft"),
-      open: totalByState("Open"),
-      paid: totalByState("Paid"),
-    };
-  }, [ledgerRows]);
-  const paperRows = useMemo(
-    () =>
-      questList.flatMap((quest, questIndex) =>
-        quest.papers.map((paper, paperIndex) => ({
-          ...paper,
-          kind: paper.meta.toLowerCase().includes("image") || paper.meta.toLowerCase().includes("photo") ? "image" as const : "file" as const,
-          paperIndex,
-          questIndex,
-          questName: quest.name,
-          questType: quest.type,
-        })),
-      ),
-    [questList],
-  );
-  const paperSummary = useMemo(() => {
-    const reviewCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("review") || paper.state.toLowerCase().includes("draft")).length;
-    const filedCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("filed")).length;
-    const readyCount = paperRows.filter((paper) => paper.state.toLowerCase().includes("ready")).length;
-    return { filedCount, readyCount, reviewCount };
-  }, [paperRows]);
-  const assetSummary = useMemo(() => {
-    const monthlyProjected = assetList.reduce((total, asset) => total + getMonthlyProjection(asset), 0);
-    return {
-      activeCount: assetList.filter((asset) => asset.status === "Producing").length,
-      monthlyProjected,
-      annualProjected: monthlyProjected * 12,
-    };
-  }, [assetList]);
+  const selectedPeople = useMemo(() => getSelectedPeople(peopleList, selectedQuest.name), [peopleList, selectedQuest.name]);
+  const peopleRows = useMemo(() => getPeopleRows(peopleList, questList), [peopleList, questList]);
+  const peopleSummary = useMemo(() => getPeopleSummary(peopleRows), [peopleRows]);
+  const activeReminders = useMemo(() => getActiveReminders(reminderList), [reminderList]);
+  const reminderRows = useMemo(() => getReminderRows(reminderList, questList), [questList, reminderList]);
+  const reminderSummary = useMemo(() => getReminderSummary(reminderRows), [reminderRows]);
+  const ledgerRows = useMemo(() => getLedgerRows(questList), [questList]);
+  const ledgerSummary = useMemo(() => getLedgerSummary(ledgerRows), [ledgerRows]);
+  const paperRows = useMemo(() => getPaperRows(questList), [questList]);
+  const paperSummary = useMemo(() => getPaperSummary(paperRows), [paperRows]);
+  const assetSummary = useMemo(() => getAssetSummary(assetList), [assetList]);
   const commandPulse = useMemo(
-    () => [
-      { label: "Assets", value: formatMoney(assetSummary.monthlyProjected), detail: "Projected / mo", view: "Assets" as AppView },
-      { label: "Ledger", value: formatMoney(ledgerSummary.open), detail: "Open money", view: "Ledger" as AppView },
-      { label: "Paper", value: String(paperSummary.reviewCount), detail: "Need review", view: "Paper Trail" as AppView },
-      { label: "People", value: String(peopleSummary.waiting), detail: "Waiting touches", view: "People" as AppView },
-    ],
+    () =>
+      getCommandPulse({
+        assetMonthlyProjected: assetSummary.monthlyProjected,
+        ledgerOpen: ledgerSummary.open,
+        paperReviewCount: paperSummary.reviewCount,
+        peopleWaiting: peopleSummary.waiting,
+      }),
     [assetSummary.monthlyProjected, ledgerSummary.open, paperSummary.reviewCount, peopleSummary.waiting],
   );
-  const paperQueue = useMemo<PaperItem[]>(() => {
-    const items = questList.flatMap((quest) =>
-      quest.papers.map((paper) => ({
-        title: paper.label,
-        source: quest.name,
-        state: paper.state,
-        amount: quest.ledger[0]?.amount ?? "$0",
-        kind: paper.meta.toLowerCase().includes("image") || paper.meta.toLowerCase().includes("photo") ? "image" as const : "file" as const,
-      })),
-    );
-
-    return items.slice(0, 3);
-  }, [questList]);
+  const paperQueue = useMemo(() => getPaperQueue(questList), [questList]);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Quest[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setQuestList(parsed);
-        }
-      }
-
-      const storedPeople = window.localStorage.getItem(PEOPLE_STORAGE_KEY);
-      if (storedPeople) {
-        const parsedPeople = JSON.parse(storedPeople) as Person[];
-        if (Array.isArray(parsedPeople)) {
-          setPeopleList(parsedPeople);
-        }
-      }
-
-      const storedReminders = window.localStorage.getItem(REMINDERS_STORAGE_KEY);
-      if (storedReminders) {
-        const parsedReminders = JSON.parse(storedReminders) as Reminder[];
-        if (Array.isArray(parsedReminders)) {
-          setReminderList(parsedReminders);
-        }
-      }
-
-      const storedAssets = window.localStorage.getItem(ASSETS_STORAGE_KEY);
-      if (storedAssets) {
-        const parsedAssets = JSON.parse(storedAssets) as Asset[];
-        if (Array.isArray(parsedAssets)) {
-          setAssetList(parsedAssets);
-        }
-      }
-    } catch {
-      setQuestList(seedQuests);
-      setPeopleList(seedPeople);
-      setReminderList(seedReminders);
-      setAssetList(seedAssets);
-    } finally {
-      setHasLoadedStoredData(true);
-    }
+    const storedData = loadStoredAppData();
+    setQuestList(storedData.quests.length > 0 ? storedData.quests : seedQuests);
+    setPeopleList(storedData.people);
+    setReminderList(storedData.reminders);
+    setAssetList(storedData.assets);
+    setHasLoadedStoredData(true);
   }, []);
 
   useEffect(() => {
     if (hasLoadedStoredData) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questList));
-      window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(peopleList));
-      window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(reminderList));
-      window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assetList));
+      saveStoredAppData({ assets: assetList, people: peopleList, quests: questList, reminders: reminderList });
     }
   }, [assetList, hasLoadedStoredData, peopleList, questList, reminderList]);
 
