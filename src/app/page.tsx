@@ -1,408 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-
-type LedgerState = "Paid" | "Open" | "Draft";
-type StepState = "Done" | "Now" | "Next";
-type QuestType = "Rental Property" | "Customer Build" | "Build Project" | "Investment" | "Personal Plan" | "Side Quest";
-type AppView = "Command" | "Quests" | "Assets" | "Ledger" | "Paper Trail" | "Reminders" | "People";
-
-type Quest = {
-  name: string;
-  type: string;
-  status: string;
-  nextMove: string;
-  value: string;
-  progress: number;
-  tone: "active" | "discovery" | "progress";
-  owner: string;
-  target: string;
-  due: string;
-  summary: string;
-  ledger: Array<{ label: string; amount: string; state: LedgerState }>;
-  papers: Array<{ label: string; meta: string; state: string }>;
-  steps: Array<{ label: string; state: StepState }>;
-  notes: string[];
-};
-
-type Reminder = {
-  label: string;
-  quest: string;
-  due: string;
-  priority: "Quiet" | "Normal" | "Important";
-  done: boolean;
-};
-
-type PaperItem = {
-  title: string;
-  source: string;
-  state: string;
-  amount: string;
-  kind: "image" | "file";
-};
-
-type Person = {
-  name: string;
-  role: string;
-  quest: string;
-  nextTouch: string;
-  status: "Active" | "Waiting" | "Quiet";
-};
-
-type Asset = {
-  name: string;
-  type: "Rental" | "Business" | "Retirement" | "Build" | "Other";
-  value: string;
-  projected: string;
-  frequency: "Monthly" | "Annual" | "One-time";
-  status: "Producing" | "Watching" | "Planning";
-};
-
-const STORAGE_KEY = "sidequest-hq:quests:v1";
-const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
-const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
-const ASSETS_STORAGE_KEY = "sidequest-hq:assets:v1";
-
-const questTypePresets: Array<{
-  type: QuestType;
-  owner: string;
-  target: string;
-  summary: string;
-  steps: Array<{ label: string; state: StepState }>;
-}> = [
-  {
-    type: "Rental Property",
-    owner: "Rental property",
-    target: "Property health",
-    summary: "Track rent, repairs, lease docs, reminders, and the people tied to this property.",
-    steps: [
-      { label: "Property profile", state: "Now" },
-      { label: "Rent ledger", state: "Next" },
-      { label: "Paper trail", state: "Next" },
-    ],
-  },
-  {
-    type: "Customer Build",
-    owner: "Customer build",
-    target: "Scope and payment lock",
-    summary: "Track quote, deposits, customer updates, files, build costs, and delivery steps.",
-    steps: [
-      { label: "Scope captured", state: "Now" },
-      { label: "Quote drafted", state: "Next" },
-      { label: "Customer update", state: "Next" },
-    ],
-  },
-  {
-    type: "Build Project",
-    owner: "Build project",
-    target: "Materials and delivery",
-    summary: "Track materials, labor, receipts, open balances, and next build actions.",
-    steps: [
-      { label: "Project created", state: "Done" },
-      { label: "Materials tracked", state: "Now" },
-      { label: "Final balance", state: "Next" },
-    ],
-  },
-  {
-    type: "Investment",
-    owner: "Investment",
-    target: "Track position notes",
-    summary: "Track expected gains, contribution notes, check-ins, and paper trail without finance portal links.",
-    steps: [
-      { label: "Position noted", state: "Now" },
-      { label: "Check-in reminder", state: "Next" },
-      { label: "Paper trail", state: "Next" },
-    ],
-  },
-  {
-    type: "Personal Plan",
-    owner: "Personal plan",
-    target: "Keep the plan moving",
-    summary: "Track tasks, reminders, notes, and supporting files for a personal goal.",
-    steps: [
-      { label: "Plan captured", state: "Now" },
-      { label: "Next move", state: "Next" },
-      { label: "Review date", state: "Next" },
-    ],
-  },
-  {
-    type: "Side Quest",
-    owner: "Side quest",
-    target: "Get it organized",
-    summary: "Fresh quest. Add ledger rows, paper trail items, people, reminders, and next steps as the work gets clearer.",
-    steps: [
-      { label: "Quest created", state: "Done" },
-      { label: "First ledger item", state: "Now" },
-      { label: "Paper trail", state: "Next" },
-    ],
-  },
-];
-
-function getQuestTypePreset(type: QuestType) {
-  return questTypePresets.find((preset) => preset.type === type) ?? questTypePresets[questTypePresets.length - 1];
-}
-
-const seedQuests: Quest[] = [
-  {
-    name: "Maple Street Rental",
-    type: "Rental Property",
-    status: "Active",
-    nextMove: "Check rent receipt and schedule gutter inspection.",
-    value: "$1,450 expected",
-    progress: 75,
-    tone: "active",
-    owner: "Thomas",
-    target: "Monthly rental health",
-    due: "Next check: Tomorrow",
-    summary: "Rent is expected, inspection is the next move, and this property needs a clean paper trail for maintenance spend.",
-    ledger: [
-      { label: "May rent", amount: "$1,450", state: "Open" },
-      { label: "Gutter quote", amount: "$225", state: "Draft" },
-      { label: "April rent", amount: "$1,450", state: "Paid" },
-    ],
-    papers: [
-      { label: "Lease packet", meta: "PDF linked", state: "Filed" },
-      { label: "Gutter photos", meta: "3 images", state: "Review" },
-    ],
-    steps: [
-      { label: "Lease stored", state: "Done" },
-      { label: "Rent receipt", state: "Now" },
-      { label: "Inspection", state: "Next" },
-    ],
-    notes: ["Ask tenant for receipt screenshot if ACH clears late.", "Bundle gutter photos with quote before approving work."],
-  },
-  {
-    name: "AI Estimate Builder",
-    type: "Customer Build",
-    status: "Discovery",
-    nextMove: "Turn rough notes into milestone quote.",
-    value: "$3,200 quoted",
-    progress: 30,
-    tone: "discovery",
-    owner: "Customer build",
-    target: "Quote and scope lock",
-    due: "Next check: Today 4:00 PM",
-    summary: "Needs a clean milestone quote from rough notes, then a customer update before the day closes.",
-    ledger: [
-      { label: "Discovery deposit", amount: "$500", state: "Paid" },
-      { label: "Milestone 1", amount: "$1,200", state: "Draft" },
-      { label: "Final delivery", amount: "$1,500", state: "Draft" },
-    ],
-    papers: [
-      { label: "Deposit screenshot", meta: "Image upload", state: "Ready" },
-      { label: "Scope notes", meta: "Manual notes", state: "Draft" },
-    ],
-    steps: [
-      { label: "Discovery call", state: "Done" },
-      { label: "Milestone quote", state: "Now" },
-      { label: "Customer approval", state: "Next" },
-    ],
-    notes: ["Convert build notes into three clear phases.", "Keep quote friendly but exact: scope, payment points, delivery window."],
-  },
-  {
-    name: "Shop Cabinet Run",
-    type: "Build Project",
-    status: "In Progress",
-    nextMove: "Upload material receipts and confirm final balance.",
-    value: "$780 open",
-    progress: 60,
-    tone: "progress",
-    owner: "Personal build",
-    target: "Close materials and balance",
-    due: "Next check: This week",
-    summary: "Materials are mostly known; this needs receipt cleanup and final balance confirmation before calling it done.",
-    ledger: [
-      { label: "Materials paid", amount: "$826", state: "Paid" },
-      { label: "Customer balance", amount: "$780", state: "Open" },
-      { label: "Hardware run", amount: "$92", state: "Draft" },
-    ],
-    papers: [
-      { label: "Home Depot receipt", meta: "Photo upload", state: "Review" },
-      { label: "Lumber quote", meta: "PDF linked", state: "Filed" },
-    ],
-    steps: [
-      { label: "Design approved", state: "Done" },
-      { label: "Receipt review", state: "Now" },
-      { label: "Final invoice", state: "Next" },
-    ],
-    notes: ["Confirm whether hardware is included in current material total.", "Photo scan should create ledger draft, not auto-approve."],
-  },
-];
-
-const seedReminders: Reminder[] = [
-  { label: "Send Friday customer update", quest: "AI Estimate Builder", due: "Today 4:00 PM", priority: "Important", done: false },
-  { label: "Check rent payment", quest: "Maple Street Rental", due: "Tomorrow", priority: "Normal", done: false },
-  { label: "Review material costs", quest: "Shop Cabinet Run", due: "This week", priority: "Quiet", done: false },
-];
-
-const seedPeople: Person[] = [
-  { name: "Tenant", role: "Maple Street Rental", quest: "Maple Street Rental", nextTouch: "Confirm May receipt", status: "Waiting" },
-  { name: "Estimate customer", role: "Decision maker", quest: "AI Estimate Builder", nextTouch: "Friday update", status: "Active" },
-  { name: "Lumber desk", role: "Vendor", quest: "Shop Cabinet Run", nextTouch: "Quote match", status: "Quiet" },
-];
-
-const seedAssets: Asset[] = [
-  { name: "Maple Street Rental", type: "Rental", value: "$185,000 est.", projected: "$1,450", frequency: "Monthly", status: "Producing" },
-  { name: "401k Growth Bucket", type: "Retirement", value: "$0 tracked", projected: "$4,800", frequency: "Annual", status: "Watching" },
-  { name: "Friend Business Stake", type: "Business", value: "$2,500 in", projected: "$300", frequency: "Monthly", status: "Planning" },
-];
-
-type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus" | "briefcase";
-
-const appViews: Array<{ label: AppView; icon: IconName }> = [
-  { label: "Command", icon: "grid" },
-  { label: "Quests", icon: "clipboard" },
-  { label: "Assets", icon: "briefcase" },
-  { label: "Ledger", icon: "dollar" },
-  { label: "Paper Trail", icon: "file" },
-  { label: "Reminders", icon: "bell" },
-  { label: "People", icon: "people" },
-];
-
-function parseMoney(value: string) {
-  const amount = Number(value.replace(/[^0-9.-]/g, ""));
-  return Number.isFinite(amount) ? amount : 0;
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, style: "currency", currency: "USD" }).format(value);
-}
-
-function getMonthlyProjection(asset: Asset) {
-  const amount = parseMoney(asset.projected);
-  if (asset.frequency === "Annual") return amount / 12;
-  if (asset.frequency === "One-time") return 0;
-  return amount;
-}
-
-function getMoneyRows(questList: Quest[]): Array<{
-  label: string;
-  value: string;
-  trend: string;
-  trendTone: "up" | "down" | "neutral";
-  icon: IconName;
-}> {
-  const openEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Open"));
-  const paidEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Paid"));
-  const draftEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Draft"));
-  const reviewPapers = questList.flatMap((quest) => quest.papers.filter((paper) => paper.state.toLowerCase().includes("review") || paper.state.toLowerCase().includes("draft")));
-
-  return [
-    { label: "Expected In", value: formatMoney(openEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${openEntries.length} open`, trendTone: "up", icon: "dollar" },
-    { label: "Open Balances", value: formatMoney(draftEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${draftEntries.length} drafts`, trendTone: "down", icon: "receipt" },
-    { label: "Recent Paid", value: formatMoney(paidEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${paidEntries.length} logged`, trendTone: "neutral", icon: "card" },
-    { label: "Paper Trail Drafts", value: String(reviewPapers.length), trend: "Needs review", trendTone: "neutral", icon: "edit" },
-  ];
-}
-
-function Icon({ name }: { name: IconName }) {
-  const paths: Record<IconName, ReactNode> = {
-    grid: (
-      <>
-        <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h3A1.5 1.5 0 0 1 10 5.5v3A1.5 1.5 0 0 1 8.5 10h-3A1.5 1.5 0 0 1 4 8.5z" />
-        <path d="M14 5.5A1.5 1.5 0 0 1 15.5 4h3A1.5 1.5 0 0 1 20 5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 14 8.5z" />
-        <path d="M4 15.5A1.5 1.5 0 0 1 5.5 14h3a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 8.5 20h-3A1.5 1.5 0 0 1 4 18.5z" />
-        <path d="M14 15.5a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a1.5 1.5 0 0 1-1.5-1.5z" />
-      </>
-    ),
-    clipboard: (
-      <>
-        <path d="M9 5h6" />
-        <path d="M9 4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6H9z" />
-        <path d="M7 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1" />
-        <path d="M8 12h8" />
-        <path d="M8 16h5" />
-      </>
-    ),
-    dollar: (
-      <>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 7v10" />
-        <path d="M15 9.5C14.2 8.7 13.2 8.3 12 8.3c-1.8 0-3 .8-3 2 0 1.4 1.4 1.8 3 2.1s3 .7 3 2.1c0 1.2-1.2 2-3 2-1.3 0-2.4-.4-3.2-1.3" />
-      </>
-    ),
-    file: (
-      <>
-        <path d="M6 3h8l4 4v14H6z" />
-        <path d="M14 3v5h5" />
-        <path d="M9 13h6" />
-        <path d="M9 17h6" />
-      </>
-    ),
-    bell: (
-      <>
-        <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16z" />
-        <path d="M10 20a2 2 0 0 0 4 0" />
-      </>
-    ),
-    people: (
-      <>
-        <path d="M16 11a4 4 0 1 0-8 0" />
-        <path d="M4 20a8 8 0 0 1 16 0" />
-        <path d="M19 11.5a3 3 0 0 1 3 3" />
-        <path d="M2 14.5a3 3 0 0 1 3-3" />
-      </>
-    ),
-    scan: (
-      <>
-        <path d="M4 7V4h3" />
-        <path d="M17 4h3v3" />
-        <path d="M20 17v3h-3" />
-        <path d="M7 20H4v-3" />
-        <path d="M8 12h8" />
-      </>
-    ),
-    receipt: (
-      <>
-        <path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1z" />
-        <path d="M9 8h6" />
-        <path d="M9 12h6" />
-        <path d="M9 16h4" />
-      </>
-    ),
-    card: (
-      <>
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18" />
-        <path d="M7 15h2" />
-      </>
-    ),
-    edit: (
-      <>
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
-      </>
-    ),
-    image: (
-      <>
-        <rect x="4" y="5" width="16" height="14" rx="2" />
-        <path d="M8 13l2.5-2.5L15 15" />
-        <path d="M14 13l1.5-1.5L20 16" />
-        <circle cx="9" cy="9" r="1" />
-      </>
-    ),
-    plus: (
-      <>
-        <path d="M12 5v14" />
-        <path d="M5 12h14" />
-      </>
-    ),
-    briefcase: (
-      <>
-        <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-        <path d="M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
-        <path d="M4 12h16" />
-      </>
-    ),
-  };
-
-  return (
-    <svg aria-hidden="true" className="icon" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-      {paths[name]}
-    </svg>
-  );
-}
-
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Icon } from "./components/Icon";
+import { AssetsWorkspace } from "./components/AssetsWorkspace";
+import { CommandWorkspace } from "./components/CommandWorkspace";
+import { LedgerWorkspace } from "./components/LedgerWorkspace";
+import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
+import { Sidebar } from "./components/Sidebar";
+import { QuestComposer, Topbar } from "./components/Topbar";
+import {
+  ASSETS_STORAGE_KEY,
+  getQuestTypePreset,
+  PEOPLE_STORAGE_KEY,
+  REMINDERS_STORAGE_KEY,
+  seedAssets,
+  seedPeople,
+  seedQuests,
+  seedReminders,
+  STORAGE_KEY,
+} from "./data";
+import type { AppView, Asset, LedgerState, PaperItem, Person, Quest, QuestType, Reminder, StepState } from "./types";
+import { formatMoney, getMoneyRows, getMonthlyProjection, parseMoney } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
@@ -811,331 +429,57 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar" aria-label="Primary">
-        <div className="brand">
-          <span className="brand-mark">SQ</span>
-          <div>
-            <strong>SideQuest HQ</strong>
-            <span>Private command center</span>
-          </div>
-        </div>
-
-        <nav className="nav-list">
-          {appViews.map((view) => (
-            <button
-              className={`nav-item${activeView === view.label ? " nav-item-active" : ""}`}
-              key={view.label}
-              onClick={() => setActiveView(view.label)}
-              type="button"
-            >
-              <Icon name={view.icon} />
-              <span>{view.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <span className="status-dot" />
-          <span>Local prototype</span>
-        </div>
-      </aside>
+      <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
       <section className="workspace">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">{activeView}</p>
-            <h1>{activeView === "Command" ? "Today's side quests" : `${activeView} workspace`}</h1>
-          </div>
-          <div className="topbar-actions">
-            <button type="button" className="icon-button" aria-label="Scan paper trail"><Icon name="scan" />Scan</button>
-            <button type="button" className="primary-button" onClick={() => setShowQuestComposer((isOpen) => !isOpen)}>New Quest</button>
-          </div>
-        </header>
+        <Topbar activeView={activeView} onToggleQuestComposer={() => setShowQuestComposer((isOpen) => !isOpen)} />
 
         {showQuestComposer ? (
-          <form className="quest-composer" onSubmit={addQuest}>
-            <input
-              aria-label="Quest name"
-              onChange={(event) => setQuestDraft((draft) => ({ ...draft, name: event.target.value }))}
-              placeholder="Quest name"
-              value={questDraft.name}
-            />
-            <select
-              aria-label="Quest type"
-              onChange={(event) => setQuestDraft((draft) => ({ ...draft, type: event.target.value as QuestType }))}
-              value={questDraft.type}
-            >
-              {questTypePresets.map((preset) => (
-                <option key={preset.type}>{preset.type}</option>
-              ))}
-            </select>
-            <input
-              aria-label="Tracked value"
-              onChange={(event) => setQuestDraft((draft) => ({ ...draft, value: event.target.value }))}
-              placeholder="$0 tracked"
-              value={questDraft.value}
-            />
-            <input
-              aria-label="Next check"
-              onChange={(event) => setQuestDraft((draft) => ({ ...draft, due: event.target.value }))}
-              placeholder="Next check"
-              value={questDraft.due}
-            />
-            <button type="submit">Add</button>
-          </form>
+          <QuestComposer draft={questDraft} onChange={setQuestDraft} onSubmit={addQuest} />
         ) : null}
 
         {activeView === "Command" ? (
-          <>
-        <section className="summary-strip" aria-label="Money summary">
-          {moneyRows.map((metric) => (
-            <div className="metric" key={metric.label}>
-              <span><Icon name={metric.icon} />{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small data-trend={metric.trendTone}>{metric.trend}</small>
-            </div>
-          ))}
-        </section>
-
-        <section className="dashboard-grid" id="command">
-          <div className="panel panel-large">
-            <div className="panel-header">
-              <h2>Needs Attention</h2>
-              <span>{activeReminders.length} active</span>
-            </div>
-            <form className="reminder-form" onSubmit={addReminder}>
-              <input
-                aria-label="Reminder label"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, label: event.target.value }))}
-                placeholder={`Remind me for ${selectedQuest.name}`}
-                value={reminderDraft.label}
-              />
-              <input
-                aria-label="Reminder due"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, due: event.target.value }))}
-                placeholder="Due"
-                value={reminderDraft.due}
-              />
-              <select
-                aria-label="Reminder priority"
-                onChange={(event) => setReminderDraft((draft) => ({ ...draft, priority: event.target.value as Reminder["priority"] }))}
-                value={reminderDraft.priority}
-              >
-                <option>Quiet</option>
-                <option>Normal</option>
-                <option>Important</option>
-              </select>
-              <button aria-label="Add reminder" type="submit">+</button>
-            </form>
-            <div className="attention-list">
-              {activeReminders.map((reminder) => (
-                <article className="attention-item" key={reminder.label}>
-                  <button className="task-check" onClick={() => toggleReminderDone(reminder.label, reminder.quest)} type="button" aria-label={`Complete ${reminder.label}`} />
-                  <div>
-                    <strong>{reminder.label}</strong>
-                    <span>{reminder.quest}</span>
-                  </div>
-                  <div className="attention-meta">
-                    <span>{reminder.due}</span>
-                    <b data-priority={reminder.priority}>{reminder.priority}</b>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel" id="paper-trail">
-            <div className="panel-header">
-              <h2>Paper Trail</h2>
-              <span>AI review queue</span>
-            </div>
-            <div className="paper-list">
-              {paperQueue.map((item) => (
-                <article className="paper-item" key={item.title}>
-                  <span className="paper-icon"><Icon name={item.kind === "image" ? "image" : "file"} /></span>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>{item.source}</span>
-                  </div>
-                  <div>
-                    <b>{item.amount}</b>
-                    <span>{item.state}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="command-pulse" aria-label="Workspace pulse">
-          {commandPulse.map((item) => (
-            <button className="pulse-card" key={item.label} onClick={() => setActiveView(item.view)} type="button">
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
-              <small>{item.detail}</small>
-            </button>
-          ))}
-        </section>
-
-          </>
+          <CommandWorkspace
+            activeReminders={activeReminders}
+            commandPulse={commandPulse}
+            moneyRows={moneyRows}
+            onAddReminder={addReminder}
+            onReminderChange={setReminderDraft}
+            onToggleReminder={toggleReminderDone}
+            paperQueue={paperQueue}
+            reminderDraft={reminderDraft}
+            selectedQuest={selectedQuest}
+            setActiveView={setActiveView}
+          />
         ) : null}
-
         {activeView === "Ledger" ? (
-        <section className="ledger-section panel">
-          <div className="panel-header">
-            <h2>Ledger</h2>
-            <span>{ledgerRows.length} entries</span>
-          </div>
-
-          <div className="ledger-board">
-            <form className="ledger-form" onSubmit={addLedgerEntry}>
-              <select
-                aria-label="Ledger quest"
-                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
-                value={selectedQuestIndex}
-              >
-                {questList.map((quest, index) => (
-                  <option key={quest.name} value={index}>{quest.name}</option>
-                ))}
-              </select>
-              <input
-                aria-label="Ledger label"
-                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, label: event.target.value }))}
-                placeholder="Ledger label"
-                value={ledgerDraft.label}
-              />
-              <input
-                aria-label="Ledger amount"
-                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, amount: event.target.value }))}
-                placeholder="$0"
-                value={ledgerDraft.amount}
-              />
-              <select
-                aria-label="Ledger state"
-                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, state: event.target.value as LedgerState }))}
-                value={ledgerDraft.state}
-              >
-                <option>Draft</option>
-                <option>Open</option>
-                <option>Paid</option>
-              </select>
-              <button type="submit">Add</button>
-            </form>
-
-            <div className="ledger-total-strip">
-              <div>
-                <span>Open</span>
-                <strong>{formatMoney(ledgerSummary.open)}</strong>
-              </div>
-              <div>
-                <span>Draft</span>
-                <strong>{formatMoney(ledgerSummary.draft)}</strong>
-              </div>
-              <div>
-                <span>Paid</span>
-                <strong>{formatMoney(ledgerSummary.paid)}</strong>
-              </div>
-            </div>
-
-            <div className="ledger-list">
-              {ledgerRows.map((entry) => (
-                <article className="ledger-row" data-state={entry.state} key={`${entry.questName}-${entry.label}-${entry.entryIndex}`}>
-                  <div>
-                    <span>{entry.questType}</span>
-                    <strong>{entry.questName}</strong>
-                  </div>
-                  <div>
-                    <span>{entry.label}</span>
-                    <strong>{entry.amount}</strong>
-                  </div>
-                  <button data-state={entry.state} onClick={() => cycleLedgerStateAt(entry.questIndex, entry.entryIndex)} type="button">{entry.state}</button>
-                  <button className="open-quest-button" onClick={() => { setSelectedQuestIndex(entry.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <LedgerWorkspace
+            draft={ledgerDraft}
+            ledgerRows={ledgerRows}
+            ledgerSummary={ledgerSummary}
+            onAddLedgerEntry={addLedgerEntry}
+            onCycleLedgerState={cycleLedgerStateAt}
+            onDraftChange={setLedgerDraft}
+            onOpenQuest={(questIndex) => { setSelectedQuestIndex(questIndex); setActiveView("Quests"); }}
+            questList={questList}
+            selectedQuestIndex={selectedQuestIndex}
+            setSelectedQuestIndex={setSelectedQuestIndex}
+          />
         ) : null}
-
         {activeView === "Paper Trail" ? (
-        <section className="paper-workspace panel">
-          <div className="panel-header">
-            <h2>Paper Trail</h2>
-            <span>{paperRows.length} items</span>
-          </div>
-
-          <div className="paper-board">
-            <form className="paper-form" onSubmit={addPaperItem}>
-              <select
-                aria-label="Paper trail quest"
-                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
-                value={selectedQuestIndex}
-              >
-                {questList.map((quest, index) => (
-                  <option key={quest.name} value={index}>{quest.name}</option>
-                ))}
-              </select>
-              <input
-                aria-label="Paper trail label"
-                onChange={(event) => setPaperDraft((draft) => ({ ...draft, label: event.target.value }))}
-                placeholder="Receipt, photo, PDF..."
-                value={paperDraft.label}
-              />
-              <input
-                aria-label="Paper trail meta"
-                onChange={(event) => setPaperDraft((draft) => ({ ...draft, meta: event.target.value }))}
-                placeholder="Photo, PDF, screenshot..."
-                value={paperDraft.meta}
-              />
-              <select
-                aria-label="Paper trail state"
-                onChange={(event) => setPaperDraft((draft) => ({ ...draft, state: event.target.value }))}
-                value={paperDraft.state}
-              >
-                <option>Review</option>
-                <option>Ready</option>
-                <option>Filed</option>
-                <option>Draft</option>
-              </select>
-              <button type="submit">Add</button>
-            </form>
-
-            <div className="paper-total-strip">
-              <div>
-                <span>Needs review</span>
-                <strong>{paperSummary.reviewCount}</strong>
-              </div>
-              <div>
-                <span>Ready</span>
-                <strong>{paperSummary.readyCount}</strong>
-              </div>
-              <div>
-                <span>Filed</span>
-                <strong>{paperSummary.filedCount}</strong>
-              </div>
-            </div>
-
-            <div className="paper-workspace-list">
-              {paperRows.map((paper) => (
-                <article className="paper-workspace-row" key={`${paper.questName}-${paper.label}-${paper.paperIndex}`}>
-                  <span className="paper-icon"><Icon name={paper.kind === "image" ? "image" : "file"} /></span>
-                  <div>
-                    <span>{paper.questType}</span>
-                    <strong>{paper.questName}</strong>
-                  </div>
-                  <div>
-                    <span>{paper.label}</span>
-                    <strong>{paper.meta}</strong>
-                  </div>
-                  <button data-state={paper.state} onClick={() => cyclePaperStateAt(paper.questIndex, paper.paperIndex)} type="button">{paper.state}</button>
-                  <button className="open-quest-button" onClick={() => { setSelectedQuestIndex(paper.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <PaperTrailWorkspace
+            draft={paperDraft}
+            onAddPaperItem={addPaperItem}
+            onCyclePaperState={cyclePaperStateAt}
+            onDraftChange={setPaperDraft}
+            onOpenQuest={(questIndex) => { setSelectedQuestIndex(questIndex); setActiveView("Quests"); }}
+            paperRows={paperRows}
+            paperSummary={paperSummary}
+            questList={questList}
+            selectedQuestIndex={selectedQuestIndex}
+            setSelectedQuestIndex={setSelectedQuestIndex}
+          />
         ) : null}
-
         {activeView === "Reminders" ? (
         <section className="reminders-workspace panel">
           <div className="panel-header">
@@ -1499,82 +843,14 @@ export default function Home() {
         ) : null}
 
         {activeView === "Assets" ? (
-        <section className="asset-section panel">
-          <div className="panel-header">
-            <h2>Assets</h2>
-            <span>{formatMoney(assetSummary.monthlyProjected)} projected/mo</span>
-          </div>
-          <div className="asset-body">
-            <form className="asset-form" onSubmit={addAsset}>
-              <input
-                aria-label="Asset name"
-                onChange={(event) => setAssetDraft((draft) => ({ ...draft, name: event.target.value }))}
-                placeholder="Asset name"
-                value={assetDraft.name}
-              />
-              <select
-                aria-label="Asset type"
-                onChange={(event) => setAssetDraft((draft) => ({ ...draft, type: event.target.value as Asset["type"] }))}
-                value={assetDraft.type}
-              >
-                <option>Rental</option>
-                <option>Business</option>
-                <option>Retirement</option>
-                <option>Build</option>
-                <option>Other</option>
-              </select>
-              <input
-                aria-label="Asset value"
-                onChange={(event) => setAssetDraft((draft) => ({ ...draft, value: event.target.value }))}
-                placeholder="Value / basis"
-                value={assetDraft.value}
-              />
-              <input
-                aria-label="Projected earnings"
-                onChange={(event) => setAssetDraft((draft) => ({ ...draft, projected: event.target.value }))}
-                placeholder="Projected"
-                value={assetDraft.projected}
-              />
-              <select
-                aria-label="Projection frequency"
-                onChange={(event) => setAssetDraft((draft) => ({ ...draft, frequency: event.target.value as Asset["frequency"] }))}
-                value={assetDraft.frequency}
-              >
-                <option>Monthly</option>
-                <option>Annual</option>
-                <option>One-time</option>
-              </select>
-              <button type="submit">Add</button>
-            </form>
-
-            <div className="asset-summary">
-              <div>
-                <span>Producing</span>
-                <strong>{assetSummary.activeCount}</strong>
-              </div>
-              <div>
-                <span>Projected yearly</span>
-                <strong>{formatMoney(assetSummary.annualProjected)}</strong>
-              </div>
-            </div>
-
-            <div className="asset-list">
-              {assetList.slice(0, 4).map((asset, index) => (
-                <article className="asset-row" key={`${asset.name}-${asset.type}`}>
-                  <div>
-                    <span>{asset.type}</span>
-                    <strong>{asset.name}</strong>
-                  </div>
-                  <div>
-                    <span>{asset.value}</span>
-                    <strong>{asset.projected} {asset.frequency.toLowerCase()}</strong>
-                  </div>
-                  <button data-status={asset.status} onClick={() => cycleAssetStatus(index)} type="button">{asset.status}</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <AssetsWorkspace
+            assetDraft={assetDraft}
+            assetList={assetList}
+            assetSummary={assetSummary}
+            onAddAsset={addAsset}
+            onAssetDraftChange={setAssetDraft}
+            onCycleAssetStatus={cycleAssetStatus}
+          />
         ) : null}
       </section>
       <button className="fab" type="button" aria-label="Quick add"><Icon name="plus" /></button>
