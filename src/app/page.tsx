@@ -423,6 +423,23 @@ export default function Home() {
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
   const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
+  const reminderRows = useMemo(
+    () =>
+      reminderList.map((reminder, reminderIndex) => ({
+        ...reminder,
+        reminderIndex,
+        questIndex: questList.findIndex((quest) => quest.name === reminder.quest),
+      })),
+    [questList, reminderList],
+  );
+  const reminderSummary = useMemo(
+    () => ({
+      active: reminderRows.filter((reminder) => !reminder.done).length,
+      done: reminderRows.filter((reminder) => reminder.done).length,
+      important: reminderRows.filter((reminder) => !reminder.done && reminder.priority === "Important").length,
+    }),
+    [reminderRows],
+  );
   const ledgerRows = useMemo(
     () =>
       questList.flatMap((quest, questIndex) =>
@@ -751,12 +768,13 @@ export default function Home() {
   }
 
   function toggleReminderDone(reminderLabel: string, questName: string) {
+    const reminderIndex = reminderList.findIndex((reminder) => reminder.label === reminderLabel && reminder.quest === questName);
+    if (reminderIndex !== -1) toggleReminderDoneAt(reminderIndex);
+  }
+
+  function toggleReminderDoneAt(reminderIndex: number) {
     setReminderList((current) =>
-      current.map((reminder) =>
-        reminder.label === reminderLabel && reminder.quest === questName
-          ? { ...reminder, done: !reminder.done }
-          : reminder,
-      ),
+      current.map((reminder, index) => (index === reminderIndex ? { ...reminder, done: !reminder.done } : reminder)),
     );
   }
 
@@ -1077,7 +1095,85 @@ export default function Home() {
         </section>
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" ? (
+        {activeView === "Reminders" ? (
+        <section className="reminders-workspace panel">
+          <div className="panel-header">
+            <h2>Reminders</h2>
+            <span>{reminderSummary.active} active</span>
+          </div>
+
+          <div className="reminders-board">
+            <form className="reminders-workspace-form" onSubmit={addReminder}>
+              <select
+                aria-label="Reminder quest"
+                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
+                value={selectedQuestIndex}
+              >
+                {questList.map((quest, index) => (
+                  <option key={quest.name} value={index}>{quest.name}</option>
+                ))}
+              </select>
+              <input
+                aria-label="Reminder label"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, label: event.target.value }))}
+                placeholder="Reminder"
+                value={reminderDraft.label}
+              />
+              <input
+                aria-label="Reminder due"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, due: event.target.value }))}
+                placeholder="Due"
+                value={reminderDraft.due}
+              />
+              <select
+                aria-label="Reminder priority"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, priority: event.target.value as Reminder["priority"] }))}
+                value={reminderDraft.priority}
+              >
+                <option>Quiet</option>
+                <option>Normal</option>
+                <option>Important</option>
+              </select>
+              <button type="submit">Add</button>
+            </form>
+
+            <div className="reminder-total-strip">
+              <div>
+                <span>Important</span>
+                <strong>{reminderSummary.important}</strong>
+              </div>
+              <div>
+                <span>Active</span>
+                <strong>{reminderSummary.active}</strong>
+              </div>
+              <div>
+                <span>Done</span>
+                <strong>{reminderSummary.done}</strong>
+              </div>
+            </div>
+
+            <div className="reminder-workspace-list">
+              {reminderRows.map((reminder) => (
+                <article className="reminder-workspace-row" data-done={reminder.done} key={`${reminder.quest}-${reminder.label}-${reminder.reminderIndex}`}>
+                  <button className="task-check" onClick={() => toggleReminderDoneAt(reminder.reminderIndex)} type="button" aria-label={`${reminder.done ? "Reopen" : "Complete"} ${reminder.label}`} />
+                  <div>
+                    <span>{reminder.quest}</span>
+                    <strong>{reminder.label}</strong>
+                  </div>
+                  <div>
+                    <span>{reminder.due}</span>
+                    <strong data-priority={reminder.priority}>{reminder.priority}</strong>
+                  </div>
+                  <button data-state={reminder.done ? "Done" : "Open"} onClick={() => toggleReminderDoneAt(reminder.reminderIndex)} type="button">{reminder.done ? "Done" : "Open"}</button>
+                  <button className="open-quest-button" onClick={() => { if (reminder.questIndex >= 0) setSelectedQuestIndex(reminder.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+        ) : null}
+
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" ? (
         <section className="quest-section">
           <div className="section-heading">
             <div>
