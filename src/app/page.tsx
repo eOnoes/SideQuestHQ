@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 type LedgerState = "Paid" | "Open" | "Draft";
 type StepState = "Done" | "Now" | "Next";
 type QuestType = "Rental Property" | "Customer Build" | "Build Project" | "Investment" | "Personal Plan" | "Side Quest";
+type AppView = "Command" | "Quests" | "Assets" | "Ledger" | "Paper Trail" | "Reminders" | "People";
 
 type Quest = {
   name: string;
@@ -248,6 +249,16 @@ const seedAssets: Asset[] = [
 
 type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus" | "briefcase";
 
+const appViews: Array<{ label: AppView; icon: IconName }> = [
+  { label: "Command", icon: "grid" },
+  { label: "Quests", icon: "clipboard" },
+  { label: "Assets", icon: "briefcase" },
+  { label: "Ledger", icon: "dollar" },
+  { label: "Paper Trail", icon: "file" },
+  { label: "Reminders", icon: "bell" },
+  { label: "People", icon: "people" },
+];
+
 function parseMoney(value: string) {
   const amount = Number(value.replace(/[^0-9.-]/g, ""));
   return Number.isFinite(amount) ? amount : 0;
@@ -397,6 +408,7 @@ export default function Home() {
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
   const [hasLoadedStoredData, setHasLoadedStoredData] = useState(false);
   const [showQuestComposer, setShowQuestComposer] = useState(false);
+  const [activeView, setActiveView] = useState<AppView>("Command");
   const [questDraft, setQuestDraft] = useState<{ name: string; type: QuestType; value: string; due: string }>({ name: "", type: "Rental Property", value: "", due: "" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
@@ -517,6 +529,7 @@ export default function Home() {
     setSelectedQuestIndex(questList.length);
     setQuestDraft({ name: "", type: "Rental Property", value: "", due: "" });
     setShowQuestComposer(false);
+    setActiveView("Quests");
   }
 
   function addLedgerEntry(event: FormEvent<HTMLFormElement>) {
@@ -699,13 +712,17 @@ export default function Home() {
         </div>
 
         <nav className="nav-list">
-          <a className="nav-item nav-item-active" href="#command"><Icon name="grid" /><span>Command</span></a>
-          <a className="nav-item" href="#quests"><Icon name="clipboard" /><span>Quests</span></a>
-          <a className="nav-item" href="#assets"><Icon name="briefcase" /><span>Assets</span></a>
-          <a className="nav-item" href="#ledger"><Icon name="dollar" /><span>Ledger</span></a>
-          <a className="nav-item" href="#paper-trail"><Icon name="file" /><span>Paper Trail</span></a>
-          <a className="nav-item" href="#reminders"><Icon name="bell" /><span>Reminders</span></a>
-          <a className="nav-item" href="#people"><Icon name="people" /><span>People</span></a>
+          {appViews.map((view) => (
+            <button
+              className={`nav-item${activeView === view.label ? " nav-item-active" : ""}`}
+              key={view.label}
+              onClick={() => setActiveView(view.label)}
+              type="button"
+            >
+              <Icon name={view.icon} />
+              <span>{view.label}</span>
+            </button>
+          ))}
         </nav>
 
         <div className="sidebar-footer">
@@ -717,8 +734,8 @@ export default function Home() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Command</p>
-            <h1>Today&apos;s side quests</h1>
+            <p className="eyebrow">{activeView}</p>
+            <h1>{activeView === "Command" ? "Today's side quests" : `${activeView} workspace`}</h1>
           </div>
           <div className="topbar-actions">
             <button type="button" className="icon-button" aria-label="Scan paper trail"><Icon name="scan" />Scan</button>
@@ -759,6 +776,8 @@ export default function Home() {
           </form>
         ) : null}
 
+        {activeView === "Command" ? (
+          <>
         <section className="summary-strip" aria-label="Money summary">
           {moneyRows.map((metric) => (
             <div className="metric" key={metric.label}>
@@ -839,7 +858,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="quest-section" id="quests">
+          </>
+        ) : null}
+
+        {activeView !== "Command" && activeView !== "Assets" ? (
+        <section className="quest-section">
           <div className="section-heading">
             <div>
               <p className="eyebrow">Active Quests</p>
@@ -1045,7 +1068,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="asset-section panel" id="assets">
+        ) : null}
+
+        {activeView === "Assets" ? (
+        <section className="asset-section panel">
           <div className="panel-header">
             <h2>Assets</h2>
             <span>{formatMoney(assetSummary.monthlyProjected)} projected/mo</span>
@@ -1121,6 +1147,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        ) : null}
       </section>
       <button className="fab" type="button" aria-label="Quick add"><Icon name="plus" /></button>
     </main>

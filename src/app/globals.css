@@ -163,8 +163,11 @@ select option {
   gap: 16px;
   height: 46px;
   padding: 0 12px;
+  border: 0;
   color: var(--muted);
+  background: transparent;
   text-decoration: none;
+  text-align: left;
   border-radius: var(--corner);
   transition: background 0.16s ease, color 0.16s ease;
 }
