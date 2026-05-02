@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 
 type Quest = {
   name: string;
@@ -8,6 +10,14 @@ type Quest = {
   value: string;
   progress: number;
   tone: "active" | "discovery" | "progress";
+  owner: string;
+  target: string;
+  due: string;
+  summary: string;
+  ledger: Array<{ label: string; amount: string; state: "Paid" | "Open" | "Draft" }>;
+  papers: Array<{ label: string; meta: string; state: string }>;
+  steps: Array<{ label: string; state: "Done" | "Now" | "Next" }>;
+  notes: string[];
 };
 
 type Reminder = {
@@ -34,6 +44,25 @@ const quests: Quest[] = [
     value: "$1,450 expected",
     progress: 75,
     tone: "active",
+    owner: "Thomas",
+    target: "Monthly rental health",
+    due: "Next check: Tomorrow",
+    summary: "Rent is expected, inspection is the next move, and this property needs a clean paper trail for maintenance spend.",
+    ledger: [
+      { label: "May rent", amount: "$1,450", state: "Open" },
+      { label: "Gutter quote", amount: "$225", state: "Draft" },
+      { label: "April rent", amount: "$1,450", state: "Paid" },
+    ],
+    papers: [
+      { label: "Lease packet", meta: "PDF linked", state: "Filed" },
+      { label: "Gutter photos", meta: "3 images", state: "Review" },
+    ],
+    steps: [
+      { label: "Lease stored", state: "Done" },
+      { label: "Rent receipt", state: "Now" },
+      { label: "Inspection", state: "Next" },
+    ],
+    notes: ["Ask tenant for receipt screenshot if ACH clears late.", "Bundle gutter photos with quote before approving work."],
   },
   {
     name: "AI Estimate Builder",
@@ -43,6 +72,25 @@ const quests: Quest[] = [
     value: "$3,200 quoted",
     progress: 30,
     tone: "discovery",
+    owner: "Customer build",
+    target: "Quote and scope lock",
+    due: "Next check: Today 4:00 PM",
+    summary: "Needs a clean milestone quote from rough notes, then a customer update before the day closes.",
+    ledger: [
+      { label: "Discovery deposit", amount: "$500", state: "Paid" },
+      { label: "Milestone 1", amount: "$1,200", state: "Draft" },
+      { label: "Final delivery", amount: "$1,500", state: "Draft" },
+    ],
+    papers: [
+      { label: "Deposit screenshot", meta: "Image upload", state: "Ready" },
+      { label: "Scope notes", meta: "Manual notes", state: "Draft" },
+    ],
+    steps: [
+      { label: "Discovery call", state: "Done" },
+      { label: "Milestone quote", state: "Now" },
+      { label: "Customer approval", state: "Next" },
+    ],
+    notes: ["Convert build notes into three clear phases.", "Keep quote friendly but exact: scope, payment points, delivery window."],
   },
   {
     name: "Shop Cabinet Run",
@@ -52,6 +100,25 @@ const quests: Quest[] = [
     value: "$780 open",
     progress: 60,
     tone: "progress",
+    owner: "Personal build",
+    target: "Close materials and balance",
+    due: "Next check: This week",
+    summary: "Materials are mostly known; this needs receipt cleanup and final balance confirmation before calling it done.",
+    ledger: [
+      { label: "Materials paid", amount: "$826", state: "Paid" },
+      { label: "Customer balance", amount: "$780", state: "Open" },
+      { label: "Hardware run", amount: "$92", state: "Draft" },
+    ],
+    papers: [
+      { label: "Home Depot receipt", meta: "Photo upload", state: "Review" },
+      { label: "Lumber quote", meta: "PDF linked", state: "Filed" },
+    ],
+    steps: [
+      { label: "Design approved", state: "Done" },
+      { label: "Receipt review", state: "Now" },
+      { label: "Final invoice", state: "Next" },
+    ],
+    notes: ["Confirm whether hardware is included in current material total.", "Photo scan should create ledger draft, not auto-approve."],
   },
 ];
 
@@ -184,6 +251,9 @@ function Icon({ name }: { name: IconName }) {
 }
 
 export default function Home() {
+  const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
+  const selectedQuest = quests[selectedQuestIndex];
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label="Primary">
@@ -287,24 +357,87 @@ export default function Home() {
             <button type="button" className="ghost-button">View All</button>
           </div>
 
-          <div className="quest-grid">
-            {quests.map((quest) => (
-              <article className="quest-card" key={quest.name}>
-                <div className="quest-card-top">
-                  <span>{quest.type}</span>
-                  <b data-status={quest.tone}>{quest.status}</b>
+          <div className="quest-focus-grid">
+            <div className="quest-picker" aria-label="Quest selector">
+              {quests.map((quest, index) => (
+                <button
+                  className="quest-card"
+                  data-selected={index === selectedQuestIndex}
+                  key={quest.name}
+                  onClick={() => setSelectedQuestIndex(index)}
+                  type="button"
+                >
+                  <div className="quest-card-top">
+                    <span>{quest.type}</span>
+                    <b data-status={quest.tone}>{quest.status}</b>
+                  </div>
+                  <h3>{quest.name}</h3>
+                  <p>{quest.nextMove}</p>
+                  <div className="progress-bar" aria-label={`${quest.name} progress`}>
+                    <span style={{ width: `${quest.progress}%` }} />
+                  </div>
+                  <div className="quest-card-bottom">
+                    <span>{quest.due}</span>
+                    <strong>{quest.value}</strong>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <article className="quest-detail" aria-live="polite">
+              <div className="quest-detail-main">
+                <div>
+                  <span className="detail-kicker">{selectedQuest.owner}</span>
+                  <h3>{selectedQuest.name}</h3>
+                  <p>{selectedQuest.summary}</p>
                 </div>
-                <h3>{quest.name}</h3>
-                <p>{quest.nextMove}</p>
-                <div className="progress-bar" aria-label={`${quest.name} progress`}>
-                  <span style={{ width: `${quest.progress}%` }} />
+                <div className="detail-value">
+                  <span>{selectedQuest.target}</span>
+                  <strong>{selectedQuest.progress}%</strong>
                 </div>
-                <div className="quest-card-bottom">
-                  <span>Tracked value</span>
-                  <strong>{quest.value}</strong>
-                </div>
-              </article>
-            ))}
+              </div>
+
+              <div className="detail-columns">
+                <section className="detail-column">
+                  <h4>Ledger</h4>
+                  {selectedQuest.ledger.map((entry) => (
+                    <div className="mini-row" key={entry.label}>
+                      <span>{entry.label}</span>
+                      <strong>{entry.amount}</strong>
+                      <b data-state={entry.state}>{entry.state}</b>
+                    </div>
+                  ))}
+                </section>
+
+                <section className="detail-column">
+                  <h4>Paper Trail</h4>
+                  {selectedQuest.papers.map((paper) => (
+                    <div className="mini-row" key={paper.label}>
+                      <span>{paper.label}</span>
+                      <strong>{paper.meta}</strong>
+                      <b data-state={paper.state}>{paper.state}</b>
+                    </div>
+                  ))}
+                </section>
+
+                <section className="detail-column">
+                  <h4>Next Steps</h4>
+                  {selectedQuest.steps.map((step) => (
+                    <div className="step-row" data-step={step.state} key={step.label}>
+                      <span />
+                      <strong>{step.label}</strong>
+                      <b>{step.state}</b>
+                    </div>
+                  ))}
+                </section>
+              </div>
+
+              <div className="note-strip">
+                {selectedQuest.notes.map((note) => (
+                  <span key={note}>{note}</span>
+                ))}
+              </div>
+            </article>
           </div>
         </section>
       </section>
