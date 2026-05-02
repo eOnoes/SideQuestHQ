@@ -397,6 +397,10 @@ export default function Home() {
     );
   }
 
+  function removeReminderAt(reminderIndex: number) {
+    setReminderList((current) => current.filter((_, index) => index !== reminderIndex));
+  }
+
   return (
     <main className="app-shell">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
@@ -471,6 +475,7 @@ export default function Home() {
               setActiveView("Quests");
             }}
             onSelectedQuestIndexChange={setSelectedQuestIndex}
+            onRemoveReminder={removeReminderAt}
             onToggleReminder={toggleReminderDoneAt}
             questList={questList}
             reminderRows={reminderRows}

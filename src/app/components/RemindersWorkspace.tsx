@@ -17,6 +17,7 @@ type RemindersWorkspaceProps = {
   onAddReminder: (event: FormEvent<HTMLFormElement>) => void;
   onDraftChange: Dispatch<SetStateAction<ReminderDraft>>;
   onOpenQuest: (questIndex: number) => void;
+  onRemoveReminder: (reminderIndex: number) => void;
   onSelectedQuestIndexChange: (questIndex: number) => void;
   onToggleReminder: (reminderIndex: number) => void;
   questList: Quest[];
@@ -34,6 +35,7 @@ export function RemindersWorkspace({
   onAddReminder,
   onDraftChange,
   onOpenQuest,
+  onRemoveReminder,
   onSelectedQuestIndexChange,
   onToggleReminder,
   questList,
@@ -112,6 +114,7 @@ export function RemindersWorkspace({
               </div>
               <button data-state={reminder.done ? "Done" : "Open"} onClick={() => onToggleReminder(reminder.reminderIndex)} type="button">{reminder.done ? "Done" : "Open"}</button>
               <button className="open-quest-button" onClick={() => onOpenQuest(reminder.questIndex)} type="button">Open Quest</button>
+              <button className="remove-reminder-button" onClick={() => onRemoveReminder(reminder.reminderIndex)} type="button" aria-label={`Remove ${reminder.label}`}>Remove</button>
             </article>
           ))}
         </div>

@@ -416,7 +416,7 @@
 
 .reminder-workspace-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) minmax(150px, 0.6fr) auto auto;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(150px, 0.6fr) auto auto auto;
   align-items: center;
   gap: 10px;
   min-height: 52px;
@@ -476,6 +476,10 @@
 
 .reminder-workspace-row button[data-state="Open"] {
   color: var(--red);
+}
+
+.remove-reminder-button {
+  color: var(--red) !important;
 }
 
 .people-workspace {
