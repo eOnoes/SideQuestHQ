@@ -423,6 +423,28 @@ export default function Home() {
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
   const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
+  const ledgerRows = useMemo(
+    () =>
+      questList.flatMap((quest, questIndex) =>
+        quest.ledger.map((entry, entryIndex) => ({
+          ...entry,
+          entryIndex,
+          questIndex,
+          questName: quest.name,
+          questType: quest.type,
+        })),
+      ),
+    [questList],
+  );
+  const ledgerSummary = useMemo(() => {
+    const totalByState = (state: LedgerState) =>
+      ledgerRows.filter((entry) => entry.state === state).reduce((total, entry) => total + parseMoney(entry.amount), 0);
+    return {
+      draft: totalByState("Draft"),
+      open: totalByState("Open"),
+      paid: totalByState("Paid"),
+    };
+  }, [ledgerRows]);
   const assetSummary = useMemo(() => {
     const monthlyProjected = assetList.reduce((total, asset) => total + getMonthlyProjection(asset), 0);
     return {
@@ -581,15 +603,24 @@ export default function Home() {
   }
 
   function cycleLedgerState(entryIndex: number) {
+    cycleLedgerStateAt(selectedQuestIndex, entryIndex);
+  }
+
+  function cycleLedgerStateAt(questIndex: number, entryIndex: number) {
     const order: LedgerState[] = ["Draft", "Open", "Paid"];
-    updateSelectedQuest((quest) => ({
-      ...quest,
-      ledger: quest.ledger.map((entry, index) => {
-        if (index !== entryIndex) return entry;
-        const nextState = order[(order.indexOf(entry.state) + 1) % order.length];
-        return { ...entry, state: nextState };
+    setQuestList((current) =>
+      current.map((quest, index) => {
+        if (index !== questIndex) return quest;
+        return {
+          ...quest,
+          ledger: quest.ledger.map((entry, ledgerIndex) => {
+            if (ledgerIndex !== entryIndex) return entry;
+            const nextState = order[(order.indexOf(entry.state) + 1) % order.length];
+            return { ...entry, state: nextState };
+          }),
+        };
       }),
-    }));
+    );
   }
 
   function cyclePaperState(paperIndex: number) {
@@ -861,7 +892,84 @@ export default function Home() {
           </>
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" ? (
+        {activeView === "Ledger" ? (
+        <section className="ledger-section panel">
+          <div className="panel-header">
+            <h2>Ledger</h2>
+            <span>{ledgerRows.length} entries</span>
+          </div>
+
+          <div className="ledger-board">
+            <form className="ledger-form" onSubmit={addLedgerEntry}>
+              <select
+                aria-label="Ledger quest"
+                onChange={(event) => setSelectedQuestIndex(Number(event.target.value))}
+                value={selectedQuestIndex}
+              >
+                {questList.map((quest, index) => (
+                  <option key={quest.name} value={index}>{quest.name}</option>
+                ))}
+              </select>
+              <input
+                aria-label="Ledger label"
+                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, label: event.target.value }))}
+                placeholder="Ledger label"
+                value={ledgerDraft.label}
+              />
+              <input
+                aria-label="Ledger amount"
+                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, amount: event.target.value }))}
+                placeholder="$0"
+                value={ledgerDraft.amount}
+              />
+              <select
+                aria-label="Ledger state"
+                onChange={(event) => setLedgerDraft((draft) => ({ ...draft, state: event.target.value as LedgerState }))}
+                value={ledgerDraft.state}
+              >
+                <option>Draft</option>
+                <option>Open</option>
+                <option>Paid</option>
+              </select>
+              <button type="submit">Add</button>
+            </form>
+
+            <div className="ledger-total-strip">
+              <div>
+                <span>Open</span>
+                <strong>{formatMoney(ledgerSummary.open)}</strong>
+              </div>
+              <div>
+                <span>Draft</span>
+                <strong>{formatMoney(ledgerSummary.draft)}</strong>
+              </div>
+              <div>
+                <span>Paid</span>
+                <strong>{formatMoney(ledgerSummary.paid)}</strong>
+              </div>
+            </div>
+
+            <div className="ledger-list">
+              {ledgerRows.map((entry) => (
+                <article className="ledger-row" data-state={entry.state} key={`${entry.questName}-${entry.label}-${entry.entryIndex}`}>
+                  <div>
+                    <span>{entry.questType}</span>
+                    <strong>{entry.questName}</strong>
+                  </div>
+                  <div>
+                    <span>{entry.label}</span>
+                    <strong>{entry.amount}</strong>
+                  </div>
+                  <button data-state={entry.state} onClick={() => cycleLedgerStateAt(entry.questIndex, entry.entryIndex)} type="button">{entry.state}</button>
+                  <button className="open-quest-button" onClick={() => { setSelectedQuestIndex(entry.questIndex); setActiveView("Quests"); }} type="button">Open Quest</button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+        ) : null}
+
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" ? (
         <section className="quest-section">
           <div className="section-heading">
             <div>
