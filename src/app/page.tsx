@@ -38,7 +38,16 @@ type PaperItem = {
   kind: "image" | "file";
 };
 
+type Person = {
+  name: string;
+  role: string;
+  quest: string;
+  nextTouch: string;
+  status: "Active" | "Waiting" | "Quiet";
+};
+
 const STORAGE_KEY = "sidequest-hq:quests:v1";
+const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
 
 const seedQuests: Quest[] = [
   {
@@ -131,6 +140,12 @@ const reminders: Reminder[] = [
   { label: "Send Friday customer update", quest: "AI Estimate Builder", due: "Today 4:00 PM", priority: "Important" },
   { label: "Check rent payment", quest: "Maple Street Rental", due: "Tomorrow", priority: "Normal" },
   { label: "Review material costs", quest: "Shop Cabinet Run", due: "This week", priority: "Quiet" },
+];
+
+const seedPeople: Person[] = [
+  { name: "Tenant", role: "Maple Street Rental", quest: "Maple Street Rental", nextTouch: "Confirm May receipt", status: "Waiting" },
+  { name: "Estimate customer", role: "Decision maker", quest: "AI Estimate Builder", nextTouch: "Friday update", status: "Active" },
+  { name: "Lumber desk", role: "Vendor", quest: "Shop Cabinet Run", nextTouch: "Quote match", status: "Quiet" },
 ];
 
 type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus";
@@ -273,9 +288,12 @@ export default function Home() {
   const [questDraft, setQuestDraft] = useState({ name: "", type: "Build Project", value: "", due: "" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
+  const [peopleList, setPeopleList] = useState<Person[]>(seedPeople);
+  const [personDraft, setPersonDraft] = useState({ name: "", role: "", nextTouch: "" });
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
+  const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
   const paperQueue = useMemo<PaperItem[]>(() => {
     const items = questList.flatMap((quest) =>
       quest.papers.map((paper) => ({
@@ -299,8 +317,17 @@ export default function Home() {
           setQuestList(parsed);
         }
       }
+
+      const storedPeople = window.localStorage.getItem(PEOPLE_STORAGE_KEY);
+      if (storedPeople) {
+        const parsedPeople = JSON.parse(storedPeople) as Person[];
+        if (Array.isArray(parsedPeople)) {
+          setPeopleList(parsedPeople);
+        }
+      }
     } catch {
       setQuestList(seedQuests);
+      setPeopleList(seedPeople);
     } finally {
       setHasLoadedStoredData(true);
     }
@@ -309,8 +336,9 @@ export default function Home() {
   useEffect(() => {
     if (hasLoadedStoredData) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questList));
+      window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(peopleList));
     }
-  }, [hasLoadedStoredData, questList]);
+  }, [hasLoadedStoredData, peopleList, questList]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -417,6 +445,41 @@ export default function Home() {
 
     updateSelectedQuest((quest) => ({ ...quest, notes: [note, ...quest.notes].slice(0, 4) }));
     setNoteDraft("");
+  }
+
+  function addPerson(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = personDraft.name.trim();
+    if (!name) return;
+
+    setPeopleList((current) => [
+      ...current,
+      {
+        name,
+        role: personDraft.role.trim() || "Contact",
+        quest: selectedQuest.name,
+        nextTouch: personDraft.nextTouch.trim() || "No next touch set",
+        status: "Active",
+      },
+    ]);
+    setPersonDraft({ name: "", role: "", nextTouch: "" });
+  }
+
+  function cyclePersonStatus(personIndex: number) {
+    const order: Person["status"][] = ["Active", "Waiting", "Quiet"];
+    const selectedIndexes = peopleList
+      .map((person, index) => ({ person, index }))
+      .filter(({ person }) => person.quest === selectedQuest.name)
+      .map(({ index }) => index);
+    const targetIndex = selectedIndexes[personIndex];
+    if (targetIndex === undefined) return;
+
+    setPeopleList((current) =>
+      current.map((person, index) => {
+        if (index !== targetIndex) return person;
+        return { ...person, status: order[(order.indexOf(person.status) + 1) % order.length] };
+      }),
+    );
   }
 
   return (
@@ -673,6 +736,44 @@ export default function Home() {
                       <button data-state={paper.state} onClick={() => cyclePaperState(index)} type="button">{paper.state}</button>
                     </div>
                   ))}
+                </section>
+
+                <section className="detail-column" id="people">
+                  <div className="detail-column-head">
+                    <h4>People</h4>
+                    <span>{selectedPeople.length}</span>
+                  </div>
+                  <form className="people-form" onSubmit={addPerson}>
+                    <input
+                      aria-label="Person name"
+                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, name: event.target.value }))}
+                      placeholder="Name"
+                      value={personDraft.name}
+                    />
+                    <input
+                      aria-label="Person role"
+                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, role: event.target.value }))}
+                      placeholder="Role"
+                      value={personDraft.role}
+                    />
+                    <input
+                      aria-label="Next touch"
+                      onChange={(event) => setPersonDraft((draft) => ({ ...draft, nextTouch: event.target.value }))}
+                      placeholder="Next touch"
+                      value={personDraft.nextTouch}
+                    />
+                    <button aria-label="Add person" type="submit">+</button>
+                  </form>
+                  {selectedPeople.length > 0 ? selectedPeople.map((person, index) => (
+                    <div className="person-row" key={`${person.name}-${person.role}`}>
+                      <span>{person.name}</span>
+                      <strong>{person.role}</strong>
+                      <em>{person.nextTouch}</em>
+                      <button data-status={person.status} onClick={() => cyclePersonStatus(index)} type="button">{person.status}</button>
+                    </div>
+                  )) : (
+                    <p className="empty-detail">No people linked yet.</p>
+                  )}
                 </section>
 
                 <section className="detail-column">

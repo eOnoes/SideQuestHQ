@@ -749,7 +749,7 @@ h3 {
 
 .detail-columns {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -789,22 +789,37 @@ h3 {
   font-size: 10px;
 }
 
-.mini-form {
+.mini-form,
+.people-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 62px 68px 28px;
   gap: 6px;
   margin-bottom: 9px;
 }
 
+.mini-form {
+  grid-template-columns: minmax(0, 1fr) 62px 68px 28px;
+}
+
+.people-form {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) 28px;
+}
+
 .mini-form input,
 .mini-form select,
-.mini-form button {
+.mini-form button,
+.people-form input,
+.people-form button {
   height: 28px;
   padding: 0 7px;
   font-size: 11px;
 }
 
-.mini-form button {
+.people-form input[aria-label="Next touch"] {
+  grid-column: 1 / 3;
+}
+
+.mini-form button,
+.people-form button {
   padding: 0;
 }
 
@@ -876,6 +891,63 @@ h3 {
 .step-row[data-step="Now"] > span {
   background: var(--yellow);
   box-shadow: 0 0 16px var(--yellow-glow);
+}
+
+.person-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  min-height: 44px;
+  padding: 7px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.person-row span,
+.person-row strong,
+.person-row em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-row span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.person-row strong,
+.person-row em {
+  color: var(--quiet);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.person-row em {
+  grid-column: 1 / 3;
+}
+
+.person-row button {
+  border: 0;
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.person-row button[data-status="Active"] {
+  color: var(--green);
+}
+
+.person-row button[data-status="Waiting"] {
+  color: var(--red);
+}
+
+.empty-detail {
+  color: var(--quiet);
+  font-size: 12px;
 }
 
 .note-strip {
@@ -1072,12 +1144,30 @@ h3 {
     padding: 10px;
   }
 
+  .detail-columns {
+    gap: 8px;
+  }
+
   .detail-column-head {
     margin-bottom: 7px;
   }
 
   .mini-form {
+    display: none;
+  }
+
+  .people-form {
+    grid-template-columns: minmax(0, 1fr) 28px;
     margin-bottom: 6px;
+  }
+
+  .people-form input[aria-label="Person role"],
+  .people-form input[aria-label="Next touch"] {
+    display: none;
+  }
+
+  .people-form input[aria-label="Next touch"] {
+    grid-column: auto;
   }
 
   .mini-row,
