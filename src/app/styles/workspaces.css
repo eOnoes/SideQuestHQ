@@ -301,7 +301,7 @@
 
 .paper-workspace-row {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 10px;
   min-height: 52px;
@@ -347,6 +347,10 @@
 .paper-workspace-row button[data-state="Review"],
 .paper-workspace-row button[data-state="Draft"] {
   color: var(--red);
+}
+
+.remove-paper-button {
+  color: var(--red) !important;
 }
 
 .reminders-workspace {

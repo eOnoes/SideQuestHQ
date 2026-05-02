@@ -19,6 +19,7 @@ type PaperTrailWorkspaceProps = {
   onCyclePaperState: (questIndex: number, paperIndex: number) => void;
   onDraftChange: (draft: { label: string; meta: string; state: string }) => void;
   onOpenQuest: (questIndex: number) => void;
+  onRemovePaperItem: (questIndex: number, paperIndex: number) => void;
   paperRows: PaperRow[];
   paperSummary: { filedCount: number; readyCount: number; reviewCount: number };
   questList: Quest[];
@@ -32,6 +33,7 @@ export function PaperTrailWorkspace({
   onCyclePaperState,
   onDraftChange,
   onOpenQuest,
+  onRemovePaperItem,
   paperRows,
   paperSummary,
   questList,
@@ -110,6 +112,7 @@ export function PaperTrailWorkspace({
               </div>
               <button data-state={paper.state} onClick={() => onCyclePaperState(paper.questIndex, paper.paperIndex)} type="button">{paper.state}</button>
               <button className="open-quest-button" onClick={() => onOpenQuest(paper.questIndex)} type="button">Open Quest</button>
+              <button className="remove-paper-button" onClick={() => onRemovePaperItem(paper.questIndex, paper.paperIndex)} type="button" aria-label={`Remove ${paper.label}`}>Remove</button>
             </article>
           ))}
         </div>

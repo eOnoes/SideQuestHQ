@@ -295,6 +295,16 @@ export default function Home() {
     );
   }
 
+  function removePaperItem(paperIndex: number) {
+    removePaperItemAt(selectedQuestIndex, paperIndex);
+  }
+
+  function removePaperItemAt(questIndex: number, paperIndex: number) {
+    setQuestList((current) =>
+      current.map((quest, index) => (index === questIndex ? { ...quest, papers: quest.papers.filter((_, currentPaperIndex) => currentPaperIndex !== paperIndex) } : quest)),
+    );
+  }
+
   function advanceStep(stepIndex: number) {
     const order: StepState[] = ["Next", "Now", "Done"];
     updateSelectedQuest((quest) => ({
@@ -458,6 +468,7 @@ export default function Home() {
             onCyclePaperState={cyclePaperStateAt}
             onDraftChange={setPaperDraft}
             onOpenQuest={(questIndex) => { setSelectedQuestIndex(questIndex); setActiveView("Quests"); }}
+            onRemovePaperItem={removePaperItemAt}
             paperRows={paperRows}
             paperSummary={paperSummary}
             questList={questList}
@@ -519,6 +530,7 @@ export default function Home() {
             onNoteDraftChange={setNoteDraft}
             onPaperDraftChange={setPaperDraft}
             onPersonDraftChange={setPersonDraft}
+            onRemovePaperItem={removePaperItem}
             onRemovePerson={removePerson}
             onSelectedQuestIndexChange={setSelectedQuestIndex}
             paperDraft={paperDraft}

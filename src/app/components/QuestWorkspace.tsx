@@ -34,6 +34,7 @@ type QuestWorkspaceProps = {
   onNoteDraftChange: Dispatch<SetStateAction<string>>;
   onPaperDraftChange: Dispatch<SetStateAction<PaperDraft>>;
   onPersonDraftChange: Dispatch<SetStateAction<PersonDraft>>;
+  onRemovePaperItem: (paperIndex: number) => void;
   onRemovePerson: (personIndex: number) => void;
   onSelectedQuestIndexChange: (questIndex: number) => void;
   paperDraft: PaperDraft;
@@ -59,6 +60,7 @@ export function QuestWorkspace({
   onNoteDraftChange,
   onPaperDraftChange,
   onPersonDraftChange,
+  onRemovePaperItem,
   onRemovePerson,
   onSelectedQuestIndexChange,
   paperDraft,
@@ -193,10 +195,11 @@ export function QuestWorkspace({
                 <button aria-label="Add paper trail item" type="submit">+</button>
               </form>
               {selectedQuest.papers.map((paper, index) => (
-                <div className="mini-row" key={paper.label}>
+                <div className="mini-row paper-mini-row" key={paper.label}>
                   <span>{paper.label}</span>
                   <strong>{paper.meta}</strong>
                   <button data-state={paper.state} onClick={() => onCyclePaperState(index)} type="button">{paper.state}</button>
+                  <button className="remove-mini-button" onClick={() => onRemovePaperItem(index)} type="button" aria-label={`Remove ${paper.label}`}>x</button>
                 </div>
               ))}
             </section>

@@ -292,6 +292,10 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
+.paper-mini-row {
+  grid-template-columns: minmax(0, 1fr) auto auto 20px;
+}
+
 .mini-row span,
 .mini-row strong,
 .step-row strong {
@@ -326,6 +330,19 @@
 .mini-row button[data-state="Open"],
 .mini-row button[data-state="Review"] {
   color: var(--red);
+}
+
+.remove-mini-button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--quiet) !important;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.remove-mini-button:hover {
+  color: var(--red) !important;
 }
 
 .step-row {
