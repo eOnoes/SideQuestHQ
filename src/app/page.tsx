@@ -48,9 +48,19 @@ type Person = {
   status: "Active" | "Waiting" | "Quiet";
 };
 
+type Asset = {
+  name: string;
+  type: "Rental" | "Business" | "Retirement" | "Build" | "Other";
+  value: string;
+  projected: string;
+  frequency: "Monthly" | "Annual" | "One-time";
+  status: "Producing" | "Watching" | "Planning";
+};
+
 const STORAGE_KEY = "sidequest-hq:quests:v1";
 const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
 const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
+const ASSETS_STORAGE_KEY = "sidequest-hq:assets:v1";
 
 const questTypePresets: Array<{
   type: QuestType;
@@ -230,7 +240,13 @@ const seedPeople: Person[] = [
   { name: "Lumber desk", role: "Vendor", quest: "Shop Cabinet Run", nextTouch: "Quote match", status: "Quiet" },
 ];
 
-type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus";
+const seedAssets: Asset[] = [
+  { name: "Maple Street Rental", type: "Rental", value: "$185,000 est.", projected: "$1,450", frequency: "Monthly", status: "Producing" },
+  { name: "401k Growth Bucket", type: "Retirement", value: "$0 tracked", projected: "$4,800", frequency: "Annual", status: "Watching" },
+  { name: "Friend Business Stake", type: "Business", value: "$2,500 in", projected: "$300", frequency: "Monthly", status: "Planning" },
+];
+
+type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus" | "briefcase";
 
 function parseMoney(value: string) {
   const amount = Number(value.replace(/[^0-9.-]/g, ""));
@@ -239,6 +255,13 @@ function parseMoney(value: string) {
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, style: "currency", currency: "USD" }).format(value);
+}
+
+function getMonthlyProjection(asset: Asset) {
+  const amount = parseMoney(asset.projected);
+  if (asset.frequency === "Annual") return amount / 12;
+  if (asset.frequency === "One-time") return 0;
+  return amount;
 }
 
 function getMoneyRows(questList: Quest[]): Array<{
@@ -353,6 +376,13 @@ function Icon({ name }: { name: IconName }) {
         <path d="M5 12h14" />
       </>
     ),
+    briefcase: (
+      <>
+        <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+        <path d="M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+        <path d="M4 12h16" />
+      </>
+    ),
   };
 
   return (
@@ -374,11 +404,21 @@ export default function Home() {
   const [personDraft, setPersonDraft] = useState({ name: "", role: "", nextTouch: "" });
   const [reminderList, setReminderList] = useState<Reminder[]>(seedReminders);
   const [reminderDraft, setReminderDraft] = useState({ label: "", due: "", priority: "Normal" as Reminder["priority"] });
+  const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
+  const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
   const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
+  const assetSummary = useMemo(() => {
+    const monthlyProjected = assetList.reduce((total, asset) => total + getMonthlyProjection(asset), 0);
+    return {
+      activeCount: assetList.filter((asset) => asset.status === "Producing").length,
+      monthlyProjected,
+      annualProjected: monthlyProjected * 12,
+    };
+  }, [assetList]);
   const paperQueue = useMemo<PaperItem[]>(() => {
     const items = questList.flatMap((quest) =>
       quest.papers.map((paper) => ({
@@ -418,10 +458,19 @@ export default function Home() {
           setReminderList(parsedReminders);
         }
       }
+
+      const storedAssets = window.localStorage.getItem(ASSETS_STORAGE_KEY);
+      if (storedAssets) {
+        const parsedAssets = JSON.parse(storedAssets) as Asset[];
+        if (Array.isArray(parsedAssets)) {
+          setAssetList(parsedAssets);
+        }
+      }
     } catch {
       setQuestList(seedQuests);
       setPeopleList(seedPeople);
       setReminderList(seedReminders);
+      setAssetList(seedAssets);
     } finally {
       setHasLoadedStoredData(true);
     }
@@ -432,8 +481,9 @@ export default function Home() {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questList));
       window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(peopleList));
       window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(reminderList));
+      window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assetList));
     }
-  }, [hasLoadedStoredData, peopleList, questList, reminderList]);
+  }, [assetList, hasLoadedStoredData, peopleList, questList, reminderList]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -491,6 +541,30 @@ export default function Home() {
       papers: [...quest.papers, { label, meta: paperDraft.meta.trim() || "Manual entry", state: paperDraft.state.trim() || "Review" }],
     }));
     setPaperDraft({ label: "", meta: "", state: "Review" });
+  }
+
+  function addAsset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = assetDraft.name.trim();
+    if (!name) return;
+
+    setAssetList((current) => [
+      {
+        ...assetDraft,
+        name,
+        value: assetDraft.value.trim() || "$0 tracked",
+        projected: assetDraft.projected.trim() || "$0",
+      },
+      ...current,
+    ]);
+    setAssetDraft({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
+  }
+
+  function cycleAssetStatus(assetIndex: number) {
+    const order: Asset["status"][] = ["Producing", "Watching", "Planning"];
+    setAssetList((current) =>
+      current.map((asset, index) => (index === assetIndex ? { ...asset, status: order[(order.indexOf(asset.status) + 1) % order.length] } : asset)),
+    );
   }
 
   function cycleLedgerState(entryIndex: number) {
@@ -627,6 +701,7 @@ export default function Home() {
         <nav className="nav-list">
           <a className="nav-item nav-item-active" href="#command"><Icon name="grid" /><span>Command</span></a>
           <a className="nav-item" href="#quests"><Icon name="clipboard" /><span>Quests</span></a>
+          <a className="nav-item" href="#assets"><Icon name="briefcase" /><span>Assets</span></a>
           <a className="nav-item" href="#ledger"><Icon name="dollar" /><span>Ledger</span></a>
           <a className="nav-item" href="#paper-trail"><Icon name="file" /><span>Paper Trail</span></a>
           <a className="nav-item" href="#reminders"><Icon name="bell" /><span>Reminders</span></a>
@@ -928,7 +1003,7 @@ export default function Home() {
                       <div className="person-actions">
                         <strong>{person.role}</strong>
                         <button data-status={person.status} onClick={() => cyclePersonStatus(index)} type="button">{person.status}</button>
-                        <button className="remove-person" onClick={() => removePerson(index)} type="button" aria-label={`Remove ${person.name}`}>×</button>
+                        <button className="remove-person" onClick={() => removePerson(index)} type="button" aria-label={`Remove ${person.name}`}>x</button>
                       </div>
                       <em>{person.nextTouch}</em>
                     </div>
@@ -967,6 +1042,83 @@ export default function Home() {
                 ))}
               </div>
             </article>
+          </div>
+        </section>
+
+        <section className="asset-section panel" id="assets">
+          <div className="panel-header">
+            <h2>Assets</h2>
+            <span>{formatMoney(assetSummary.monthlyProjected)} projected/mo</span>
+          </div>
+          <div className="asset-body">
+            <form className="asset-form" onSubmit={addAsset}>
+              <input
+                aria-label="Asset name"
+                onChange={(event) => setAssetDraft((draft) => ({ ...draft, name: event.target.value }))}
+                placeholder="Asset name"
+                value={assetDraft.name}
+              />
+              <select
+                aria-label="Asset type"
+                onChange={(event) => setAssetDraft((draft) => ({ ...draft, type: event.target.value as Asset["type"] }))}
+                value={assetDraft.type}
+              >
+                <option>Rental</option>
+                <option>Business</option>
+                <option>Retirement</option>
+                <option>Build</option>
+                <option>Other</option>
+              </select>
+              <input
+                aria-label="Asset value"
+                onChange={(event) => setAssetDraft((draft) => ({ ...draft, value: event.target.value }))}
+                placeholder="Value / basis"
+                value={assetDraft.value}
+              />
+              <input
+                aria-label="Projected earnings"
+                onChange={(event) => setAssetDraft((draft) => ({ ...draft, projected: event.target.value }))}
+                placeholder="Projected"
+                value={assetDraft.projected}
+              />
+              <select
+                aria-label="Projection frequency"
+                onChange={(event) => setAssetDraft((draft) => ({ ...draft, frequency: event.target.value as Asset["frequency"] }))}
+                value={assetDraft.frequency}
+              >
+                <option>Monthly</option>
+                <option>Annual</option>
+                <option>One-time</option>
+              </select>
+              <button type="submit">Add</button>
+            </form>
+
+            <div className="asset-summary">
+              <div>
+                <span>Producing</span>
+                <strong>{assetSummary.activeCount}</strong>
+              </div>
+              <div>
+                <span>Projected yearly</span>
+                <strong>{formatMoney(assetSummary.annualProjected)}</strong>
+              </div>
+            </div>
+
+            <div className="asset-list">
+              {assetList.slice(0, 4).map((asset, index) => (
+                <article className="asset-row" key={`${asset.name}-${asset.type}`}>
+                  <div>
+                    <span>{asset.type}</span>
+                    <strong>{asset.name}</strong>
+                  </div>
+                  <div>
+                    <span>{asset.value}</span>
+                    <strong>{asset.projected} {asset.frequency.toLowerCase()}</strong>
+                  </div>
+                  <button data-status={asset.status} onClick={() => cycleAssetStatus(index)} type="button">{asset.status}</button>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       </section>
