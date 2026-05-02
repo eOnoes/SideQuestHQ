@@ -48,6 +48,25 @@ button {
   cursor: pointer;
 }
 
+input,
+select {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  outline: 0;
+}
+
+input::placeholder {
+  color: var(--quiet);
+}
+
+select option {
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
 .icon {
   width: 20px;
   height: 20px;
@@ -237,6 +256,32 @@ h3 {
 .topbar-actions {
   display: flex;
   gap: 12px;
+}
+
+.quest-composer {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 0.8fr) minmax(120px, 0.6fr) minmax(130px, 0.7fr) auto;
+  gap: 10px;
+  margin: -8px 0 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--corner);
+  background: rgba(255, 211, 61, 0.08);
+}
+
+.quest-composer input,
+.quest-composer button {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.quest-composer button,
+.mini-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
 }
 
 .primary-button,
@@ -693,12 +738,51 @@ h3 {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.detail-column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
 .detail-column h4 {
   margin: 0 0 10px;
   color: var(--muted);
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.detail-column-head h4 {
+  margin: 0;
+}
+
+.detail-column-head span {
+  padding: 2px 7px;
+  border-radius: var(--corner);
+  background: rgba(255, 211, 61, 0.12);
+  color: var(--yellow);
+  font-size: 10px;
+}
+
+.mini-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px 68px 28px;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+
+.mini-form input,
+.mini-form select,
+.mini-form button {
+  height: 28px;
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+.mini-form button {
+  padding: 0;
 }
 
 .mini-row,
@@ -841,6 +925,17 @@ h3 {
     margin-bottom: 14px;
   }
 
+  .quest-composer {
+    margin: -4px 0 10px;
+    padding: 9px;
+  }
+
+  .quest-composer input,
+  .quest-composer button {
+    min-height: 30px;
+    font-size: 12px;
+  }
+
   .metric {
     min-height: 88px;
     padding: 14px 20px;
@@ -927,6 +1022,14 @@ h3 {
     padding: 10px;
   }
 
+  .detail-column-head {
+    margin-bottom: 7px;
+  }
+
+  .mini-form {
+    margin-bottom: 6px;
+  }
+
   .mini-row,
   .step-row {
     min-height: 25px;
@@ -962,6 +1065,10 @@ h3 {
 
   .quest-picker {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .quest-composer {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -1012,6 +1119,15 @@ h3 {
 
   .topbar {
     flex-direction: column;
+  }
+
+  .topbar-actions,
+  .quest-composer {
+    width: 100%;
+  }
+
+  .quest-composer {
+    grid-template-columns: 1fr;
   }
 
   .quest-picker {

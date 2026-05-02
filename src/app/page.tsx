@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+
+type LedgerState = "Paid" | "Open" | "Draft";
+type StepState = "Done" | "Now" | "Next";
 
 type Quest = {
   name: string;
@@ -14,9 +17,9 @@ type Quest = {
   target: string;
   due: string;
   summary: string;
-  ledger: Array<{ label: string; amount: string; state: "Paid" | "Open" | "Draft" }>;
+  ledger: Array<{ label: string; amount: string; state: LedgerState }>;
   papers: Array<{ label: string; meta: string; state: string }>;
-  steps: Array<{ label: string; state: "Done" | "Now" | "Next" }>;
+  steps: Array<{ label: string; state: StepState }>;
   notes: string[];
 };
 
@@ -35,7 +38,9 @@ type PaperItem = {
   kind: "image" | "file";
 };
 
-const quests: Quest[] = [
+const STORAGE_KEY = "sidequest-hq:quests:v1";
+
+const seedQuests: Quest[] = [
   {
     name: "Maple Street Rental",
     type: "Rental Property",
@@ -128,26 +133,36 @@ const reminders: Reminder[] = [
   { label: "Review material costs", quest: "Shop Cabinet Run", due: "This week", priority: "Quiet" },
 ];
 
-const paperTrail: PaperItem[] = [
-  { title: "Home Depot receipt", source: "Photo upload", state: "Needs review", amount: "$184.72", kind: "image" },
-  { title: "Customer deposit screenshot", source: "Manual upload", state: "Ready to approve", amount: "$500.00", kind: "image" },
-  { title: "Lumber yard quote", source: "PDF - Linked", state: "Linked", amount: "$642.18", kind: "file" },
-];
+type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus";
 
-const moneyRows: Array<{
+function parseMoney(value: string) {
+  const amount = Number(value.replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, style: "currency", currency: "USD" }).format(value);
+}
+
+function getMoneyRows(questList: Quest[]): Array<{
   label: string;
   value: string;
   trend: string;
   trendTone: "up" | "down" | "neutral";
   icon: IconName;
-}> = [
-  { label: "Expected In", value: "$5,430", trend: "+12% this week", trendTone: "up", icon: "dollar" },
-  { label: "Open Balances", value: "$1,280", trend: "3 pending", trendTone: "down", icon: "receipt" },
-  { label: "Recent Expenses", value: "$826", trend: "-5% vs last week", trendTone: "down", icon: "card" },
-  { label: "Paper Trail Drafts", value: "2", trend: "Needs review", trendTone: "neutral", icon: "edit" },
-];
+}> {
+  const openEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Open"));
+  const paidEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Paid"));
+  const draftEntries = questList.flatMap((quest) => quest.ledger.filter((entry) => entry.state === "Draft"));
+  const reviewPapers = questList.flatMap((quest) => quest.papers.filter((paper) => paper.state.toLowerCase().includes("review") || paper.state.toLowerCase().includes("draft")));
 
-type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus";
+  return [
+    { label: "Expected In", value: formatMoney(openEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${openEntries.length} open`, trendTone: "up", icon: "dollar" },
+    { label: "Open Balances", value: formatMoney(draftEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${draftEntries.length} drafts`, trendTone: "down", icon: "receipt" },
+    { label: "Recent Paid", value: formatMoney(paidEntries.reduce((total, entry) => total + parseMoney(entry.amount), 0)), trend: `${paidEntries.length} logged`, trendTone: "neutral", icon: "card" },
+    { label: "Paper Trail Drafts", value: String(reviewPapers.length), trend: "Needs review", trendTone: "neutral", icon: "edit" },
+  ];
+}
 
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
@@ -251,8 +266,111 @@ function Icon({ name }: { name: IconName }) {
 }
 
 export default function Home() {
+  const [questList, setQuestList] = useState<Quest[]>(seedQuests);
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
-  const selectedQuest = quests[selectedQuestIndex];
+  const [hasLoadedStoredData, setHasLoadedStoredData] = useState(false);
+  const [showQuestComposer, setShowQuestComposer] = useState(false);
+  const [questDraft, setQuestDraft] = useState({ name: "", type: "Build Project", value: "", due: "" });
+  const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
+  const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
+  const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
+  const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
+  const paperQueue = useMemo<PaperItem[]>(() => {
+    const items = questList.flatMap((quest) =>
+      quest.papers.map((paper) => ({
+        title: paper.label,
+        source: quest.name,
+        state: paper.state,
+        amount: quest.ledger[0]?.amount ?? "$0",
+        kind: paper.meta.toLowerCase().includes("image") || paper.meta.toLowerCase().includes("photo") ? "image" as const : "file" as const,
+      })),
+    );
+
+    return items.slice(0, 3);
+  }, [questList]);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Quest[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setQuestList(parsed);
+        }
+      }
+    } catch {
+      setQuestList(seedQuests);
+    } finally {
+      setHasLoadedStoredData(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hasLoadedStoredData) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questList));
+    }
+  }, [hasLoadedStoredData, questList]);
+
+  function updateSelectedQuest(updater: (quest: Quest) => Quest) {
+    setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
+  }
+
+  function addQuest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = questDraft.name.trim();
+    if (!name) return;
+
+    const nextQuest: Quest = {
+      name,
+      type: questDraft.type.trim() || "Side Quest",
+      status: "Discovery",
+      nextMove: "Capture the first move and attach the first ledger item.",
+      value: questDraft.value.trim() || "$0 tracked",
+      progress: 10,
+      tone: "discovery",
+      owner: "New quest",
+      target: "Get it organized",
+      due: questDraft.due.trim() || "Next check: Soon",
+      summary: "Fresh quest. Add ledger rows, paper trail items, and next steps as the work gets clearer.",
+      ledger: [],
+      papers: [],
+      steps: [
+        { label: "Quest created", state: "Done" },
+        { label: "First ledger item", state: "Now" },
+        { label: "Paper trail", state: "Next" },
+      ],
+      notes: ["Use this as the command card until we build the full edit screen."],
+    };
+
+    setQuestList((current) => [...current, nextQuest]);
+    setSelectedQuestIndex(questList.length);
+    setQuestDraft({ name: "", type: "Build Project", value: "", due: "" });
+    setShowQuestComposer(false);
+  }
+
+  function addLedgerEntry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = ledgerDraft.label.trim();
+    if (!label) return;
+
+    updateSelectedQuest((quest) => ({
+      ...quest,
+      ledger: [...quest.ledger, { label, amount: ledgerDraft.amount.trim() || "$0", state: ledgerDraft.state }],
+    }));
+    setLedgerDraft({ label: "", amount: "", state: "Draft" });
+  }
+
+  function addPaperItem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = paperDraft.label.trim();
+    if (!label) return;
+
+    updateSelectedQuest((quest) => ({
+      ...quest,
+      papers: [...quest.papers, { label, meta: paperDraft.meta.trim() || "Manual entry", state: paperDraft.state.trim() || "Review" }],
+    }));
+    setPaperDraft({ label: "", meta: "", state: "Review" });
+  }
 
   return (
     <main className="app-shell">
@@ -288,9 +406,39 @@ export default function Home() {
           </div>
           <div className="topbar-actions">
             <button type="button" className="icon-button" aria-label="Scan paper trail"><Icon name="scan" />Scan</button>
-            <button type="button" className="primary-button">New Quest</button>
+            <button type="button" className="primary-button" onClick={() => setShowQuestComposer((isOpen) => !isOpen)}>New Quest</button>
           </div>
         </header>
+
+        {showQuestComposer ? (
+          <form className="quest-composer" onSubmit={addQuest}>
+            <input
+              aria-label="Quest name"
+              onChange={(event) => setQuestDraft((draft) => ({ ...draft, name: event.target.value }))}
+              placeholder="Quest name"
+              value={questDraft.name}
+            />
+            <input
+              aria-label="Quest type"
+              onChange={(event) => setQuestDraft((draft) => ({ ...draft, type: event.target.value }))}
+              placeholder="Rental, build, investment..."
+              value={questDraft.type}
+            />
+            <input
+              aria-label="Tracked value"
+              onChange={(event) => setQuestDraft((draft) => ({ ...draft, value: event.target.value }))}
+              placeholder="$0 tracked"
+              value={questDraft.value}
+            />
+            <input
+              aria-label="Next check"
+              onChange={(event) => setQuestDraft((draft) => ({ ...draft, due: event.target.value }))}
+              placeholder="Next check"
+              value={questDraft.due}
+            />
+            <button type="submit">Add</button>
+          </form>
+        ) : null}
 
         <section className="summary-strip" aria-label="Money summary">
           {moneyRows.map((metric) => (
@@ -306,7 +454,7 @@ export default function Home() {
           <div className="panel panel-large">
             <div className="panel-header">
               <h2>Needs Attention</h2>
-              <span>3 items</span>
+              <span>{reminders.length} items</span>
             </div>
             <div className="attention-list">
               {reminders.map((reminder) => (
@@ -331,7 +479,7 @@ export default function Home() {
               <span>AI review queue</span>
             </div>
             <div className="paper-list">
-              {paperTrail.map((item) => (
+              {paperQueue.map((item) => (
                 <article className="paper-item" key={item.title}>
                   <span className="paper-icon"><Icon name={item.kind === "image" ? "image" : "file"} /></span>
                   <div>
@@ -359,7 +507,7 @@ export default function Home() {
 
           <div className="quest-focus-grid">
             <div className="quest-picker" aria-label="Quest selector">
-              {quests.map((quest, index) => (
+              {questList.map((quest, index) => (
                 <button
                   className="quest-card"
                   data-selected={index === selectedQuestIndex}
@@ -399,7 +547,34 @@ export default function Home() {
 
               <div className="detail-columns">
                 <section className="detail-column">
-                  <h4>Ledger</h4>
+                  <div className="detail-column-head">
+                    <h4>Ledger</h4>
+                    <span>{selectedQuest.ledger.length}</span>
+                  </div>
+                  <form className="mini-form" onSubmit={addLedgerEntry}>
+                    <input
+                      aria-label="Ledger label"
+                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, label: event.target.value }))}
+                      placeholder="Label"
+                      value={ledgerDraft.label}
+                    />
+                    <input
+                      aria-label="Ledger amount"
+                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, amount: event.target.value }))}
+                      placeholder="$0"
+                      value={ledgerDraft.amount}
+                    />
+                    <select
+                      aria-label="Ledger state"
+                      onChange={(event) => setLedgerDraft((draft) => ({ ...draft, state: event.target.value as LedgerState }))}
+                      value={ledgerDraft.state}
+                    >
+                      <option>Draft</option>
+                      <option>Open</option>
+                      <option>Paid</option>
+                    </select>
+                    <button aria-label="Add ledger entry" type="submit">+</button>
+                  </form>
                   {selectedQuest.ledger.map((entry) => (
                     <div className="mini-row" key={entry.label}>
                       <span>{entry.label}</span>
@@ -410,7 +585,31 @@ export default function Home() {
                 </section>
 
                 <section className="detail-column">
-                  <h4>Paper Trail</h4>
+                  <div className="detail-column-head">
+                    <h4>Paper Trail</h4>
+                    <span>{selectedQuest.papers.length}</span>
+                  </div>
+                  <form className="mini-form" onSubmit={addPaperItem}>
+                    <input
+                      aria-label="Paper trail label"
+                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, label: event.target.value }))}
+                      placeholder="Receipt/photo"
+                      value={paperDraft.label}
+                    />
+                    <input
+                      aria-label="Paper trail meta"
+                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, meta: event.target.value }))}
+                      placeholder="Photo, PDF..."
+                      value={paperDraft.meta}
+                    />
+                    <input
+                      aria-label="Paper trail state"
+                      onChange={(event) => setPaperDraft((draft) => ({ ...draft, state: event.target.value }))}
+                      placeholder="Review"
+                      value={paperDraft.state}
+                    />
+                    <button aria-label="Add paper trail item" type="submit">+</button>
+                  </form>
                   {selectedQuest.papers.map((paper) => (
                     <div className="mini-row" key={paper.label}>
                       <span>{paper.label}</span>
@@ -421,7 +620,10 @@ export default function Home() {
                 </section>
 
                 <section className="detail-column">
-                  <h4>Next Steps</h4>
+                  <div className="detail-column-head">
+                    <h4>Next Steps</h4>
+                    <span>{selectedQuest.steps.length}</span>
+                  </div>
                   {selectedQuest.steps.map((step) => (
                     <div className="step-row" data-step={step.state} key={step.label}>
                       <span />
