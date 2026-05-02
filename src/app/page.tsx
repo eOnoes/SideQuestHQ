@@ -28,6 +28,7 @@ type Reminder = {
   quest: string;
   due: string;
   priority: "Quiet" | "Normal" | "Important";
+  done: boolean;
 };
 
 type PaperItem = {
@@ -48,6 +49,7 @@ type Person = {
 
 const STORAGE_KEY = "sidequest-hq:quests:v1";
 const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
+const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
 
 const seedQuests: Quest[] = [
   {
@@ -136,10 +138,10 @@ const seedQuests: Quest[] = [
   },
 ];
 
-const reminders: Reminder[] = [
-  { label: "Send Friday customer update", quest: "AI Estimate Builder", due: "Today 4:00 PM", priority: "Important" },
-  { label: "Check rent payment", quest: "Maple Street Rental", due: "Tomorrow", priority: "Normal" },
-  { label: "Review material costs", quest: "Shop Cabinet Run", due: "This week", priority: "Quiet" },
+const seedReminders: Reminder[] = [
+  { label: "Send Friday customer update", quest: "AI Estimate Builder", due: "Today 4:00 PM", priority: "Important", done: false },
+  { label: "Check rent payment", quest: "Maple Street Rental", due: "Tomorrow", priority: "Normal", done: false },
+  { label: "Review material costs", quest: "Shop Cabinet Run", due: "This week", priority: "Quiet", done: false },
 ];
 
 const seedPeople: Person[] = [
@@ -290,10 +292,13 @@ export default function Home() {
   const [paperDraft, setPaperDraft] = useState({ label: "", meta: "", state: "Review" });
   const [peopleList, setPeopleList] = useState<Person[]>(seedPeople);
   const [personDraft, setPersonDraft] = useState({ name: "", role: "", nextTouch: "" });
+  const [reminderList, setReminderList] = useState<Reminder[]>(seedReminders);
+  const [reminderDraft, setReminderDraft] = useState({ label: "", due: "", priority: "Normal" as Reminder["priority"] });
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = questList[Math.min(selectedQuestIndex, questList.length - 1)] ?? seedQuests[0];
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
   const selectedPeople = useMemo(() => peopleList.filter((person) => person.quest === selectedQuest.name), [peopleList, selectedQuest.name]);
+  const activeReminders = useMemo(() => reminderList.filter((reminder) => !reminder.done).slice(0, 4), [reminderList]);
   const paperQueue = useMemo<PaperItem[]>(() => {
     const items = questList.flatMap((quest) =>
       quest.papers.map((paper) => ({
@@ -325,9 +330,18 @@ export default function Home() {
           setPeopleList(parsedPeople);
         }
       }
+
+      const storedReminders = window.localStorage.getItem(REMINDERS_STORAGE_KEY);
+      if (storedReminders) {
+        const parsedReminders = JSON.parse(storedReminders) as Reminder[];
+        if (Array.isArray(parsedReminders)) {
+          setReminderList(parsedReminders);
+        }
+      }
     } catch {
       setQuestList(seedQuests);
       setPeopleList(seedPeople);
+      setReminderList(seedReminders);
     } finally {
       setHasLoadedStoredData(true);
     }
@@ -337,8 +351,9 @@ export default function Home() {
     if (hasLoadedStoredData) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questList));
       window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(peopleList));
+      window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(reminderList));
     }
-  }, [hasLoadedStoredData, peopleList, questList]);
+  }, [hasLoadedStoredData, peopleList, questList, reminderList]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -482,6 +497,34 @@ export default function Home() {
     );
   }
 
+  function addReminder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = reminderDraft.label.trim();
+    if (!label) return;
+
+    setReminderList((current) => [
+      {
+        label,
+        quest: selectedQuest.name,
+        due: reminderDraft.due.trim() || "Soon",
+        priority: reminderDraft.priority,
+        done: false,
+      },
+      ...current,
+    ]);
+    setReminderDraft({ label: "", due: "", priority: "Normal" });
+  }
+
+  function toggleReminderDone(reminderLabel: string, questName: string) {
+    setReminderList((current) =>
+      current.map((reminder) =>
+        reminder.label === reminderLabel && reminder.quest === questName
+          ? { ...reminder, done: !reminder.done }
+          : reminder,
+      ),
+    );
+  }
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label="Primary">
@@ -564,12 +607,36 @@ export default function Home() {
           <div className="panel panel-large">
             <div className="panel-header">
               <h2>Needs Attention</h2>
-              <span>{reminders.length} items</span>
+              <span>{activeReminders.length} active</span>
             </div>
+            <form className="reminder-form" onSubmit={addReminder}>
+              <input
+                aria-label="Reminder label"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, label: event.target.value }))}
+                placeholder={`Remind me for ${selectedQuest.name}`}
+                value={reminderDraft.label}
+              />
+              <input
+                aria-label="Reminder due"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, due: event.target.value }))}
+                placeholder="Due"
+                value={reminderDraft.due}
+              />
+              <select
+                aria-label="Reminder priority"
+                onChange={(event) => setReminderDraft((draft) => ({ ...draft, priority: event.target.value as Reminder["priority"] }))}
+                value={reminderDraft.priority}
+              >
+                <option>Quiet</option>
+                <option>Normal</option>
+                <option>Important</option>
+              </select>
+              <button aria-label="Add reminder" type="submit">+</button>
+            </form>
             <div className="attention-list">
-              {reminders.map((reminder) => (
+              {activeReminders.map((reminder) => (
                 <article className="attention-item" key={reminder.label}>
-                  <span className="task-check" aria-hidden="true" />
+                  <button className="task-check" onClick={() => toggleReminderDone(reminder.label, reminder.quest)} type="button" aria-label={`Complete ${reminder.label}`} />
                   <div>
                     <strong>{reminder.label}</strong>
                     <span>{reminder.quest}</span>

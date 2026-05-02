@@ -428,6 +428,29 @@ h3 {
   padding: 6px 8px;
 }
 
+.reminder-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px 104px 32px;
+  gap: 8px;
+  padding: 10px 20px 4px;
+}
+
+.reminder-form input,
+.reminder-form select,
+.reminder-form button {
+  height: 32px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.reminder-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
 .attention-item,
 .paper-item {
   display: grid;
@@ -455,6 +478,8 @@ h3 {
 .task-check {
   width: 20px;
   height: 20px;
+  padding: 0;
+  background: transparent;
   border-radius: 0 0 6px 0;
   border: 2px solid var(--line);
 }
@@ -1016,11 +1041,11 @@ h3 {
   }
 
   .workspace {
-    padding: 18px 28px 16px;
+    padding: 14px 28px 12px;
   }
 
   .topbar {
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .eyebrow {
@@ -1040,7 +1065,7 @@ h3 {
   }
 
   .summary-strip {
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .quest-composer {
@@ -1055,26 +1080,39 @@ h3 {
   }
 
   .metric {
-    min-height: 88px;
-    padding: 14px 20px;
+    min-height: 78px;
+    padding: 11px 20px;
   }
 
   .metric strong {
-    font-size: 24px;
+    font-size: 23px;
   }
 
   .dashboard-grid {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .panel-header {
-    padding: 14px 20px 10px;
+    padding: 11px 20px 8px;
+  }
+
+  .reminder-form {
+    grid-template-columns: minmax(0, 1fr) 88px 88px 28px;
+    gap: 6px;
+    padding: 6px 14px 0;
+  }
+
+  .reminder-form input,
+  .reminder-form select,
+  .reminder-form button {
+    height: 28px;
+    font-size: 11px;
   }
 
   .attention-item,
   .paper-item {
-    min-height: 56px;
-    padding: 8px 14px;
+    min-height: 47px;
+    padding: 6px 14px;
   }
 
   .paper-icon {
@@ -1087,13 +1125,13 @@ h3 {
   }
 
   .section-heading {
-    margin: 10px 0;
+    margin: 6px 0;
   }
 
   .quest-card {
-    min-height: 56px;
+    min-height: 51px;
     gap: 4px;
-    padding: 9px 12px;
+    padding: 7px 12px;
   }
 
   .quest-card p {
@@ -1119,7 +1157,7 @@ h3 {
 
   .quest-detail {
     gap: 10px;
-    padding: 16px 18px;
+    padding: 13px 18px;
   }
 
   .quest-detail-main p {
@@ -1218,6 +1256,10 @@ h3 {
   .quest-composer {
     grid-template-columns: 1fr 1fr;
   }
+
+  .reminder-form {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1275,6 +1317,10 @@ h3 {
   }
 
   .quest-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .reminder-form {
     grid-template-columns: 1fr;
   }
 
