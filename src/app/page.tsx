@@ -507,6 +507,15 @@ export default function Home() {
       annualProjected: monthlyProjected * 12,
     };
   }, [assetList]);
+  const commandPulse = useMemo(
+    () => [
+      { label: "Assets", value: formatMoney(assetSummary.monthlyProjected), detail: "Projected / mo", view: "Assets" as AppView },
+      { label: "Ledger", value: formatMoney(ledgerSummary.open), detail: "Open money", view: "Ledger" as AppView },
+      { label: "Paper", value: String(paperSummary.reviewCount), detail: "Need review", view: "Paper Trail" as AppView },
+      { label: "People", value: String(peopleSummary.waiting), detail: "Waiting touches", view: "People" as AppView },
+    ],
+    [assetSummary.monthlyProjected, ledgerSummary.open, paperSummary.reviewCount, peopleSummary.waiting],
+  );
   const paperQueue = useMemo<PaperItem[]>(() => {
     const items = questList.flatMap((quest) =>
       quest.papers.map((paper) => ({
@@ -956,6 +965,16 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="command-pulse" aria-label="Workspace pulse">
+          {commandPulse.map((item) => (
+            <button className="pulse-card" key={item.label} onClick={() => setActiveView(item.view)} type="button">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+              <small>{item.detail}</small>
+            </button>
+          ))}
         </section>
 
           </>

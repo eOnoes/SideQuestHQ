@@ -405,6 +405,46 @@ h3 {
   margin-bottom: 18px;
 }
 
+.command-pulse {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pulse-card {
+  display: grid;
+  gap: 3px;
+  min-height: 76px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  text-align: left;
+}
+
+.pulse-card:hover {
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pulse-card span,
+.pulse-card small {
+  overflow: hidden;
+  color: var(--quiet);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pulse-card strong {
+  overflow: hidden;
+  color: var(--yellow);
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .panel {
   overflow: hidden;
 }
@@ -1832,6 +1872,19 @@ h3 {
     margin-bottom: 8px;
   }
 
+  .command-pulse {
+    gap: 8px;
+  }
+
+  .pulse-card {
+    min-height: 55px;
+    padding: 7px 10px;
+  }
+
+  .pulse-card strong {
+    font-size: 16px;
+  }
+
   .panel-header {
     padding: 11px 20px 8px;
   }
@@ -1974,6 +2027,7 @@ h3 {
 
   .summary-strip,
   .dashboard-grid,
+  .command-pulse,
   .asset-body,
   .asset-list,
   .ledger-board,
