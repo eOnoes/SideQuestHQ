@@ -184,7 +184,7 @@
 
 .ledger-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 10px;
   min-height: 48px;
@@ -228,6 +228,10 @@
 
 .ledger-row button[data-state="Open"] {
   color: var(--red);
+}
+
+.remove-ledger-button {
+  color: var(--red) !important;
 }
 
 .open-quest-button {

@@ -34,6 +34,7 @@ type QuestWorkspaceProps = {
   onNoteDraftChange: Dispatch<SetStateAction<string>>;
   onPaperDraftChange: Dispatch<SetStateAction<PaperDraft>>;
   onPersonDraftChange: Dispatch<SetStateAction<PersonDraft>>;
+  onRemoveLedgerEntry: (entryIndex: number) => void;
   onRemovePaperItem: (paperIndex: number) => void;
   onRemovePerson: (personIndex: number) => void;
   onSelectedQuestIndexChange: (questIndex: number) => void;
@@ -60,6 +61,7 @@ export function QuestWorkspace({
   onNoteDraftChange,
   onPaperDraftChange,
   onPersonDraftChange,
+  onRemoveLedgerEntry,
   onRemovePaperItem,
   onRemovePerson,
   onSelectedQuestIndexChange,
@@ -160,10 +162,11 @@ export function QuestWorkspace({
                 <button aria-label="Add ledger entry" type="submit">+</button>
               </form>
               {selectedQuest.ledger.map((entry, index) => (
-                <div className="mini-row" key={entry.label}>
+                <div className="mini-row ledger-mini-row" key={entry.label}>
                   <span>{entry.label}</span>
                   <strong>{entry.amount}</strong>
                   <button data-state={entry.state} onClick={() => onCycleLedgerState(index)} type="button">{entry.state}</button>
+                  <button className="remove-mini-button" onClick={() => onRemoveLedgerEntry(index)} type="button" aria-label={`Remove ${entry.label}`}>x</button>
                 </div>
               ))}
             </section>

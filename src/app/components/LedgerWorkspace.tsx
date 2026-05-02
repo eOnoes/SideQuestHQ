@@ -20,6 +20,7 @@ type LedgerWorkspaceProps = {
   onCycleLedgerState: (questIndex: number, entryIndex: number) => void;
   onDraftChange: (draft: { label: string; amount: string; state: LedgerState }) => void;
   onOpenQuest: (questIndex: number) => void;
+  onRemoveLedgerEntry: (questIndex: number, entryIndex: number) => void;
   questList: Quest[];
   selectedQuestIndex: number;
   setSelectedQuestIndex: (index: number) => void;
@@ -33,6 +34,7 @@ export function LedgerWorkspace({
   onCycleLedgerState,
   onDraftChange,
   onOpenQuest,
+  onRemoveLedgerEntry,
   questList,
   selectedQuestIndex,
   setSelectedQuestIndex,
@@ -107,6 +109,7 @@ export function LedgerWorkspace({
               </div>
               <button data-state={entry.state} onClick={() => onCycleLedgerState(entry.questIndex, entry.entryIndex)} type="button">{entry.state}</button>
               <button className="open-quest-button" onClick={() => onOpenQuest(entry.questIndex)} type="button">Open Quest</button>
+              <button className="remove-ledger-button" onClick={() => onRemoveLedgerEntry(entry.questIndex, entry.entryIndex)} type="button" aria-label={`Remove ${entry.label}`}>Remove</button>
             </article>
           ))}
         </div>

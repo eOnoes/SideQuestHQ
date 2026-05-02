@@ -84,6 +84,8 @@
   }
 
   .ledger-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) auto auto auto;
+    gap: 6px;
     min-height: 42px;
     padding: 6px 9px;
   }

@@ -274,6 +274,16 @@ export default function Home() {
     );
   }
 
+  function removeLedgerEntry(entryIndex: number) {
+    removeLedgerEntryAt(selectedQuestIndex, entryIndex);
+  }
+
+  function removeLedgerEntryAt(questIndex: number, entryIndex: number) {
+    setQuestList((current) =>
+      current.map((quest, index) => (index === questIndex ? { ...quest, ledger: quest.ledger.filter((_, currentEntryIndex) => currentEntryIndex !== entryIndex) } : quest)),
+    );
+  }
+
   function cyclePaperState(paperIndex: number) {
     cyclePaperStateAt(selectedQuestIndex, paperIndex);
   }
@@ -456,6 +466,7 @@ export default function Home() {
             onCycleLedgerState={cycleLedgerStateAt}
             onDraftChange={setLedgerDraft}
             onOpenQuest={(questIndex) => { setSelectedQuestIndex(questIndex); setActiveView("Quests"); }}
+            onRemoveLedgerEntry={removeLedgerEntryAt}
             questList={questList}
             selectedQuestIndex={selectedQuestIndex}
             setSelectedQuestIndex={setSelectedQuestIndex}
@@ -530,6 +541,7 @@ export default function Home() {
             onNoteDraftChange={setNoteDraft}
             onPaperDraftChange={setPaperDraft}
             onPersonDraftChange={setPersonDraft}
+            onRemoveLedgerEntry={removeLedgerEntry}
             onRemovePaperItem={removePaperItem}
             onRemovePerson={removePerson}
             onSelectedQuestIndexChange={setSelectedQuestIndex}
