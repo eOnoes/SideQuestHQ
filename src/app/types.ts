@@ -197,6 +197,14 @@ export type RentalDocument = {
   notes: string;
 };
 
+export type MileageRate = {
+  tax_year: number;
+  business_rate: number;
+  source: string;
+  source_url: string;
+  notes: string;
+};
+
 export type RentalBook = {
   properties: RentalProperty[];
   rents: RentRecord[];
@@ -208,6 +216,7 @@ export type RentalBook = {
   vendors: Vendor[];
   tenants: Tenant[];
   documents: RentalDocument[];
+  mileageRates: MileageRate[];
 };
 
 export type IconName = "grid" | "clipboard" | "dollar" | "file" | "bell" | "people" | "scan" | "receipt" | "card" | "edit" | "image" | "plus" | "briefcase" | "home";

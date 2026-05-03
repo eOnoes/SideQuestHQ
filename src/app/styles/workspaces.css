@@ -839,3 +839,11 @@
   font-size: 12px;
 }
 
+.panel-header select {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--corner);
+  color: var(--yellow);
+  font-size: 12px;
+}
+

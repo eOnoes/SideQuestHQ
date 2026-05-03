@@ -54,6 +54,7 @@ export default function Home() {
   const [rentDraft, setRentDraft] = useState<RentDraft>({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
   const [expenseDraft, setExpenseDraft] = useState<ExpenseDraft>({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
   const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0 });
+  const [selectedTaxYear, setSelectedTaxYear] = useState(2026);
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
@@ -573,7 +574,9 @@ export default function Home() {
             rentalBook={rentalBook}
             rentDraft={rentDraft}
             selectedPropertyIndex={selectedPropertyIndex}
+            selectedTaxYear={selectedTaxYear}
             onSelectedPropertyIndexChange={setSelectedPropertyIndex}
+            onSelectedTaxYearChange={setSelectedTaxYear}
             onTripDraftChange={setTripDraft}
             tripDraft={tripDraft}
           />

@@ -25,7 +25,9 @@ type RentalsWorkspaceProps = {
   rentalBook: RentalBook;
   rentDraft: RentDraft;
   selectedPropertyIndex: number;
+  selectedTaxYear: number;
   onSelectedPropertyIndexChange: (propertyIndex: number) => void;
+  onSelectedTaxYearChange: (taxYear: number) => void;
   onTripDraftChange: Dispatch<SetStateAction<TripDraft>>;
   tripDraft: TripDraft;
 };
@@ -40,12 +42,14 @@ export function RentalsWorkspace({
   rentalBook,
   rentDraft,
   selectedPropertyIndex,
+  selectedTaxYear,
   onSelectedPropertyIndexChange,
+  onSelectedTaxYearChange,
   onTripDraftChange,
   tripDraft,
 }: RentalsWorkspaceProps) {
   const selectedProperty = rentalBook.properties[Math.min(selectedPropertyIndex, rentalBook.properties.length - 1)] ?? rentalBook.properties[0];
-  const bookSummary = getRentalBookSummary(rentalBook);
+  const bookSummary = getRentalBookSummary(rentalBook, selectedTaxYear);
 
   if (!selectedProperty) {
     return (
@@ -65,7 +69,11 @@ export function RentalsWorkspace({
     <section className="rentals-workspace panel">
       <div className="panel-header">
         <h2>Rental Business</h2>
-        <span>{bookSummary.propertyCount} properties</span>
+        <select aria-label="Rental tax year" onChange={(event) => onSelectedTaxYearChange(Number(event.target.value))} value={selectedTaxYear}>
+          {rentalBook.mileageRates.map((rate) => (
+            <option key={rate.tax_year} value={rate.tax_year}>{rate.tax_year}</option>
+          ))}
+        </select>
       </div>
 
       <div className="rental-board">
@@ -220,8 +228,12 @@ export function RentalsWorkspace({
                 <strong>{Math.round(bookSummary.businessUsePercentage * 100)}%</strong>
               </div>
               <div className="rental-row">
-                <span>Standard mileage</span>
+                <span>Standard mileage @ {formatMileageRate(bookSummary.mileageRate.business_rate)}</span>
                 <strong>{formatMoney(bookSummary.standardMileageEstimate)}</strong>
+              </div>
+              <div className="rental-row">
+                <span>{bookSummary.mileageRate.source}</span>
+                <strong>{bookSummary.mileageRate.tax_year}</strong>
               </div>
               <div className="rental-row">
                 <span>Actual expense allocation</span>
@@ -233,6 +245,10 @@ export function RentalsWorkspace({
       </div>
     </section>
   );
+}
+
+function formatMileageRate(rate: number) {
+  return `${(rate * 100).toFixed(1)}c/mi`;
 }
 
 function PropertyHeader({ property }: { property: RentalProperty }) {

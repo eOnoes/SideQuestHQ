@@ -404,6 +404,22 @@ export const seedRentalBook: RentalBook = {
       notes: "Supply receipt placeholder.",
     },
   ],
+  mileageRates: [
+    {
+      tax_year: 2026,
+      business_rate: 0.725,
+      source: "IRS Notice 2026-10",
+      source_url: "https://www.irs.gov/newsroom/irs-sets-2026-business-standard-mileage-rate-at-725-cents-per-mile-up-25-cents",
+      notes: "Business standard mileage rate for 2026; keep configurable by tax year.",
+    },
+    {
+      tax_year: 2025,
+      business_rate: 0.7,
+      source: "IRS standard mileage rates",
+      source_url: "https://www.irs.gov/tax-professionals/standard-mileage-rates",
+      notes: "Business standard mileage rate for 2025.",
+    },
+  ],
 };
 
 export const appViews: Array<{ label: AppView; icon: IconName }> = [

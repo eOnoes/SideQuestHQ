@@ -1,8 +1,6 @@
 import type { AppView, Asset, LedgerState, PaperItem, Person, Quest, Reminder, RentalBook, RentalExpense } from "./types";
 import { formatMoney, getMonthlyProjection, parseMoney } from "./utils";
 
-const BUSINESS_STANDARD_MILEAGE_RATE_2026 = 0.725;
-
 export type PersonRow = Person & {
   personIndex: number;
   questIndex: number;
@@ -191,7 +189,7 @@ export function getRentalPropertySummary(rentalBook: RentalBook, propertyId: str
   };
 }
 
-export function getRentalBookSummary(rentalBook: RentalBook) {
+export function getRentalBookSummary(rentalBook: RentalBook, taxYear = new Date().getFullYear()) {
   const rentReceived = rentalBook.rents.reduce((total, rent) => total + rent.amount_received + rent.late_fee_amount, 0);
   const rentDue = rentalBook.rents.reduce((total, rent) => total + Math.max(rent.amount_due + rent.late_fee_amount - rent.amount_received, 0), 0);
   const expenses = rentalBook.expenses.reduce((total, expense) => total + expense.amount, 0);
@@ -199,6 +197,7 @@ export function getRentalBookSummary(rentalBook: RentalBook) {
   const totalMiles = rentalBook.vehicleTrips.reduce((total, trip) => total + trip.miles, 0);
   const actualVehicleExpenses = rentalBook.vehicleExpenses.reduce((total, expense) => total + expense.amount, 0);
   const businessUsePercentage = totalMiles > 0 ? businessMiles / totalMiles : 0;
+  const mileageRate = getMileageRateForYear(rentalBook, taxYear);
 
   return {
     actualVehicleExpenseEstimate: actualVehicleExpenses * businessUsePercentage,
@@ -210,8 +209,19 @@ export function getRentalBookSummary(rentalBook: RentalBook) {
     propertyCount: rentalBook.properties.length,
     rentDue,
     rentReceived,
-    standardMileageEstimate: businessMiles * BUSINESS_STANDARD_MILEAGE_RATE_2026,
+    mileageRate,
+    standardMileageEstimate: businessMiles * mileageRate.business_rate,
     totalMiles,
+  };
+}
+
+export function getMileageRateForYear(rentalBook: RentalBook, taxYear: number) {
+  return rentalBook.mileageRates.find((rate) => rate.tax_year === taxYear) ?? rentalBook.mileageRates[0] ?? {
+    business_rate: 0,
+    notes: "No mileage rate configured.",
+    source: "Not configured",
+    source_url: "",
+    tax_year: taxYear,
   };
 }
 

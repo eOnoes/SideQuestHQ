@@ -35,7 +35,7 @@ export function loadStoredAppData(): StoredAppData {
       people: readArray(PEOPLE_STORAGE_KEY, seedPeople),
       quests: readArray(STORAGE_KEY, seedQuests),
       reminders: readArray(REMINDERS_STORAGE_KEY, seedReminders),
-      rentalBook: JSON.parse(window.localStorage.getItem(RENTAL_BOOK_STORAGE_KEY) || "null") ?? seedRentalBook,
+      rentalBook: normalizeRentalBook(JSON.parse(window.localStorage.getItem(RENTAL_BOOK_STORAGE_KEY) || "null") ?? seedRentalBook),
     };
   } catch {
     return {
@@ -48,10 +48,17 @@ export function loadStoredAppData(): StoredAppData {
   }
 }
 
+function normalizeRentalBook(rentalBook: RentalBook): RentalBook {
+  return {
+    ...rentalBook,
+    mileageRates: rentalBook.mileageRates?.length ? rentalBook.mileageRates : seedRentalBook.mileageRates,
+  };
+}
+
 export function saveStoredAppData(data: StoredAppData) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data.quests));
   window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(data.people));
   window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(data.reminders));
   window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(data.assets));
-  window.localStorage.setItem(RENTAL_BOOK_STORAGE_KEY, JSON.stringify(data.rentalBook));
+  window.localStorage.setItem(RENTAL_BOOK_STORAGE_KEY, JSON.stringify(normalizeRentalBook(data.rentalBook)));
 }
