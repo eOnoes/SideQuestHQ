@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Icon } from "./components/Icon";
 import { AssetsWorkspace } from "./components/AssetsWorkspace";
 import { CommandWorkspace } from "./components/CommandWorkspace";
+import { CryptoWorkspace, type CryptoSnapshotDraft } from "./components/CryptoWorkspace";
 import { GarageWorkspace, type VehicleDraft } from "./components/GarageWorkspace";
 import { InvestmentsWorkspace, type InvestmentSnapshotDraft } from "./components/InvestmentsWorkspace";
 import { LedgerWorkspace } from "./components/LedgerWorkspace";
@@ -14,7 +15,7 @@ import { RentalsWorkspace, type RentalPropertyDraft } from "./components/Rentals
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
-import { getQuestTypePreset, seedAssets, seedInvestmentSnapshots, seedPeople, seedQuests, seedReminders, seedRentalBook } from "./data";
+import { getQuestTypePreset, seedAssets, seedCryptoSnapshots, seedInvestmentSnapshots, seedPeople, seedQuests, seedReminders, seedRentalBook } from "./data";
 import { loadStoredAppData, saveStoredAppData } from "./persistence";
 import {
   getActiveReminders,
@@ -32,7 +33,7 @@ import {
   getSelectedPeople,
   getSelectedQuest,
 } from "./selectors";
-import type { AppView, Asset, AssetTab, InvestmentSnapshot, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, RentalProperty, StepState } from "./types";
+import type { AppView, Asset, AssetTab, CryptoSnapshot, InvestmentSnapshot, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, RentalProperty, StepState } from "./types";
 import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
@@ -52,6 +53,8 @@ export default function Home() {
   const [reminderDraft, setReminderDraft] = useState({ label: "", due: "", priority: "Normal" as Reminder["priority"] });
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
+  const [cryptoSnapshots, setCryptoSnapshots] = useState<CryptoSnapshot[]>(seedCryptoSnapshots);
+  const [cryptoSnapshotDraft, setCryptoSnapshotDraft] = useState<CryptoSnapshotDraft>({ current_value: 0, notes: "", snapshot_date: "", token_count: 0, token_name: "", token_symbol: "", wallet_label: "" });
   const [investmentSnapshots, setInvestmentSnapshots] = useState<InvestmentSnapshot[]>(seedInvestmentSnapshots);
   const [investmentSnapshotDraft, setInvestmentSnapshotDraft] = useState<InvestmentSnapshotDraft>({ account_name: "401k", asset_name: "401k Growth Bucket", contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
@@ -97,6 +100,7 @@ export default function Home() {
     setPeopleList(storedData.people);
     setReminderList(storedData.reminders);
     setAssetList(storedData.assets);
+    setCryptoSnapshots(storedData.cryptoSnapshots);
     setInvestmentSnapshots(storedData.investmentSnapshots);
     setRentalBook(storedData.rentalBook);
     setHasLoadedStoredData(true);
@@ -104,9 +108,9 @@ export default function Home() {
 
   useEffect(() => {
     if (hasLoadedStoredData) {
-      saveStoredAppData({ assets: assetList, investmentSnapshots, people: peopleList, quests: questList, reminders: reminderList, rentalBook });
+      saveStoredAppData({ assets: assetList, cryptoSnapshots, investmentSnapshots, people: peopleList, quests: questList, reminders: reminderList, rentalBook });
     }
-  }, [assetList, hasLoadedStoredData, investmentSnapshots, peopleList, questList, reminderList, rentalBook]);
+  }, [assetList, cryptoSnapshots, hasLoadedStoredData, investmentSnapshots, peopleList, questList, reminderList, rentalBook]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -287,6 +291,31 @@ export default function Home() {
       ...current,
     ]);
     setInvestmentSnapshotDraft({ account_name: "401k", asset_name: assetName, contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
+  }
+
+  function addCryptoSnapshot(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const tokenName = cryptoSnapshotDraft.token_name.trim();
+    const tokenSymbol = cryptoSnapshotDraft.token_symbol.trim().toUpperCase();
+    if (!tokenName && !tokenSymbol) return;
+
+    const displayName = tokenName || tokenSymbol;
+    const snapshotDate = cryptoSnapshotDraft.snapshot_date || new Date().toISOString().slice(0, 10);
+    setCryptoSnapshots((current) => [
+      {
+        ...cryptoSnapshotDraft,
+        current_value: Number(cryptoSnapshotDraft.current_value) || 0,
+        notes: cryptoSnapshotDraft.notes.trim(),
+        snapshot_date: snapshotDate,
+        snapshot_id: `crypto-${displayName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${Date.now()}`,
+        token_count: Number(cryptoSnapshotDraft.token_count) || 0,
+        token_name: displayName,
+        token_symbol: tokenSymbol || displayName.toUpperCase(),
+        wallet_label: cryptoSnapshotDraft.wallet_label.trim() || "Manual wallet",
+      },
+      ...current,
+    ]);
+    setCryptoSnapshotDraft({ current_value: 0, notes: "", snapshot_date: "", token_count: 0, token_name: displayName, token_symbol: tokenSymbol, wallet_label: cryptoSnapshotDraft.wallet_label.trim() || "Manual wallet" });
   }
 
   function cycleLedgerState(entryIndex: number) {
@@ -686,6 +715,7 @@ export default function Home() {
             assetDraft={assetDraft}
             assetList={assetList}
             assetSummary={assetSummary}
+            cryptoSnapshots={cryptoSnapshots}
             investmentSnapshots={investmentSnapshots}
             onAddAsset={addAsset}
             onAssetDraftChange={setAssetDraft}
@@ -723,6 +753,14 @@ export default function Home() {
                 investmentSnapshots={investmentSnapshots}
                 onAddInvestmentSnapshot={addInvestmentSnapshot}
                 onInvestmentSnapshotDraftChange={setInvestmentSnapshotDraft}
+              />
+            ) : null}
+            {activeAssetTab === "Crypto" ? (
+              <CryptoWorkspace
+                cryptoSnapshotDraft={cryptoSnapshotDraft}
+                cryptoSnapshots={cryptoSnapshots}
+                onAddCryptoSnapshot={addCryptoSnapshot}
+                onCryptoSnapshotDraftChange={setCryptoSnapshotDraft}
               />
             ) : null}
           </AssetsWorkspace>

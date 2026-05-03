@@ -2,7 +2,7 @@ export type LedgerState = "Paid" | "Open" | "Draft";
 export type StepState = "Done" | "Now" | "Next";
 export type QuestType = "Rental Property" | "Customer Build" | "Build Project" | "Investment" | "Personal Plan" | "Side Quest";
 export type AppView = "Command" | "Quests" | "Assets" | "Ledger" | "Paper Trail" | "Reminders" | "People";
-export type AssetTab = "Portfolio" | "Rentals" | "Garage" | "Investments";
+export type AssetTab = "Portfolio" | "Rentals" | "Garage" | "Investments" | "Crypto";
 
 export type Quest = {
   name: string;
@@ -64,6 +64,17 @@ export type InvestmentSnapshot = {
   snapshot_date: string;
   current_value: number;
   contributions_to_date: number;
+  notes: string;
+};
+
+export type CryptoSnapshot = {
+  snapshot_id: string;
+  wallet_label: string;
+  token_name: string;
+  token_symbol: string;
+  token_count: number;
+  current_value: number;
+  snapshot_date: string;
   notes: string;
 };
 

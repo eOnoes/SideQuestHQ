@@ -822,6 +822,82 @@
   padding: 14px 20px 20px;
 }
 
+.crypto-workspace {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px 20px;
+}
+
+.crypto-form {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(120px, 0.9fr) 82px 112px 112px 120px minmax(150px, 1fr) 58px;
+  gap: 8px;
+}
+
+.crypto-form input,
+.crypto-form button {
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.crypto-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
+.crypto-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 118px 110px 110px 96px;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.crypto-row div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.crypto-row span,
+.crypto-row strong,
+.crypto-row em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crypto-row span,
+.crypto-row em {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.crypto-row strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.crypto-row strong[data-tone="good"] {
+  color: var(--green);
+}
+
+.crypto-row strong[data-tone="warn"] {
+  color: var(--red);
+}
+
+.crypto-row em {
+  font-style: normal;
+}
+
 .rental-report-panel {
   display: grid;
   gap: 9px;

@@ -1,9 +1,10 @@
-import type { AppView, Asset, IconName, InvestmentSnapshot, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
+import type { AppView, Asset, CryptoSnapshot, IconName, InvestmentSnapshot, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
 
 export const STORAGE_KEY = "sidequest-hq:quests:v1";
 export const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
 export const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
 export const ASSETS_STORAGE_KEY = "sidequest-hq:assets:v1";
+export const CRYPTO_SNAPSHOTS_STORAGE_KEY = "sidequest-hq:crypto-snapshots:v1";
 export const INVESTMENT_SNAPSHOTS_STORAGE_KEY = "sidequest-hq:investment-snapshots:v1";
 export const RENTAL_BOOK_STORAGE_KEY = "sidequest-hq:rental-book:v1";
 
@@ -213,6 +214,19 @@ export const seedInvestmentSnapshots: InvestmentSnapshot[] = [
     notes: "Shows contribution-adjusted movement pattern for AI summary later.",
     snapshot_date: "2026-05-02",
     ticker: "",
+  },
+];
+
+export const seedCryptoSnapshots: CryptoSnapshot[] = [
+  {
+    snapshot_id: "crypto-btc-baseline",
+    current_value: 1250,
+    notes: "Manual seed crypto snapshot. Replace with real token count/value when ready.",
+    snapshot_date: "2026-05-02",
+    token_count: 0.0125,
+    token_name: "Bitcoin",
+    token_symbol: "BTC",
+    wallet_label: "Manual wallet",
   },
 ];
 

@@ -1,10 +1,12 @@
 import {
   ASSETS_STORAGE_KEY,
+  CRYPTO_SNAPSHOTS_STORAGE_KEY,
   INVESTMENT_SNAPSHOTS_STORAGE_KEY,
   PEOPLE_STORAGE_KEY,
   RENTAL_BOOK_STORAGE_KEY,
   REMINDERS_STORAGE_KEY,
   seedAssets,
+  seedCryptoSnapshots,
   seedInvestmentSnapshots,
   seedPeople,
   seedRentalBook,
@@ -12,10 +14,11 @@ import {
   seedReminders,
   STORAGE_KEY,
 } from "./data";
-import type { Asset, InvestmentSnapshot, Person, Quest, Reminder, RentalBook } from "./types";
+import type { Asset, CryptoSnapshot, InvestmentSnapshot, Person, Quest, Reminder, RentalBook } from "./types";
 
 export type StoredAppData = {
   assets: Asset[];
+  cryptoSnapshots: CryptoSnapshot[];
   investmentSnapshots: InvestmentSnapshot[];
   people: Person[];
   quests: Quest[];
@@ -35,6 +38,7 @@ export function loadStoredAppData(): StoredAppData {
   try {
     return {
       assets: readArray(ASSETS_STORAGE_KEY, seedAssets),
+      cryptoSnapshots: readArray(CRYPTO_SNAPSHOTS_STORAGE_KEY, seedCryptoSnapshots),
       investmentSnapshots: readArray(INVESTMENT_SNAPSHOTS_STORAGE_KEY, seedInvestmentSnapshots),
       people: readArray(PEOPLE_STORAGE_KEY, seedPeople),
       quests: readArray(STORAGE_KEY, seedQuests),
@@ -44,6 +48,7 @@ export function loadStoredAppData(): StoredAppData {
   } catch {
     return {
       assets: seedAssets,
+      cryptoSnapshots: seedCryptoSnapshots,
       investmentSnapshots: seedInvestmentSnapshots,
       people: seedPeople,
       quests: seedQuests,
@@ -87,6 +92,7 @@ export function saveStoredAppData(data: StoredAppData) {
   window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(data.people));
   window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(data.reminders));
   window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(data.assets));
+  window.localStorage.setItem(CRYPTO_SNAPSHOTS_STORAGE_KEY, JSON.stringify(data.cryptoSnapshots));
   window.localStorage.setItem(INVESTMENT_SNAPSHOTS_STORAGE_KEY, JSON.stringify(data.investmentSnapshots));
   window.localStorage.setItem(RENTAL_BOOK_STORAGE_KEY, JSON.stringify(normalizeRentalBook(data.rentalBook)));
 }

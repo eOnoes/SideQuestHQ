@@ -120,6 +120,29 @@
     padding: 10px 14px;
   }
 
+  .crypto-workspace {
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .crypto-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) 64px 86px 86px 92px minmax(0, 1fr) 50px;
+    gap: 6px;
+  }
+
+  .crypto-form input,
+  .crypto-form button {
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .crypto-row {
+    grid-template-columns: minmax(0, 1fr) 92px 86px 86px 76px;
+    gap: 6px;
+    min-height: 48px;
+    padding: 7px 8px;
+  }
+
   .garage-form {
     grid-template-columns: minmax(0, 0.9fr) 82px 82px 82px 58px 82px 78px 88px 88px 50px;
     gap: 6px;
@@ -512,6 +535,8 @@
   .portfolio-columns,
   .snapshot-form,
   .snapshot-row,
+  .crypto-form,
+  .crypto-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -565,6 +590,8 @@
   .portfolio-columns,
   .snapshot-form,
   .snapshot-row,
+  .crypto-form,
+  .crypto-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -651,6 +678,8 @@
   .portfolio-item-actions,
   .snapshot-form,
   .snapshot-row,
+  .crypto-form,
+  .crypto-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,

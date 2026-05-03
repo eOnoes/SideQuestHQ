@@ -1,5 +1,6 @@
 import type { FormEvent, ReactNode } from "react";
-import type { Asset, AssetTab, InvestmentSnapshot, RentalBook, RentalProperty, VehicleProfile } from "../types";
+import type { Asset, AssetTab, CryptoSnapshot, InvestmentSnapshot, RentalBook, RentalProperty, VehicleProfile } from "../types";
+import { CryptoRows } from "./CryptoWorkspace";
 import { SnapshotRows } from "./InvestmentsWorkspace";
 import { formatMoney } from "../utils";
 
@@ -14,6 +15,7 @@ type AssetsWorkspaceProps = {
     planningCount: number;
     watchingCount: number;
   };
+  cryptoSnapshots: CryptoSnapshot[];
   investmentSnapshots: InvestmentSnapshot[];
   onAddAsset: (event: FormEvent<HTMLFormElement>) => void;
   onAssetDraftChange: (draft: Asset) => void;
@@ -45,6 +47,7 @@ export function AssetsWorkspace({
   assetList,
   assetSummary,
   children,
+  cryptoSnapshots,
   investmentSnapshots,
   onAddAsset,
   onAssetDraftChange,
@@ -54,7 +57,7 @@ export function AssetsWorkspace({
   onRemoveAsset,
   rentalBook,
 }: AssetsWorkspaceProps) {
-  const tabs: AssetTab[] = ["Portfolio", "Rentals", "Garage", "Investments"];
+  const tabs: AssetTab[] = ["Portfolio", "Rentals", "Garage", "Investments", "Crypto"];
   const rentalProperties = rentalBook.properties.filter((property) => property.rental_status !== "archived");
   const garageVehicles = rentalBook.vehicles.filter((vehicle) => vehicle.availability_status !== "archived");
   const investmentAssets = assetList.filter((asset) => asset.type !== "Rental");
@@ -210,6 +213,18 @@ export function AssetsWorkspace({
           </div>
 
           <SnapshotRows investmentSnapshots={investmentSnapshots} limit={3} />
+        </section>
+
+        <section className="snapshot-panel">
+          <div className="snapshot-panel-head">
+            <div>
+              <h3>Latest crypto snapshots</h3>
+              <span>Read-only overview from manual token-count/value records.</span>
+            </div>
+            <strong>{cryptoSnapshots.length} saved</strong>
+          </div>
+
+          <CryptoRows cryptoSnapshots={cryptoSnapshots} limit={3} />
         </section>
       </div>
       )}
