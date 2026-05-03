@@ -8,7 +8,7 @@ import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
 import { PeopleWorkspace } from "./components/PeopleWorkspace";
 import { QuestWorkspace } from "./components/QuestWorkspace";
-import { RentalsWorkspace } from "./components/RentalsWorkspace";
+import { RentalsWorkspace, type ExpenseDraft, type RentDraft, type TripDraft } from "./components/RentalsWorkspace";
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
@@ -51,6 +51,9 @@ export default function Home() {
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
   const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
+  const [rentDraft, setRentDraft] = useState<RentDraft>({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
+  const [expenseDraft, setExpenseDraft] = useState<ExpenseDraft>({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
+  const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0 });
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
@@ -429,6 +432,85 @@ export default function Home() {
     setReminderList((current) => current.filter((_, index) => index !== reminderIndex));
   }
 
+  function getSelectedRentalPropertyId() {
+    return rentalBook.properties[Math.min(selectedPropertyIndex, rentalBook.properties.length - 1)]?.property_id ?? rentalBook.properties[0]?.property_id ?? "";
+  }
+
+  function addRentalRent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const propertyId = getSelectedRentalPropertyId();
+    if (!propertyId || !rentDraft.rent_period_start || !rentDraft.due_date || rentDraft.amount_due <= 0) return;
+    const tenant = rentalBook.tenants.find((currentTenant) => currentTenant.property_id === propertyId && currentTenant.status === "active");
+
+    setRentalBook((current) => ({
+      ...current,
+      rents: [
+        ...current.rents,
+        {
+          ...rentDraft,
+          late_fee_amount: 0,
+          notes: rentDraft.notes.trim(),
+          payment_method: rentDraft.payment_method.trim(),
+          property_id: propertyId,
+          rent_id: `rent-${Date.now()}`,
+          tenant_id: tenant?.tenant_id ?? "",
+        },
+      ],
+    }));
+    setRentDraft({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
+  }
+
+  function addRentalExpense(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const propertyId = getSelectedRentalPropertyId();
+    if (!propertyId || !expenseDraft.expense_date || expenseDraft.amount <= 0) return;
+
+    setRentalBook((current) => ({
+      ...current,
+      expenses: [
+        ...current.expenses,
+        {
+          ...expenseDraft,
+          due_date: expenseDraft.paid_date || expenseDraft.expense_date,
+          expense_id: `expense-${Date.now()}`,
+          notes: expenseDraft.notes.trim(),
+          payment_method: expenseDraft.payment_method.trim(),
+          property_id: propertyId,
+          receipt_url: "",
+          tax_bucket: expenseDraft.tax_bucket.trim() || expenseDraft.category,
+          vendor_id: "",
+        },
+      ],
+    }));
+    setExpenseDraft({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
+  }
+
+  function addRentalTrip(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const propertyId = getSelectedRentalPropertyId();
+    const vehicle = rentalBook.vehicles[0];
+    if (!propertyId || !vehicle || !tripDraft.date || tripDraft.miles <= 0) return;
+
+    setRentalBook((current) => ({
+      ...current,
+      vehicleTrips: [
+        ...current.vehicleTrips,
+        {
+          ...tripDraft,
+          business_use: true,
+          destination: tripDraft.destination.trim(),
+          notes: tripDraft.notes.trim(),
+          origin: tripDraft.origin.trim(),
+          property_id: propertyId,
+          purpose: tripDraft.purpose.trim(),
+          trip_id: `trip-${Date.now()}`,
+          vehicle_id: vehicle.vehicle_id,
+        },
+      ],
+    }));
+    setTripDraft({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0 });
+  }
+
   return (
     <main className="app-shell">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
@@ -482,9 +564,18 @@ export default function Home() {
         ) : null}
         {activeView === "Rentals" ? (
           <RentalsWorkspace
+            expenseDraft={expenseDraft}
+            onAddExpense={addRentalExpense}
+            onAddRent={addRentalRent}
+            onAddTrip={addRentalTrip}
+            onExpenseDraftChange={setExpenseDraft}
+            onRentDraftChange={setRentDraft}
             rentalBook={rentalBook}
+            rentDraft={rentDraft}
             selectedPropertyIndex={selectedPropertyIndex}
             onSelectedPropertyIndexChange={setSelectedPropertyIndex}
+            onTripDraftChange={setTripDraft}
+            tripDraft={tripDraft}
           />
         ) : null}
         {activeView === "Paper Trail" ? (

@@ -203,6 +203,46 @@
   white-space: nowrap;
 }
 
+.rental-intake-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rental-intake-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 52px;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rental-intake-form strong {
+  grid-column: 1 / -1;
+  color: var(--yellow);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rental-intake-form input,
+.rental-intake-form select,
+.rental-intake-form button {
+  min-width: 0;
+  height: 28px;
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+.rental-intake-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
 .rental-summary-strip {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));

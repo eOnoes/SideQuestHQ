@@ -85,6 +85,23 @@
     gap: 6px;
   }
 
+  .rental-intake-grid {
+    gap: 6px;
+  }
+
+  .rental-intake-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+    gap: 5px;
+    padding: 7px;
+  }
+
+  .rental-intake-form input,
+  .rental-intake-form select,
+  .rental-intake-form button {
+    height: 25px;
+    font-size: 10px;
+  }
+
   .rental-summary-strip div {
     min-height: 46px;
     padding: 6px 8px;
@@ -390,6 +407,7 @@
   .asset-body,
   .asset-list,
   .rental-board,
+  .rental-intake-grid,
   .rental-summary-strip,
   .rental-grid,
   .ledger-board,
@@ -434,6 +452,7 @@
   .asset-form,
   .asset-summary,
   .rental-summary-strip,
+  .rental-intake-grid,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,
@@ -509,6 +528,7 @@
   .asset-form,
   .asset-summary,
   .rental-summary-strip,
+  .rental-intake-grid,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,
