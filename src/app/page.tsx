@@ -664,6 +664,7 @@ export default function Home() {
             onCycleAssetStatus={cycleAssetStatus}
             onOpenAssetQuest={openAssetQuest}
             onRemoveAsset={removeAsset}
+            rentalBook={rentalBook}
           >
             {activeAssetTab === "Rentals" ? (
               <RentalsWorkspace

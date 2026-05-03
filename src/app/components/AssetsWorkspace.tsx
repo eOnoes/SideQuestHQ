@@ -1,5 +1,5 @@
 import type { FormEvent, ReactNode } from "react";
-import type { Asset, AssetTab } from "../types";
+import type { Asset, AssetTab, RentalBook, RentalProperty, VehicleProfile } from "../types";
 import { formatMoney } from "../utils";
 
 type AssetsWorkspaceProps = {
@@ -19,7 +19,22 @@ type AssetsWorkspaceProps = {
   onOpenAssetQuest: (assetIndex: number) => void;
   onRemoveAsset: (assetIndex: number) => void;
   onAssetTabChange: (assetTab: AssetTab) => void;
+  rentalBook: RentalBook;
   children?: ReactNode;
+};
+
+const rentalStatusLabels: Record<RentalProperty["rental_status"], string> = {
+  archived: "archived",
+  available: "available",
+  empty: "empty",
+  full: "full",
+  under_maintenance: "under maint",
+};
+
+const vehicleStatusLabels: Record<VehicleProfile["availability_status"], string> = {
+  archived: "archived",
+  available: "available",
+  unavailable: "unavailable",
 };
 
 export function AssetsWorkspace({
@@ -34,8 +49,12 @@ export function AssetsWorkspace({
   onCycleAssetStatus,
   onOpenAssetQuest,
   onRemoveAsset,
+  rentalBook,
 }: AssetsWorkspaceProps) {
   const tabs: AssetTab[] = ["Portfolio", "Rentals", "Garage"];
+  const rentalProperties = rentalBook.properties.filter((property) => property.rental_status !== "archived");
+  const garageVehicles = rentalBook.vehicles.filter((vehicle) => vehicle.availability_status !== "archived");
+  const investmentAssets = assetList.filter((asset) => asset.type !== "Rental");
 
   return (
     <section className="asset-section panel">
@@ -111,22 +130,71 @@ export function AssetsWorkspace({
           </div>
         </div>
 
-        <div className="asset-list">
-          {assetList.map((asset, index) => (
-            <article className="asset-row" key={`${asset.name}-${asset.type}`}>
-              <div>
-                <span>{asset.type}</span>
-                <strong>{asset.name}</strong>
-              </div>
-              <div>
-                <span>{asset.value}</span>
-                <strong>{asset.projected} {asset.frequency.toLowerCase()}</strong>
-              </div>
-              <button data-status={asset.status} onClick={() => onCycleAssetStatus(index)} type="button">{asset.status}</button>
-              <button className="open-quest-button" onClick={() => onOpenAssetQuest(index)} type="button">Quest</button>
-              <button className="remove-asset-button" onClick={() => onRemoveAsset(index)} type="button" aria-label={`Remove ${asset.name}`}>Remove</button>
-            </article>
-          ))}
+        <div className="portfolio-columns">
+          <section className="portfolio-column">
+            <div className="portfolio-column-head">
+              <h3>Rentals</h3>
+              <span>{rentalProperties.length}</span>
+            </div>
+            <div className="portfolio-stack">
+              {rentalProperties.map((property) => (
+                <article className="portfolio-item" key={property.property_id}>
+                  <div>
+                    <span>{property.rent_type} / {property.rooms} rooms</span>
+                    <strong>{property.property_name}</strong>
+                    <em>{property.street_address || "No address set"}</em>
+                  </div>
+                  <b data-state={property.rental_status}>{rentalStatusLabels[property.rental_status]}</b>
+                </article>
+              ))}
+              {rentalProperties.length === 0 ? <p>No rental assets listed.</p> : null}
+            </div>
+          </section>
+
+          <section className="portfolio-column">
+            <div className="portfolio-column-head">
+              <h3>Garage</h3>
+              <span>{garageVehicles.length}</span>
+            </div>
+            <div className="portfolio-stack">
+              {garageVehicles.map((vehicle) => (
+                <article className="portfolio-item" key={vehicle.vehicle_id}>
+                  <div>
+                    <span>{vehicle.vehicle_type} / {vehicle.owned_or_leased}</span>
+                    <strong>{vehicle.vehicle_name}</strong>
+                    <em>{[vehicle.model_year, vehicle.make, vehicle.model].filter(Boolean).join(" ") || "Vehicle details open"}</em>
+                  </div>
+                  <b data-state={vehicle.availability_status}>{vehicleStatusLabels[vehicle.availability_status]}</b>
+                </article>
+              ))}
+              {garageVehicles.length === 0 ? <p>No garage assets listed.</p> : null}
+            </div>
+          </section>
+
+          <section className="portfolio-column">
+            <div className="portfolio-column-head">
+              <h3>Investments</h3>
+              <span>{investmentAssets.length}</span>
+            </div>
+            <div className="portfolio-stack">
+              {investmentAssets.map((asset) => {
+                const assetIndex = assetList.indexOf(asset);
+                return (
+                  <article className="portfolio-item portfolio-item-actions" key={`${asset.name}-${asset.type}`}>
+                    <div>
+                      <span>{asset.type}</span>
+                      <strong>{asset.name}</strong>
+                      <em>{asset.value} / {asset.projected} {asset.frequency.toLowerCase()}</em>
+                    </div>
+                    <button data-status={asset.status} onClick={() => onCycleAssetStatus(assetIndex)} type="button">{asset.status}</button>
+                    <button className="open-quest-button" onClick={() => onOpenAssetQuest(assetIndex)} type="button">Quest</button>
+                    <button className="remove-asset-button" onClick={() => onRemoveAsset(assetIndex)} type="button" aria-label={`Remove ${asset.name}`}>Remove</button>
+                  </article>
+                );
+              })}
+              {investmentAssets.length === 0 ? <p>No investments listed.</p> : null}
+            </div>
+          </section>
         </div>
       </div>
       )}

@@ -64,6 +64,128 @@
   gap: 10px;
 }
 
+.portfolio-columns {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.portfolio-column {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.portfolio-column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.portfolio-column-head h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.portfolio-column-head span {
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.portfolio-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.portfolio-stack p {
+  margin: 0;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.portfolio-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.portfolio-item-actions {
+  grid-template-columns: minmax(0, 1fr) 82px 52px 64px;
+}
+
+.portfolio-item div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.portfolio-item span,
+.portfolio-item strong,
+.portfolio-item em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portfolio-item span,
+.portfolio-item em {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.portfolio-item strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.portfolio-item em {
+  font-style: normal;
+}
+
+.portfolio-item b,
+.portfolio-item button {
+  justify-self: stretch;
+  min-width: 0;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.portfolio-item b[data-state="available"],
+.portfolio-item b[data-state="full"],
+.portfolio-item button[data-status="Producing"] {
+  color: var(--green);
+}
+
+.portfolio-item b[data-state="unavailable"],
+.portfolio-item b[data-state="empty"],
+.portfolio-item b[data-state="under_maintenance"],
+.portfolio-item button[data-status="Planning"] {
+  color: var(--red);
+}
+
 .asset-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr) auto auto auto;

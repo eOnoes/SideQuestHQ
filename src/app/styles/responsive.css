@@ -58,6 +58,23 @@
     gap: 8px;
   }
 
+  .portfolio-columns {
+    gap: 8px;
+  }
+
+  .portfolio-column {
+    padding: 8px;
+  }
+
+  .portfolio-item {
+    min-height: 48px;
+    padding: 7px 8px;
+  }
+
+  .portfolio-item-actions {
+    grid-template-columns: minmax(0, 1fr) 76px 48px 58px;
+  }
+
   .asset-row {
     gap: 4px 6px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto auto auto;
@@ -463,6 +480,7 @@
   .command-pulse,
   .asset-body,
   .asset-list,
+  .portfolio-columns,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -513,6 +531,7 @@
 
   .asset-form,
   .asset-summary,
+  .portfolio-columns,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -594,6 +613,9 @@
 
   .asset-form,
   .asset-summary,
+  .portfolio-columns,
+  .portfolio-item,
+  .portfolio-item-actions,
   .garage-form,
   .garage-row,
   .rental-asset-form,
