@@ -409,6 +409,10 @@
     overflow: visible;
   }
 
+  .workspace[data-view="Command"] {
+    overflow: visible;
+  }
+
   .summary-strip,
   .dashboard-grid,
   .command-pulse,

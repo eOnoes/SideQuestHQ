@@ -516,7 +516,7 @@ export default function Home() {
     <main className="app-shell">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
-      <section className="workspace">
+      <section className="workspace" data-view={activeView}>
         <Topbar
           activeView={activeView}
           onToggleQuestComposer={() => setShowQuestComposer((isOpen) => !isOpen)}
