@@ -5,6 +5,7 @@ import { Icon } from "./components/Icon";
 import { AssetsWorkspace } from "./components/AssetsWorkspace";
 import { CommandWorkspace } from "./components/CommandWorkspace";
 import { GarageWorkspace, type VehicleDraft } from "./components/GarageWorkspace";
+import { InvestmentsWorkspace, type InvestmentSnapshotDraft } from "./components/InvestmentsWorkspace";
 import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
 import { PeopleWorkspace } from "./components/PeopleWorkspace";
@@ -52,7 +53,7 @@ export default function Home() {
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
   const [investmentSnapshots, setInvestmentSnapshots] = useState<InvestmentSnapshot[]>(seedInvestmentSnapshots);
-  const [investmentSnapshotDraft, setInvestmentSnapshotDraft] = useState<Omit<InvestmentSnapshot, "snapshot_id">>({ account_name: "401k", asset_name: "401k Growth Bucket", contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
+  const [investmentSnapshotDraft, setInvestmentSnapshotDraft] = useState<InvestmentSnapshotDraft>({ account_name: "401k", asset_name: "401k Growth Bucket", contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
   const [propertyDraft, setPropertyDraft] = useState<RentalPropertyDraft>({ pet_allowed: false, property_name: "", rent_type: "House", rooms: 0, street_address: "" });
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
@@ -685,14 +686,11 @@ export default function Home() {
             assetDraft={assetDraft}
             assetList={assetList}
             assetSummary={assetSummary}
-            investmentSnapshotDraft={investmentSnapshotDraft}
             investmentSnapshots={investmentSnapshots}
             onAddAsset={addAsset}
-            onAddInvestmentSnapshot={addInvestmentSnapshot}
             onAssetDraftChange={setAssetDraft}
             onAssetTabChange={setActiveAssetTab}
             onCycleAssetStatus={cycleAssetStatus}
-            onInvestmentSnapshotDraftChange={setInvestmentSnapshotDraft}
             onOpenAssetQuest={openAssetQuest}
             onRemoveAsset={removeAsset}
             rentalBook={rentalBook}
@@ -716,6 +714,15 @@ export default function Home() {
                 rentalBook={rentalBook}
                 selectedTaxYear={selectedTaxYear}
                 vehicleDraft={vehicleDraft}
+              />
+            ) : null}
+            {activeAssetTab === "Investments" ? (
+              <InvestmentsWorkspace
+                investmentAssets={assetList.filter((asset) => asset.type !== "Rental")}
+                investmentSnapshotDraft={investmentSnapshotDraft}
+                investmentSnapshots={investmentSnapshots}
+                onAddInvestmentSnapshot={addInvestmentSnapshot}
+                onInvestmentSnapshotDraftChange={setInvestmentSnapshotDraft}
               />
             ) : null}
           </AssetsWorkspace>
