@@ -55,6 +55,18 @@ export type Asset = {
   status: "Producing" | "Watching" | "Planning";
 };
 
+export type InvestmentSnapshot = {
+  snapshot_id: string;
+  asset_name: string;
+  account_name: string;
+  holding_name: string;
+  ticker: string;
+  snapshot_date: string;
+  current_value: number;
+  contributions_to_date: number;
+  notes: string;
+};
+
 export type RentalProperty = {
   property_id: string;
   property_name: string;

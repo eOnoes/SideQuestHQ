@@ -13,7 +13,7 @@ import { RentalsWorkspace, type RentalPropertyDraft } from "./components/Rentals
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
-import { getQuestTypePreset, seedAssets, seedPeople, seedQuests, seedReminders, seedRentalBook } from "./data";
+import { getQuestTypePreset, seedAssets, seedInvestmentSnapshots, seedPeople, seedQuests, seedReminders, seedRentalBook } from "./data";
 import { loadStoredAppData, saveStoredAppData } from "./persistence";
 import {
   getActiveReminders,
@@ -31,7 +31,7 @@ import {
   getSelectedPeople,
   getSelectedQuest,
 } from "./selectors";
-import type { AppView, Asset, AssetTab, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, RentalProperty, StepState } from "./types";
+import type { AppView, Asset, AssetTab, InvestmentSnapshot, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, RentalProperty, StepState } from "./types";
 import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
@@ -51,6 +51,8 @@ export default function Home() {
   const [reminderDraft, setReminderDraft] = useState({ label: "", due: "", priority: "Normal" as Reminder["priority"] });
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
+  const [investmentSnapshots, setInvestmentSnapshots] = useState<InvestmentSnapshot[]>(seedInvestmentSnapshots);
+  const [investmentSnapshotDraft, setInvestmentSnapshotDraft] = useState<Omit<InvestmentSnapshot, "snapshot_id">>({ account_name: "401k", asset_name: "401k Growth Bucket", contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
   const [propertyDraft, setPropertyDraft] = useState<RentalPropertyDraft>({ pet_allowed: false, property_name: "", rent_type: "House", rooms: 0, street_address: "" });
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
@@ -94,15 +96,16 @@ export default function Home() {
     setPeopleList(storedData.people);
     setReminderList(storedData.reminders);
     setAssetList(storedData.assets);
+    setInvestmentSnapshots(storedData.investmentSnapshots);
     setRentalBook(storedData.rentalBook);
     setHasLoadedStoredData(true);
   }, []);
 
   useEffect(() => {
     if (hasLoadedStoredData) {
-      saveStoredAppData({ assets: assetList, people: peopleList, quests: questList, reminders: reminderList, rentalBook });
+      saveStoredAppData({ assets: assetList, investmentSnapshots, people: peopleList, quests: questList, reminders: reminderList, rentalBook });
     }
-  }, [assetList, hasLoadedStoredData, peopleList, questList, reminderList, rentalBook]);
+  }, [assetList, hasLoadedStoredData, investmentSnapshots, peopleList, questList, reminderList, rentalBook]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -259,6 +262,30 @@ export default function Home() {
     setQuestList((current) => [...current, nextQuest]);
     setSelectedQuestIndex(questList.length);
     setActiveView("Quests");
+  }
+
+  function addInvestmentSnapshot(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const assetName = investmentSnapshotDraft.asset_name.trim();
+    if (!assetName) return;
+
+    const snapshotDate = investmentSnapshotDraft.snapshot_date || new Date().toISOString().slice(0, 10);
+    setInvestmentSnapshots((current) => [
+      {
+        ...investmentSnapshotDraft,
+        account_name: investmentSnapshotDraft.account_name.trim() || "Investment account",
+        asset_name: assetName,
+        current_value: Number(investmentSnapshotDraft.current_value) || 0,
+        contributions_to_date: Number(investmentSnapshotDraft.contributions_to_date) || 0,
+        holding_name: investmentSnapshotDraft.holding_name.trim() || assetName,
+        notes: investmentSnapshotDraft.notes.trim(),
+        snapshot_date: snapshotDate,
+        snapshot_id: `snap-${assetName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${Date.now()}`,
+        ticker: investmentSnapshotDraft.ticker.trim().toUpperCase(),
+      },
+      ...current,
+    ]);
+    setInvestmentSnapshotDraft({ account_name: "401k", asset_name: assetName, contributions_to_date: 0, current_value: 0, holding_name: "", notes: "", snapshot_date: "", ticker: "" });
   }
 
   function cycleLedgerState(entryIndex: number) {
@@ -658,10 +685,14 @@ export default function Home() {
             assetDraft={assetDraft}
             assetList={assetList}
             assetSummary={assetSummary}
+            investmentSnapshotDraft={investmentSnapshotDraft}
+            investmentSnapshots={investmentSnapshots}
             onAddAsset={addAsset}
+            onAddInvestmentSnapshot={addInvestmentSnapshot}
             onAssetDraftChange={setAssetDraft}
             onAssetTabChange={setActiveAssetTab}
             onCycleAssetStatus={cycleAssetStatus}
+            onInvestmentSnapshotDraftChange={setInvestmentSnapshotDraft}
             onOpenAssetQuest={openAssetQuest}
             onRemoveAsset={removeAsset}
             rentalBook={rentalBook}

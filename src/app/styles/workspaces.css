@@ -186,6 +186,123 @@
   color: var(--red);
 }
 
+.snapshot-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.snapshot-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.snapshot-panel-head h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.snapshot-panel-head span {
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.snapshot-panel-head strong {
+  color: var(--yellow);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.snapshot-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 90px minmax(130px, 1fr) 92px 120px 112px 124px minmax(120px, 1fr) 58px;
+  gap: 8px;
+}
+
+.snapshot-form input,
+.snapshot-form select,
+.snapshot-form button {
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.snapshot-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
+.snapshot-list {
+  display: grid;
+  gap: 8px;
+}
+
+.snapshot-list p {
+  margin: 0;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.snapshot-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 120px 110px;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.snapshot-row div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.snapshot-row span,
+.snapshot-row strong,
+.snapshot-row em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snapshot-row span,
+.snapshot-row em {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.snapshot-row strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.snapshot-row strong[data-tone="good"] {
+  color: var(--green);
+}
+
+.snapshot-row strong[data-tone="warn"] {
+  color: var(--red);
+}
+
+.snapshot-row em {
+  font-style: normal;
+}
+
 .asset-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr) auto auto auto;

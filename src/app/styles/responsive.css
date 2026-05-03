@@ -75,6 +75,30 @@
     grid-template-columns: minmax(0, 1fr) 76px 48px 58px;
   }
 
+  .snapshot-panel {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .snapshot-form {
+    grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr) 74px 92px 88px 98px minmax(0, 1fr) 50px;
+    gap: 6px;
+  }
+
+  .snapshot-form input,
+  .snapshot-form select,
+  .snapshot-form button {
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .snapshot-row {
+    grid-template-columns: minmax(0, 1fr) 92px 92px 86px;
+    gap: 6px;
+    min-height: 48px;
+    padding: 7px 8px;
+  }
+
   .asset-row {
     gap: 4px 6px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto auto auto;
@@ -481,6 +505,8 @@
   .asset-body,
   .asset-list,
   .portfolio-columns,
+  .snapshot-form,
+  .snapshot-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -532,6 +558,8 @@
   .asset-form,
   .asset-summary,
   .portfolio-columns,
+  .snapshot-form,
+  .snapshot-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,
@@ -616,6 +644,8 @@
   .portfolio-columns,
   .portfolio-item,
   .portfolio-item-actions,
+  .snapshot-form,
+  .snapshot-row,
   .garage-form,
   .garage-row,
   .rental-asset-form,

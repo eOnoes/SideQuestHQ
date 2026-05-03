@@ -1,9 +1,10 @@
-import type { AppView, Asset, IconName, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
+import type { AppView, Asset, IconName, InvestmentSnapshot, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
 
 export const STORAGE_KEY = "sidequest-hq:quests:v1";
 export const PEOPLE_STORAGE_KEY = "sidequest-hq:people:v1";
 export const REMINDERS_STORAGE_KEY = "sidequest-hq:reminders:v1";
 export const ASSETS_STORAGE_KEY = "sidequest-hq:assets:v1";
+export const INVESTMENT_SNAPSHOTS_STORAGE_KEY = "sidequest-hq:investment-snapshots:v1";
 export const RENTAL_BOOK_STORAGE_KEY = "sidequest-hq:rental-book:v1";
 
 export const questTypePresets: Array<{
@@ -188,6 +189,31 @@ export const seedAssets: Asset[] = [
   { name: "Maple Street Rental", type: "Rental", value: "$185,000 est.", projected: "$1,450", frequency: "Monthly", status: "Producing" },
   { name: "401k Growth Bucket", type: "Retirement", value: "$0 tracked", projected: "$4,800", frequency: "Annual", status: "Watching" },
   { name: "Friend Business Stake", type: "Business", value: "$2,500 in", projected: "$300", frequency: "Monthly", status: "Planning" },
+];
+
+export const seedInvestmentSnapshots: InvestmentSnapshot[] = [
+  {
+    snapshot_id: "snap-401k-growth-apr",
+    account_name: "401k",
+    asset_name: "401k Growth Bucket",
+    contributions_to_date: 1200,
+    current_value: 18450,
+    holding_name: "Growth allocation",
+    notes: "Manual seed snapshot. Replace with real statement value when ready.",
+    snapshot_date: "2026-04-30",
+    ticker: "",
+  },
+  {
+    snapshot_id: "snap-401k-growth-may",
+    account_name: "401k",
+    asset_name: "401k Growth Bucket",
+    contributions_to_date: 1600,
+    current_value: 19080,
+    holding_name: "Growth allocation",
+    notes: "Shows contribution-adjusted movement pattern for AI summary later.",
+    snapshot_date: "2026-05-02",
+    ticker: "",
+  },
 ];
 
 export const seedRentalBook: RentalBook = {
