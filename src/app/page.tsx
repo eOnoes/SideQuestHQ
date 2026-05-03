@@ -60,7 +60,7 @@ export default function Home() {
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
   const [propertyDraft, setPropertyDraft] = useState<RentalPropertyDraft>({ pet_allowed: false, property_name: "", rent_type: "House", rooms: 0, street_address: "" });
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
-  const [selectedTaxYear, setSelectedTaxYear] = useState(2026);
+  const [selectedTaxYear] = useState(2026);
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);

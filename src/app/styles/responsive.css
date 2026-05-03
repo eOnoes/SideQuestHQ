@@ -54,10 +54,6 @@
     font-size: 11px;
   }
 
-  .asset-list {
-    gap: 8px;
-  }
-
   .portfolio-columns {
     gap: 8px;
   }
@@ -97,13 +93,6 @@
     gap: 6px;
     min-height: 48px;
     padding: 7px 8px;
-  }
-
-  .asset-row {
-    gap: 4px 6px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto auto auto;
-    min-height: 48px;
-    padding: 7px 9px;
   }
 
   .asset-tabs {
@@ -177,64 +166,6 @@
     gap: 6px;
     min-height: 48px;
     padding: 7px 9px;
-  }
-
-  .rental-board {
-    grid-template-columns: 190px minmax(0, 1fr);
-    gap: 8px;
-    padding: 0 14px 10px;
-  }
-
-  .rental-property-list button {
-    min-height: 58px;
-    padding: 9px;
-  }
-
-  .rental-property-header {
-    min-height: 58px;
-    padding: 9px 10px;
-  }
-
-  .rental-summary-strip {
-    gap: 6px;
-  }
-
-  .rental-intake-grid {
-    gap: 6px;
-  }
-
-  .rental-intake-form {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
-    gap: 5px;
-    padding: 7px;
-  }
-
-  .rental-intake-form input,
-  .rental-intake-form select,
-  .rental-intake-form button {
-    height: 25px;
-    font-size: 10px;
-  }
-
-  .rental-summary-strip div {
-    min-height: 46px;
-    padding: 6px 8px;
-  }
-
-  .rental-grid {
-    gap: 8px;
-  }
-
-  .rental-panel {
-    padding: 9px;
-  }
-
-  .rental-report-panel {
-    padding: 9px;
-  }
-
-  .rental-report-grid {
-    gap: 6px;
   }
 
   .ledger-board {
@@ -531,7 +462,6 @@
   .dashboard-grid,
   .command-pulse,
   .asset-body,
-  .asset-list,
   .portfolio-columns,
   .snapshot-form,
   .snapshot-row,
@@ -541,11 +471,6 @@
   .garage-row,
   .rental-asset-form,
   .rental-asset-row,
-  .rental-board,
-  .rental-intake-grid,
-  .rental-summary-strip,
-  .rental-grid,
-  .rental-report-grid,
   .ledger-board,
   .ledger-form,
   .ledger-row,
@@ -596,9 +521,6 @@
   .garage-row,
   .rental-asset-form,
   .rental-asset-row,
-  .rental-summary-strip,
-  .rental-intake-grid,
-  .rental-report-grid,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,
@@ -684,9 +606,6 @@
   .garage-row,
   .rental-asset-form,
   .rental-asset-row,
-  .rental-summary-strip,
-  .rental-intake-grid,
-  .rental-report-grid,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,
