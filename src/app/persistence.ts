@@ -52,6 +52,13 @@ function normalizeRentalBook(rentalBook: RentalBook): RentalBook {
   return {
     ...rentalBook,
     mileageRates: rentalBook.mileageRates?.length ? rentalBook.mileageRates : seedRentalBook.mileageRates,
+    properties: rentalBook.properties.map((property) => ({
+      ...property,
+      pet_allowed: property.pet_allowed ?? false,
+      rent_type: property.rent_type ?? "House",
+      rental_status: normalizeRentalStatus(property.rental_status),
+      rooms: property.rooms ?? 0,
+    })),
     vehicles: rentalBook.vehicles.map((vehicle) => ({
       ...vehicle,
       availability_status: vehicle.availability_status ?? "available",
@@ -61,6 +68,13 @@ function normalizeRentalBook(rentalBook: RentalBook): RentalBook {
       vehicle_type: vehicle.vehicle_type ?? "Car",
     })),
   };
+}
+
+function normalizeRentalStatus(status: RentalBook["properties"][number]["rental_status"] | "active" | "vacant" | "maintenance" | "planned" | "inactive") {
+  if (status === "active") return "full";
+  if (status === "vacant" || status === "planned" || status === "inactive") return "empty";
+  if (status === "maintenance") return "under_maintenance";
+  return status;
 }
 
 export function saveStoredAppData(data: StoredAppData) {

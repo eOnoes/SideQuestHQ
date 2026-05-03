@@ -62,9 +62,12 @@ export type RentalProperty = {
   city: string;
   state: string;
   zip: string;
+  rent_type: "House" | "Room";
+  rooms: 0 | 1 | 2 | 3 | 4 | 5;
+  pet_allowed: boolean;
   acquisition_date: string;
   ownership_status: "owned" | "leased" | "sold" | "inactive";
-  rental_status: "active" | "vacant" | "maintenance" | "planned" | "inactive";
+  rental_status: "available" | "full" | "empty" | "under_maintenance" | "archived";
   notes: string;
 };
 

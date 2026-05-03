@@ -92,6 +92,24 @@
     padding: 7px 9px;
   }
 
+  .rental-asset-form {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) 82px 72px 72px 50px;
+    gap: 6px;
+  }
+
+  .rental-asset-form input,
+  .rental-asset-form select,
+  .rental-asset-form button {
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .rental-asset-row {
+    gap: 6px;
+    min-height: 48px;
+    padding: 7px 9px;
+  }
+
   .rental-board {
     grid-template-columns: 190px minmax(0, 1fr);
     gap: 8px;
@@ -447,6 +465,8 @@
   .asset-list,
   .garage-form,
   .garage-row,
+  .rental-asset-form,
+  .rental-asset-row,
   .rental-board,
   .rental-intake-grid,
   .rental-summary-strip,
@@ -495,6 +515,8 @@
   .asset-summary,
   .garage-form,
   .garage-row,
+  .rental-asset-form,
+  .rental-asset-row,
   .rental-summary-strip,
   .rental-intake-grid,
   .rental-report-grid,
@@ -574,6 +596,8 @@
   .asset-summary,
   .garage-form,
   .garage-row,
+  .rental-asset-form,
+  .rental-asset-row,
   .rental-summary-strip,
   .rental-intake-grid,
   .rental-report-grid,

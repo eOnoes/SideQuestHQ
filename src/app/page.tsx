@@ -9,7 +9,7 @@ import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
 import { PeopleWorkspace } from "./components/PeopleWorkspace";
 import { QuestWorkspace } from "./components/QuestWorkspace";
-import { RentalsWorkspace, type ExpenseDraft, type RentDraft, type TripDraft } from "./components/RentalsWorkspace";
+import { RentalsWorkspace, type RentalPropertyDraft } from "./components/RentalsWorkspace";
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
@@ -31,7 +31,7 @@ import {
   getSelectedPeople,
   getSelectedQuest,
 } from "./selectors";
-import type { AppView, Asset, AssetTab, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
+import type { AppView, Asset, AssetTab, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, RentalProperty, StepState } from "./types";
 import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
@@ -52,10 +52,7 @@ export default function Home() {
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
   const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
-  const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
-  const [rentDraft, setRentDraft] = useState<RentDraft>({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
-  const [expenseDraft, setExpenseDraft] = useState<ExpenseDraft>({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
-  const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0, vehicle_id: "veh-personal-truck" });
+  const [propertyDraft, setPropertyDraft] = useState<RentalPropertyDraft>({ pet_allowed: false, property_name: "", rent_type: "House", rooms: 0, street_address: "" });
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
   const [selectedTaxYear, setSelectedTaxYear] = useState(2026);
   const [noteDraft, setNoteDraft] = useState("");
@@ -436,83 +433,51 @@ export default function Home() {
     setReminderList((current) => current.filter((_, index) => index !== reminderIndex));
   }
 
-  function getSelectedRentalPropertyId() {
-    return rentalBook.properties[Math.min(selectedPropertyIndex, rentalBook.properties.length - 1)]?.property_id ?? rentalBook.properties[0]?.property_id ?? "";
-  }
-
-  function addRentalRent(event: FormEvent<HTMLFormElement>) {
+  function addRentalProperty(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const propertyId = getSelectedRentalPropertyId();
-    if (!propertyId || !rentDraft.rent_period_start || !rentDraft.due_date || rentDraft.amount_due <= 0) return;
-    const tenant = rentalBook.tenants.find((currentTenant) => currentTenant.property_id === propertyId && currentTenant.status === "active");
+    const name = propertyDraft.property_name.trim();
+    if (!name) return;
+    const propertyId = `prop-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${Date.now()}`;
 
     setRentalBook((current) => ({
       ...current,
-      rents: [
-        ...current.rents,
+      properties: [
+        ...current.properties,
         {
-          ...rentDraft,
-          late_fee_amount: 0,
-          notes: rentDraft.notes.trim(),
-          payment_method: rentDraft.payment_method.trim(),
+          acquisition_date: "",
+          city: "",
+          notes: "",
+          ownership_status: "owned",
+          pet_allowed: propertyDraft.pet_allowed,
           property_id: propertyId,
-          rent_id: `rent-${Date.now()}`,
-          tenant_id: tenant?.tenant_id ?? "",
+          property_name: name,
+          rent_type: propertyDraft.rent_type,
+          rental_status: "empty",
+          rooms: propertyDraft.rooms,
+          state: "",
+          street_address: propertyDraft.street_address.trim(),
+          zip: "",
         },
       ],
     }));
-    setRentDraft({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
+    setPropertyDraft({ pet_allowed: false, property_name: "", rent_type: "House", rooms: 0, street_address: "" });
   }
 
-  function addRentalExpense(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const propertyId = getSelectedRentalPropertyId();
-    if (!propertyId || !expenseDraft.expense_date || expenseDraft.amount <= 0) return;
-
+  function cycleRentalPropertyStatus(propertyId: string) {
+    const order: RentalProperty["rental_status"][] = ["available", "full", "empty", "under_maintenance"];
     setRentalBook((current) => ({
       ...current,
-      expenses: [
-        ...current.expenses,
-        {
-          ...expenseDraft,
-          due_date: expenseDraft.paid_date || expenseDraft.expense_date,
-          expense_id: `expense-${Date.now()}`,
-          notes: expenseDraft.notes.trim(),
-          payment_method: expenseDraft.payment_method.trim(),
-          property_id: propertyId,
-          receipt_url: "",
-          tax_bucket: expenseDraft.tax_bucket.trim() || expenseDraft.category,
-          vendor_id: "",
-        },
-      ],
+      properties: current.properties.map((property) =>
+        property.property_id === propertyId ? { ...property, rental_status: order[(order.indexOf(property.rental_status) + 1) % order.length] } : property,
+      ),
     }));
-    setExpenseDraft({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
   }
 
-  function addRentalTrip(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const propertyId = getSelectedRentalPropertyId();
-    const vehicle = rentalBook.vehicles.find((currentVehicle) => currentVehicle.vehicle_id === tripDraft.vehicle_id) ?? rentalBook.vehicles[0];
-    if (!propertyId || !vehicle || vehicle.availability_status !== "available" || !tripDraft.date || tripDraft.miles <= 0) return;
-
+  function archiveRentalProperty(propertyId: string) {
     setRentalBook((current) => ({
       ...current,
-      vehicleTrips: [
-        ...current.vehicleTrips,
-        {
-          ...tripDraft,
-          business_use: true,
-          destination: tripDraft.destination.trim(),
-          notes: tripDraft.notes.trim(),
-          origin: tripDraft.origin.trim(),
-          property_id: propertyId,
-          purpose: tripDraft.purpose.trim(),
-          trip_id: `trip-${Date.now()}`,
-          vehicle_id: vehicle.vehicle_id,
-        },
-      ],
+      properties: current.properties.map((property) => (property.property_id === propertyId ? { ...property, rental_status: "archived" } : property)),
     }));
-    setTripDraft({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0, vehicle_id: vehicle.vehicle_id });
   }
 
   function addVehicle(event: FormEvent<HTMLFormElement>) {
@@ -533,7 +498,6 @@ export default function Home() {
         },
       ],
     }));
-    setTripDraft((current) => ({ ...current, vehicle_id: vehicleId }));
     setVehicleDraft({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
   }
 
@@ -552,11 +516,6 @@ export default function Home() {
       ...current,
       vehicles: current.vehicles.map((vehicle) => (vehicle.vehicle_id === vehicleId ? { ...vehicle, availability_status: "archived" } : vehicle)),
     }));
-    setTripDraft((current) => {
-      if (current.vehicle_id !== vehicleId) return current;
-      const nextVehicle = rentalBook.vehicles.find((vehicle) => vehicle.vehicle_id !== vehicleId && vehicle.availability_status === "available");
-      return { ...current, vehicle_id: nextVehicle?.vehicle_id ?? "" };
-    });
   }
 
   return (
@@ -708,20 +667,12 @@ export default function Home() {
           >
             {activeAssetTab === "Rentals" ? (
               <RentalsWorkspace
-                expenseDraft={expenseDraft}
-                onAddExpense={addRentalExpense}
-                onAddRent={addRentalRent}
-                onAddTrip={addRentalTrip}
-                onExpenseDraftChange={setExpenseDraft}
-                onRentDraftChange={setRentDraft}
+                onAddProperty={addRentalProperty}
+                onArchiveProperty={archiveRentalProperty}
+                onCyclePropertyStatus={cycleRentalPropertyStatus}
+                onPropertyDraftChange={setPropertyDraft}
+                propertyDraft={propertyDraft}
                 rentalBook={rentalBook}
-                rentDraft={rentDraft}
-                selectedPropertyIndex={selectedPropertyIndex}
-                selectedTaxYear={selectedTaxYear}
-                onSelectedPropertyIndexChange={setSelectedPropertyIndex}
-                onSelectedTaxYearChange={setSelectedTaxYear}
-                onTripDraftChange={setTripDraft}
-                tripDraft={tripDraft}
               />
             ) : null}
             {activeAssetTab === "Garage" ? (

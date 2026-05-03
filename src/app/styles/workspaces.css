@@ -141,7 +141,123 @@
 }
 
 .rentals-workspace {
+  display: grid;
+  gap: 12px;
   min-height: 0;
+  padding: 14px 20px 20px;
+}
+
+.rental-asset-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rental-asset-head h3 {
+  margin: 0;
+}
+
+.rental-asset-head span {
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.rental-asset-head strong {
+  color: var(--yellow);
+  font-size: 12px;
+}
+
+.rental-asset-form {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.72fr) minmax(210px, 1.4fr) 104px 90px 90px 64px;
+  gap: 8px;
+}
+
+.rental-asset-form input,
+.rental-asset-form select,
+.rental-asset-form button {
+  height: 34px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.rental-asset-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
+.rental-asset-list {
+  display: grid;
+  gap: 10px;
+}
+
+.rental-asset-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.5fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rental-asset-row div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rental-asset-row span,
+.rental-asset-row strong,
+.rental-asset-row em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rental-asset-row span,
+.rental-asset-row em {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.rental-asset-row strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.rental-asset-row em {
+  font-style: normal;
+}
+
+.rental-asset-row button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rental-asset-row button[data-status="available"] {
+  color: var(--green);
+}
+
+.rental-asset-row button[data-status="full"] {
+  color: var(--blue);
+}
+
+.rental-asset-row button[data-status="empty"],
+.rental-asset-row button[data-status="under_maintenance"],
+.archive-property-button {
+  color: var(--red) !important;
 }
 
 .rental-board {
