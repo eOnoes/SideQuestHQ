@@ -75,7 +75,7 @@
   }
 
   .garage-form {
-    grid-template-columns: minmax(0, 1fr) 92px 86px 86px 86px 86px 50px;
+    grid-template-columns: minmax(0, 0.9fr) 82px 82px 82px 58px 82px 78px 88px 88px 50px;
     gap: 6px;
   }
 

@@ -65,6 +65,7 @@ export function RentalsWorkspace({
   const propertySummary = getRentalPropertySummary(rentalBook, selectedProperty.property_id);
   const expenseRows = getExpensesByCategory(propertySummary.expenses, selectedProperty.property_id);
   const reportRows = getRentalReportIndex(rentalBook, selectedProperty.property_id, selectedTaxYear);
+  const tripVehicles = rentalBook.vehicles.filter((vehicle) => vehicle.availability_status !== "archived");
 
   return (
     <section className="rentals-workspace">
@@ -138,8 +139,10 @@ export function RentalsWorkspace({
             <form className="rental-intake-form" onSubmit={onAddTrip}>
               <strong>Trip</strong>
               <select aria-label="Trip vehicle" onChange={(event) => onTripDraftChange((draft) => ({ ...draft, vehicle_id: event.target.value }))} value={tripDraft.vehicle_id}>
-                {rentalBook.vehicles.map((vehicle) => (
-                  <option key={vehicle.vehicle_id} value={vehicle.vehicle_id}>{vehicle.vehicle_name}</option>
+                {tripVehicles.map((vehicle) => (
+                  <option disabled={vehicle.availability_status === "unavailable"} key={vehicle.vehicle_id} value={vehicle.vehicle_id}>
+                    {vehicle.vehicle_name}{vehicle.availability_status === "unavailable" ? " (unavailable)" : ""}
+                  </option>
                 ))}
               </select>
               <input aria-label="Trip date" onChange={(event) => onTripDraftChange((draft) => ({ ...draft, date: event.target.value }))} placeholder="Date" value={tripDraft.date} />

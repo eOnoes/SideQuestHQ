@@ -127,7 +127,12 @@ export type WorkOrder = {
 export type VehicleProfile = {
   vehicle_id: string;
   vehicle_name: string;
+  vehicle_type: "Van" | "Truck" | "Car" | "Motorcycle";
+  make: string;
+  model: string;
+  model_year: string;
   owned_or_leased: "owned" | "leased";
+  availability_status: "available" | "unavailable" | "archived";
   in_service_date: string;
   lease_monthly_amount: number;
   start_odometer_year: number;

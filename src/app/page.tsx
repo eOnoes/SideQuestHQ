@@ -56,7 +56,7 @@ export default function Home() {
   const [rentDraft, setRentDraft] = useState<RentDraft>({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
   const [expenseDraft, setExpenseDraft] = useState<ExpenseDraft>({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
   const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0, vehicle_id: "veh-personal-truck" });
-  const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "" });
+  const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
   const [selectedTaxYear, setSelectedTaxYear] = useState(2026);
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
@@ -493,7 +493,7 @@ export default function Home() {
     event.preventDefault();
     const propertyId = getSelectedRentalPropertyId();
     const vehicle = rentalBook.vehicles.find((currentVehicle) => currentVehicle.vehicle_id === tripDraft.vehicle_id) ?? rentalBook.vehicles[0];
-    if (!propertyId || !vehicle || !tripDraft.date || tripDraft.miles <= 0) return;
+    if (!propertyId || !vehicle || vehicle.availability_status !== "available" || !tripDraft.date || tripDraft.miles <= 0) return;
 
     setRentalBook((current) => ({
       ...current,
@@ -534,7 +534,29 @@ export default function Home() {
       ],
     }));
     setTripDraft((current) => ({ ...current, vehicle_id: vehicleId }));
-    setVehicleDraft({ end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "" });
+    setVehicleDraft({ availability_status: "available", end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, make: "", model: "", model_year: "", notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "", vehicle_type: "Car" });
+  }
+
+  function cycleVehicleAvailability(vehicleId: string) {
+    setRentalBook((current) => ({
+      ...current,
+      vehicles: current.vehicles.map((vehicle) => {
+        if (vehicle.vehicle_id !== vehicleId) return vehicle;
+        return { ...vehicle, availability_status: vehicle.availability_status === "available" ? "unavailable" : "available" };
+      }),
+    }));
+  }
+
+  function archiveVehicle(vehicleId: string) {
+    setRentalBook((current) => ({
+      ...current,
+      vehicles: current.vehicles.map((vehicle) => (vehicle.vehicle_id === vehicleId ? { ...vehicle, availability_status: "archived" } : vehicle)),
+    }));
+    setTripDraft((current) => {
+      if (current.vehicle_id !== vehicleId) return current;
+      const nextVehicle = rentalBook.vehicles.find((vehicle) => vehicle.vehicle_id !== vehicleId && vehicle.availability_status === "available");
+      return { ...current, vehicle_id: nextVehicle?.vehicle_id ?? "" };
+    });
   }
 
   return (
@@ -705,6 +727,8 @@ export default function Home() {
             {activeAssetTab === "Garage" ? (
               <GarageWorkspace
                 onAddVehicle={addVehicle}
+                onArchiveVehicle={archiveVehicle}
+                onCycleVehicleAvailability={cycleVehicleAvailability}
                 onVehicleDraftChange={setVehicleDraft}
                 rentalBook={rentalBook}
                 selectedTaxYear={selectedTaxYear}

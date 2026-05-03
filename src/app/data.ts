@@ -336,7 +336,12 @@ export const seedRentalBook: RentalBook = {
     {
       vehicle_id: "veh-personal-truck",
       vehicle_name: "Personal Truck",
+      vehicle_type: "Truck",
+      make: "",
+      model: "",
+      model_year: "",
       owned_or_leased: "owned",
+      availability_status: "available",
       in_service_date: "2026-01-01",
       lease_monthly_amount: 0,
       start_odometer_year: 42000,

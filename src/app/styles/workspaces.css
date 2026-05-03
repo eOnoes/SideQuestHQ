@@ -366,7 +366,7 @@
 
 .garage-form {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) 120px repeat(4, minmax(100px, 0.7fr)) 64px;
+  grid-template-columns: minmax(110px, 0.72fr) 112px minmax(92px, 0.62fr) minmax(92px, 0.62fr) 72px 102px 96px 112px 112px 64px;
   gap: 8px;
 }
 
@@ -386,6 +386,13 @@
   font-weight: 900;
 }
 
+.garage-form input:disabled {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--quiet);
+  cursor: not-allowed;
+}
+
 .garage-list {
   display: grid;
   gap: 10px;
@@ -393,7 +400,7 @@
 
 .garage-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) repeat(5, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.2fr) auto repeat(5, minmax(0, 1fr)) auto;
   align-items: center;
   gap: 10px;
   min-height: 62px;
@@ -409,7 +416,8 @@
 }
 
 .garage-row span,
-.garage-row strong {
+.garage-row strong,
+.garage-row em {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -423,6 +431,32 @@
 .garage-row strong {
   color: var(--text);
   font-size: 12px;
+}
+
+.garage-row em {
+  color: var(--quiet);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.garage-row button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.garage-row button[data-status="available"] {
+  color: var(--green);
+}
+
+.garage-row button[data-status="unavailable"],
+.archive-vehicle-button {
+  color: var(--red) !important;
 }
 
 .rental-report-panel {

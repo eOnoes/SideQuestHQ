@@ -52,6 +52,14 @@ function normalizeRentalBook(rentalBook: RentalBook): RentalBook {
   return {
     ...rentalBook,
     mileageRates: rentalBook.mileageRates?.length ? rentalBook.mileageRates : seedRentalBook.mileageRates,
+    vehicles: rentalBook.vehicles.map((vehicle) => ({
+      ...vehicle,
+      availability_status: vehicle.availability_status ?? "available",
+      make: vehicle.make ?? "",
+      model: vehicle.model ?? "",
+      model_year: vehicle.model_year ?? "",
+      vehicle_type: vehicle.vehicle_type ?? "Car",
+    })),
   };
 }
 
