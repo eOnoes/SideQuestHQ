@@ -1,20 +1,23 @@
 import {
   ASSETS_STORAGE_KEY,
   PEOPLE_STORAGE_KEY,
+  RENTAL_BOOK_STORAGE_KEY,
   REMINDERS_STORAGE_KEY,
   seedAssets,
   seedPeople,
+  seedRentalBook,
   seedQuests,
   seedReminders,
   STORAGE_KEY,
 } from "./data";
-import type { Asset, Person, Quest, Reminder } from "./types";
+import type { Asset, Person, Quest, Reminder, RentalBook } from "./types";
 
 export type StoredAppData = {
   assets: Asset[];
   people: Person[];
   quests: Quest[];
   reminders: Reminder[];
+  rentalBook: RentalBook;
 };
 
 function readArray<T>(key: string, fallback: T[]) {
@@ -32,6 +35,7 @@ export function loadStoredAppData(): StoredAppData {
       people: readArray(PEOPLE_STORAGE_KEY, seedPeople),
       quests: readArray(STORAGE_KEY, seedQuests),
       reminders: readArray(REMINDERS_STORAGE_KEY, seedReminders),
+      rentalBook: JSON.parse(window.localStorage.getItem(RENTAL_BOOK_STORAGE_KEY) || "null") ?? seedRentalBook,
     };
   } catch {
     return {
@@ -39,6 +43,7 @@ export function loadStoredAppData(): StoredAppData {
       people: seedPeople,
       quests: seedQuests,
       reminders: seedReminders,
+      rentalBook: seedRentalBook,
     };
   }
 }
@@ -48,4 +53,5 @@ export function saveStoredAppData(data: StoredAppData) {
   window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(data.people));
   window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(data.reminders));
   window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(data.assets));
+  window.localStorage.setItem(RENTAL_BOOK_STORAGE_KEY, JSON.stringify(data.rentalBook));
 }

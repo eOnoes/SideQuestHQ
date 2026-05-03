@@ -1,5 +1,7 @@
-import type { AppView, Asset, LedgerState, PaperItem, Person, Quest, Reminder } from "./types";
+import type { AppView, Asset, LedgerState, PaperItem, Person, Quest, Reminder, RentalBook, RentalExpense } from "./types";
 import { formatMoney, getMonthlyProjection, parseMoney } from "./utils";
+
+const BUSINESS_STANDARD_MILEAGE_RATE_2026 = 0.725;
 
 export type PersonRow = Person & {
   personIndex: number;
@@ -155,4 +157,75 @@ export function getPaperQueue(questList: Quest[]): PaperItem[] {
   );
 
   return items.slice(0, 3);
+}
+
+export function getRentalPropertySummary(rentalBook: RentalBook, propertyId: string) {
+  const rents = rentalBook.rents.filter((rent) => rent.property_id === propertyId);
+  const expenses = rentalBook.expenses.filter((expense) => expense.property_id === propertyId || expense.allocation_property_ids?.includes(propertyId));
+  const workOrders = rentalBook.workOrders.filter((workOrder) => workOrder.property_id === propertyId);
+  const trips = rentalBook.vehicleTrips.filter((trip) => trip.property_id === propertyId);
+  const documents = rentalBook.documents.filter((document) => document.property_id === propertyId);
+  const tenants = rentalBook.tenants.filter((tenant) => tenant.property_id === propertyId);
+
+  const rentReceived = rents.reduce((total, rent) => total + rent.amount_received + rent.late_fee_amount, 0);
+  const rentDue = rents.reduce((total, rent) => total + Math.max(rent.amount_due + rent.late_fee_amount - rent.amount_received, 0), 0);
+  const expenseTotal = expenses.reduce((total, expense) => total + getAllocatedExpenseAmount(expense, propertyId), 0);
+  const completedRepairs = workOrders.filter((workOrder) => workOrder.status === "completed").length;
+  const openRepairs = workOrders.filter((workOrder) => workOrder.status !== "completed" && workOrder.status !== "cancelled").length;
+  const businessMiles = trips.filter((trip) => trip.business_use).reduce((total, trip) => total + trip.miles, 0);
+
+  return {
+    businessMiles,
+    completedRepairs,
+    documents,
+    expenses,
+    expenseTotal,
+    netIncome: rentReceived - expenseTotal,
+    openRepairs,
+    rentDue,
+    rentReceived,
+    rents,
+    tenants,
+    trips,
+    workOrders,
+  };
+}
+
+export function getRentalBookSummary(rentalBook: RentalBook) {
+  const rentReceived = rentalBook.rents.reduce((total, rent) => total + rent.amount_received + rent.late_fee_amount, 0);
+  const rentDue = rentalBook.rents.reduce((total, rent) => total + Math.max(rent.amount_due + rent.late_fee_amount - rent.amount_received, 0), 0);
+  const expenses = rentalBook.expenses.reduce((total, expense) => total + expense.amount, 0);
+  const businessMiles = rentalBook.vehicleTrips.filter((trip) => trip.business_use).reduce((total, trip) => total + trip.miles, 0);
+  const totalMiles = rentalBook.vehicleTrips.reduce((total, trip) => total + trip.miles, 0);
+  const actualVehicleExpenses = rentalBook.vehicleExpenses.reduce((total, expense) => total + expense.amount, 0);
+  const businessUsePercentage = totalMiles > 0 ? businessMiles / totalMiles : 0;
+
+  return {
+    actualVehicleExpenseEstimate: actualVehicleExpenses * businessUsePercentage,
+    businessMiles,
+    businessUsePercentage,
+    expenses,
+    netIncome: rentReceived - expenses,
+    personalMiles: totalMiles - businessMiles,
+    propertyCount: rentalBook.properties.length,
+    rentDue,
+    rentReceived,
+    standardMileageEstimate: businessMiles * BUSINESS_STANDARD_MILEAGE_RATE_2026,
+    totalMiles,
+  };
+}
+
+export function getExpensesByCategory(expenses: RentalExpense[], propertyId: string) {
+  return expenses.reduce<Array<{ category: RentalExpense["category"]; amount: number }>>((rows, expense) => {
+    const amount = getAllocatedExpenseAmount(expense, propertyId);
+    const existing = rows.find((row) => row.category === expense.category);
+    if (existing) existing.amount += amount;
+    else rows.push({ category: expense.category, amount });
+    return rows;
+  }, []);
+}
+
+function getAllocatedExpenseAmount(expense: RentalExpense, propertyId: string) {
+  if (!expense.allocation_property_ids?.length) return expense.amount;
+  return expense.allocation_property_ids.includes(propertyId) ? expense.amount / expense.allocation_property_ids.length : 0;
 }

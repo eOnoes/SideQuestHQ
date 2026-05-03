@@ -65,6 +65,39 @@
     padding: 7px 9px;
   }
 
+  .rental-board {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 8px;
+    padding: 0 14px 10px;
+  }
+
+  .rental-property-list button {
+    min-height: 58px;
+    padding: 9px;
+  }
+
+  .rental-property-header {
+    min-height: 58px;
+    padding: 9px 10px;
+  }
+
+  .rental-summary-strip {
+    gap: 6px;
+  }
+
+  .rental-summary-strip div {
+    min-height: 46px;
+    padding: 6px 8px;
+  }
+
+  .rental-grid {
+    gap: 8px;
+  }
+
+  .rental-panel {
+    padding: 9px;
+  }
+
   .ledger-board {
     grid-template-columns: minmax(0, 1fr) 286px;
     gap: 8px;
@@ -356,6 +389,9 @@
   .command-pulse,
   .asset-body,
   .asset-list,
+  .rental-board,
+  .rental-summary-strip,
+  .rental-grid,
   .ledger-board,
   .ledger-form,
   .ledger-row,
@@ -397,6 +433,7 @@
 
   .asset-form,
   .asset-summary,
+  .rental-summary-strip,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,
@@ -471,6 +508,7 @@
 
   .asset-form,
   .asset-summary,
+  .rental-summary-strip,
   .ledger-total-strip,
   .paper-total-strip,
   .reminder-total-strip,

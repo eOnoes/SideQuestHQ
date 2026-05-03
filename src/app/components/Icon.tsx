@@ -100,6 +100,13 @@ export function Icon({ name }: { name: IconName }) {
         <path d="M4 12h16" />
       </>
     ),
+    home: (
+      <>
+        <path d="M3 11l9-8 9 8" />
+        <path d="M5 10v10h14V10" />
+        <path d="M9 20v-6h6v6" />
+      </>
+    ),
   };
 
   return (

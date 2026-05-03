@@ -8,10 +8,11 @@ import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
 import { PeopleWorkspace } from "./components/PeopleWorkspace";
 import { QuestWorkspace } from "./components/QuestWorkspace";
+import { RentalsWorkspace } from "./components/RentalsWorkspace";
 import { RemindersWorkspace } from "./components/RemindersWorkspace";
 import { Sidebar } from "./components/Sidebar";
 import { QuestComposer, ScanIntake, Topbar, type ScanDraft } from "./components/Topbar";
-import { getQuestTypePreset, seedAssets, seedPeople, seedQuests, seedReminders } from "./data";
+import { getQuestTypePreset, seedAssets, seedPeople, seedQuests, seedReminders, seedRentalBook } from "./data";
 import { loadStoredAppData, saveStoredAppData } from "./persistence";
 import {
   getActiveReminders,
@@ -29,7 +30,7 @@ import {
   getSelectedPeople,
   getSelectedQuest,
 } from "./selectors";
-import type { AppView, Asset, LedgerState, Person, Quest, QuestType, Reminder, StepState } from "./types";
+import type { AppView, Asset, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
 import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
@@ -48,6 +49,8 @@ export default function Home() {
   const [reminderDraft, setReminderDraft] = useState({ label: "", due: "", priority: "Normal" as Reminder["priority"] });
   const [assetList, setAssetList] = useState<Asset[]>(seedAssets);
   const [assetDraft, setAssetDraft] = useState<Asset>({ name: "", type: "Rental", value: "", projected: "", frequency: "Monthly", status: "Producing" });
+  const [rentalBook, setRentalBook] = useState<RentalBook>(seedRentalBook);
+  const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
   const moneyRows = useMemo(() => getMoneyRows(questList), [questList]);
@@ -87,14 +90,15 @@ export default function Home() {
     setPeopleList(storedData.people);
     setReminderList(storedData.reminders);
     setAssetList(storedData.assets);
+    setRentalBook(storedData.rentalBook);
     setHasLoadedStoredData(true);
   }, []);
 
   useEffect(() => {
     if (hasLoadedStoredData) {
-      saveStoredAppData({ assets: assetList, people: peopleList, quests: questList, reminders: reminderList });
+      saveStoredAppData({ assets: assetList, people: peopleList, quests: questList, reminders: reminderList, rentalBook });
     }
-  }, [assetList, hasLoadedStoredData, peopleList, questList, reminderList]);
+  }, [assetList, hasLoadedStoredData, peopleList, questList, reminderList, rentalBook]);
 
   function updateSelectedQuest(updater: (quest: Quest) => Quest) {
     setQuestList((current) => current.map((quest, index) => (index === selectedQuestIndex ? updater(quest) : quest)));
@@ -476,6 +480,13 @@ export default function Home() {
             setSelectedQuestIndex={setSelectedQuestIndex}
           />
         ) : null}
+        {activeView === "Rentals" ? (
+          <RentalsWorkspace
+            rentalBook={rentalBook}
+            selectedPropertyIndex={selectedPropertyIndex}
+            onSelectedPropertyIndexChange={setSelectedPropertyIndex}
+          />
+        ) : null}
         {activeView === "Paper Trail" ? (
           <PaperTrailWorkspace
             draft={paperDraft}
@@ -529,7 +540,7 @@ export default function Home() {
           />
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Rentals" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
           <QuestWorkspace
             ledgerDraft={ledgerDraft}
             noteDraft={noteDraft}
