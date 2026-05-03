@@ -1,7 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import type { RentalBook, RentalExpense, RentalProperty, RentRecord, VehicleTrip } from "../types";
 import { formatMoney } from "../utils";
-import { getExpensesByCategory, getRentalBookSummary, getRentalPropertySummary } from "../selectors";
+import { getExpensesByCategory, getRentalBookSummary, getRentalPropertySummary, getRentalReportIndex } from "../selectors";
 
 export type RentDraft = Pick<RentRecord, "amount_due" | "amount_received" | "due_date" | "payment_date" | "payment_method" | "rent_period_end" | "rent_period_start" | "status"> & {
   notes: string;
@@ -64,6 +64,7 @@ export function RentalsWorkspace({
 
   const propertySummary = getRentalPropertySummary(rentalBook, selectedProperty.property_id);
   const expenseRows = getExpensesByCategory(propertySummary.expenses, selectedProperty.property_id);
+  const reportRows = getRentalReportIndex(rentalBook, selectedProperty.property_id, selectedTaxYear);
 
   return (
     <section className="rentals-workspace panel">
@@ -241,6 +242,22 @@ export function RentalsWorkspace({
               </div>
             </section>
           </div>
+
+          <section className="rental-report-panel">
+            <div>
+              <h3>Reports / Export Prep</h3>
+              <span>Generated from saved rental records</span>
+            </div>
+            <div className="rental-report-grid">
+              {reportRows.map((report) => (
+                <article key={report.label}>
+                  <span>{report.label}</span>
+                  <strong>{report.value}</strong>
+                  <p>{report.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     </section>

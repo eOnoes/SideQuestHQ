@@ -335,6 +335,68 @@
   color: var(--red);
 }
 
+.rental-report-panel {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rental-report-panel > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rental-report-panel h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rental-report-panel > div:first-child span {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.rental-report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rental-report-grid article {
+  display: grid;
+  gap: 3px;
+  min-height: 72px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rental-report-grid span,
+.rental-report-grid p {
+  overflow: hidden;
+  color: var(--quiet);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rental-report-grid strong {
+  color: var(--yellow);
+  font-size: 15px;
+}
+
+.rental-report-grid p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .ledger-section {
   min-height: 0;
 }

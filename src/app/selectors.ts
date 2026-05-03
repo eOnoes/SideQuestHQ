@@ -235,6 +235,30 @@ export function getExpensesByCategory(expenses: RentalExpense[], propertyId: str
   }, []);
 }
 
+export function getRentalReportIndex(rentalBook: RentalBook, propertyId: string, taxYear: number) {
+  const propertySummary = getRentalPropertySummary(rentalBook, propertyId);
+  const bookSummary = getRentalBookSummary(rentalBook, taxYear);
+  const expenseRows = getExpensesByCategory(propertySummary.expenses, propertyId);
+  const vendorPayments = propertySummary.expenses.reduce<Array<{ vendorId: string; amount: number }>>((rows, expense) => {
+    const existing = rows.find((row) => row.vendorId === expense.vendor_id);
+    if (existing) existing.amount += expense.amount;
+    else rows.push({ vendorId: expense.vendor_id || "unassigned", amount: expense.amount });
+    return rows;
+  }, []);
+
+  return [
+    { label: "Property P/L", value: formatMoney(propertySummary.netIncome), detail: `${formatMoney(propertySummary.rentReceived)} rent - ${formatMoney(propertySummary.expenseTotal)} expenses` },
+    { label: "Rent Received", value: formatMoney(propertySummary.rentReceived), detail: `${propertySummary.rents.length} rent records` },
+    { label: "Expense Categories", value: String(expenseRows.length), detail: expenseRows.map((row) => `${row.category}: ${formatMoney(row.amount)}`).join(" / ") || "No expenses" },
+    { label: "Repairs", value: String(propertySummary.workOrders.length), detail: `${propertySummary.openRepairs} open / ${propertySummary.completedRepairs} completed` },
+    { label: "Vehicle Mileage", value: `${propertySummary.businessMiles} mi`, detail: `${formatMoney(bookSummary.standardMileageEstimate)} standard mileage estimate` },
+    { label: "Vehicle Actual", value: formatMoney(bookSummary.actualVehicleExpenseEstimate), detail: `${Math.round(bookSummary.businessUsePercentage * 100)}% business use allocation` },
+    { label: "Vendor Payments", value: String(vendorPayments.length), detail: vendorPayments.map((row) => `${row.vendorId}: ${formatMoney(row.amount)}`).join(" / ") || "No vendor payments" },
+    { label: "Tax Summary", value: formatMoney(propertySummary.netIncome - bookSummary.standardMileageEstimate), detail: "P/L less standard mileage estimate, review before filing" },
+    { label: "Receipt Index", value: String(propertySummary.documents.length), detail: `${propertySummary.documents.filter((document) => document.document_type === "receipt").length} receipts indexed` },
+  ];
+}
+
 function getAllocatedExpenseAmount(expense: RentalExpense, propertyId: string) {
   if (!expense.allocation_property_ids?.length) return expense.amount;
   return expense.allocation_property_ids.includes(propertyId) ? expense.amount / expense.allocation_property_ids.length : 0;
