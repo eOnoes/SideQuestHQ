@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Icon } from "./components/Icon";
 import { AssetsWorkspace } from "./components/AssetsWorkspace";
 import { CommandWorkspace } from "./components/CommandWorkspace";
+import { GarageWorkspace, type VehicleDraft } from "./components/GarageWorkspace";
 import { LedgerWorkspace } from "./components/LedgerWorkspace";
 import { PaperTrailWorkspace } from "./components/PaperTrailWorkspace";
 import { PeopleWorkspace } from "./components/PeopleWorkspace";
@@ -30,7 +31,7 @@ import {
   getSelectedPeople,
   getSelectedQuest,
 } from "./selectors";
-import type { AppView, Asset, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
+import type { AppView, Asset, AssetTab, LedgerState, Person, Quest, QuestType, Reminder, RentalBook, StepState } from "./types";
 import { getMoneyRows } from "./utils";
 export default function Home() {
   const [questList, setQuestList] = useState<Quest[]>(seedQuests);
@@ -39,6 +40,7 @@ export default function Home() {
   const [showQuestComposer, setShowQuestComposer] = useState(false);
   const [showScanIntake, setShowScanIntake] = useState(false);
   const [activeView, setActiveView] = useState<AppView>("Command");
+  const [activeAssetTab, setActiveAssetTab] = useState<AssetTab>("Portfolio");
   const [questDraft, setQuestDraft] = useState<{ name: string; type: QuestType; value: string; due: string }>({ name: "", type: "Rental Property", value: "", due: "" });
   const [scanDraft, setScanDraft] = useState<ScanDraft>({ amount: "", fileName: "", label: "", notes: "", questIndex: 0, source: "Receipt", state: "Review" });
   const [ledgerDraft, setLedgerDraft] = useState<{ label: string; amount: string; state: LedgerState }>({ label: "", amount: "", state: "Draft" });
@@ -53,7 +55,8 @@ export default function Home() {
   const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
   const [rentDraft, setRentDraft] = useState<RentDraft>({ amount_due: 0, amount_received: 0, due_date: "", notes: "", payment_date: "", payment_method: "", rent_period_end: "", rent_period_start: "", status: "due" });
   const [expenseDraft, setExpenseDraft] = useState<ExpenseDraft>({ amount: 0, category: "repairs", expense_date: "", notes: "", paid_date: "", payment_method: "", recurring: false, tax_bucket: "repairs" });
-  const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0 });
+  const [tripDraft, setTripDraft] = useState<TripDraft>({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0, vehicle_id: "veh-personal-truck" });
+  const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft>({ end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "" });
   const [selectedTaxYear, setSelectedTaxYear] = useState(2026);
   const [noteDraft, setNoteDraft] = useState("");
   const selectedQuest = useMemo(() => getSelectedQuest(questList, selectedQuestIndex, seedQuests[0]), [questList, selectedQuestIndex]);
@@ -489,7 +492,7 @@ export default function Home() {
   function addRentalTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const propertyId = getSelectedRentalPropertyId();
-    const vehicle = rentalBook.vehicles[0];
+    const vehicle = rentalBook.vehicles.find((currentVehicle) => currentVehicle.vehicle_id === tripDraft.vehicle_id) ?? rentalBook.vehicles[0];
     if (!propertyId || !vehicle || !tripDraft.date || tripDraft.miles <= 0) return;
 
     setRentalBook((current) => ({
@@ -509,7 +512,29 @@ export default function Home() {
         },
       ],
     }));
-    setTripDraft({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0 });
+    setTripDraft({ category: "inspection", date: "", destination: "", end_odometer: 0, miles: 0, notes: "", origin: "", purpose: "", start_odometer: 0, vehicle_id: vehicle.vehicle_id });
+  }
+
+  function addVehicle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = vehicleDraft.vehicle_name.trim();
+    if (!name) return;
+    const vehicleId = `veh-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${Date.now()}`;
+
+    setRentalBook((current) => ({
+      ...current,
+      vehicles: [
+        ...current.vehicles,
+        {
+          ...vehicleDraft,
+          notes: vehicleDraft.notes.trim(),
+          vehicle_id: vehicleId,
+          vehicle_name: name,
+        },
+      ],
+    }));
+    setTripDraft((current) => ({ ...current, vehicle_id: vehicleId }));
+    setVehicleDraft({ end_odometer_year: 0, in_service_date: "", lease_monthly_amount: 0, notes: "", owned_or_leased: "owned", start_odometer_year: 0, vehicle_name: "" });
   }
 
   return (
@@ -561,24 +586,6 @@ export default function Home() {
             questList={questList}
             selectedQuestIndex={selectedQuestIndex}
             setSelectedQuestIndex={setSelectedQuestIndex}
-          />
-        ) : null}
-        {activeView === "Rentals" ? (
-          <RentalsWorkspace
-            expenseDraft={expenseDraft}
-            onAddExpense={addRentalExpense}
-            onAddRent={addRentalRent}
-            onAddTrip={addRentalTrip}
-            onExpenseDraftChange={setExpenseDraft}
-            onRentDraftChange={setRentDraft}
-            rentalBook={rentalBook}
-            rentDraft={rentDraft}
-            selectedPropertyIndex={selectedPropertyIndex}
-            selectedTaxYear={selectedTaxYear}
-            onSelectedPropertyIndexChange={setSelectedPropertyIndex}
-            onSelectedTaxYearChange={setSelectedTaxYear}
-            onTripDraftChange={setTripDraft}
-            tripDraft={tripDraft}
           />
         ) : null}
         {activeView === "Paper Trail" ? (
@@ -634,7 +641,7 @@ export default function Home() {
           />
         ) : null}
 
-        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Rentals" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
+        {activeView !== "Command" && activeView !== "Assets" && activeView !== "Ledger" && activeView !== "Paper Trail" && activeView !== "Reminders" && activeView !== "People" ? (
           <QuestWorkspace
             ledgerDraft={ledgerDraft}
             noteDraft={noteDraft}
@@ -666,15 +673,45 @@ export default function Home() {
 
         {activeView === "Assets" ? (
           <AssetsWorkspace
+            activeAssetTab={activeAssetTab}
             assetDraft={assetDraft}
             assetList={assetList}
             assetSummary={assetSummary}
             onAddAsset={addAsset}
             onAssetDraftChange={setAssetDraft}
+            onAssetTabChange={setActiveAssetTab}
             onCycleAssetStatus={cycleAssetStatus}
             onOpenAssetQuest={openAssetQuest}
             onRemoveAsset={removeAsset}
-          />
+          >
+            {activeAssetTab === "Rentals" ? (
+              <RentalsWorkspace
+                expenseDraft={expenseDraft}
+                onAddExpense={addRentalExpense}
+                onAddRent={addRentalRent}
+                onAddTrip={addRentalTrip}
+                onExpenseDraftChange={setExpenseDraft}
+                onRentDraftChange={setRentDraft}
+                rentalBook={rentalBook}
+                rentDraft={rentDraft}
+                selectedPropertyIndex={selectedPropertyIndex}
+                selectedTaxYear={selectedTaxYear}
+                onSelectedPropertyIndexChange={setSelectedPropertyIndex}
+                onSelectedTaxYearChange={setSelectedTaxYear}
+                onTripDraftChange={setTripDraft}
+                tripDraft={tripDraft}
+              />
+            ) : null}
+            {activeAssetTab === "Garage" ? (
+              <GarageWorkspace
+                onAddVehicle={addVehicle}
+                onVehicleDraftChange={setVehicleDraft}
+                rentalBook={rentalBook}
+                selectedTaxYear={selectedTaxYear}
+                vehicleDraft={vehicleDraft}
+              />
+            ) : null}
+          </AssetsWorkspace>
         ) : null}
       </section>
       <button className="fab" type="button" aria-label="Quick add"><Icon name="plus" /></button>

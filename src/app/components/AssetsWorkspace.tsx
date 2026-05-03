@@ -1,8 +1,9 @@
-import type { FormEvent } from "react";
-import type { Asset } from "../types";
+import type { FormEvent, ReactNode } from "react";
+import type { Asset, AssetTab } from "../types";
 import { formatMoney } from "../utils";
 
 type AssetsWorkspaceProps = {
+  activeAssetTab: AssetTab;
   assetDraft: Asset;
   assetList: Asset[];
   assetSummary: {
@@ -17,24 +18,37 @@ type AssetsWorkspaceProps = {
   onCycleAssetStatus: (assetIndex: number) => void;
   onOpenAssetQuest: (assetIndex: number) => void;
   onRemoveAsset: (assetIndex: number) => void;
+  onAssetTabChange: (assetTab: AssetTab) => void;
+  children?: ReactNode;
 };
 
 export function AssetsWorkspace({
+  activeAssetTab,
   assetDraft,
   assetList,
   assetSummary,
+  children,
   onAddAsset,
   onAssetDraftChange,
+  onAssetTabChange,
   onCycleAssetStatus,
   onOpenAssetQuest,
   onRemoveAsset,
 }: AssetsWorkspaceProps) {
+  const tabs: AssetTab[] = ["Portfolio", "Rentals", "Garage"];
+
   return (
     <section className="asset-section panel">
       <div className="panel-header">
         <h2>Assets</h2>
         <span>{formatMoney(assetSummary.monthlyProjected)} projected/mo</span>
       </div>
+      <div className="asset-tabs" role="tablist" aria-label="Asset sections">
+        {tabs.map((tab) => (
+          <button data-selected={activeAssetTab === tab} key={tab} onClick={() => onAssetTabChange(tab)} role="tab" type="button">{tab}</button>
+        ))}
+      </div>
+      {activeAssetTab !== "Portfolio" ? children : (
       <div className="asset-body">
         <form className="asset-form" onSubmit={onAddAsset}>
           <input
@@ -115,6 +129,7 @@ export function AssetsWorkspace({
           ))}
         </div>
       </div>
+      )}
     </section>
   );
 }

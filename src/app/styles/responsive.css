@@ -65,6 +65,33 @@
     padding: 7px 9px;
   }
 
+  .asset-tabs {
+    padding: 8px 14px 0;
+  }
+
+  .garage-workspace {
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .garage-form {
+    grid-template-columns: minmax(0, 1fr) 92px 86px 86px 86px 86px 50px;
+    gap: 6px;
+  }
+
+  .garage-form input,
+  .garage-form select,
+  .garage-form button {
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .garage-row {
+    gap: 6px;
+    min-height: 48px;
+    padding: 7px 9px;
+  }
+
   .rental-board {
     grid-template-columns: 190px minmax(0, 1fr);
     gap: 8px;
@@ -418,6 +445,8 @@
   .command-pulse,
   .asset-body,
   .asset-list,
+  .garage-form,
+  .garage-row,
   .rental-board,
   .rental-intake-grid,
   .rental-summary-strip,
@@ -464,6 +493,8 @@
 
   .asset-form,
   .asset-summary,
+  .garage-form,
+  .garage-row,
   .rental-summary-strip,
   .rental-intake-grid,
   .rental-report-grid,
@@ -541,6 +572,8 @@
 
   .asset-form,
   .asset-summary,
+  .garage-form,
+  .garage-row,
   .rental-summary-strip,
   .rental-intake-grid,
   .rental-report-grid,

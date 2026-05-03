@@ -11,7 +11,7 @@ export type ExpenseDraft = Pick<RentalExpense, "amount" | "category" | "expense_
   notes: string;
 };
 
-export type TripDraft = Pick<VehicleTrip, "category" | "date" | "destination" | "end_odometer" | "miles" | "origin" | "purpose" | "start_odometer"> & {
+export type TripDraft = Pick<VehicleTrip, "category" | "date" | "destination" | "end_odometer" | "miles" | "origin" | "purpose" | "start_odometer" | "vehicle_id"> & {
   notes: string;
 };
 
@@ -53,7 +53,7 @@ export function RentalsWorkspace({
 
   if (!selectedProperty) {
     return (
-      <section className="rentals-workspace panel">
+      <section className="rentals-workspace">
         <div className="panel-header">
           <h2>Rentals</h2>
           <span>No properties</span>
@@ -67,7 +67,7 @@ export function RentalsWorkspace({
   const reportRows = getRentalReportIndex(rentalBook, selectedProperty.property_id, selectedTaxYear);
 
   return (
-    <section className="rentals-workspace panel">
+    <section className="rentals-workspace">
       <div className="panel-header">
         <h2>Rental Business</h2>
         <select aria-label="Rental tax year" onChange={(event) => onSelectedTaxYearChange(Number(event.target.value))} value={selectedTaxYear}>
@@ -137,6 +137,11 @@ export function RentalsWorkspace({
 
             <form className="rental-intake-form" onSubmit={onAddTrip}>
               <strong>Trip</strong>
+              <select aria-label="Trip vehicle" onChange={(event) => onTripDraftChange((draft) => ({ ...draft, vehicle_id: event.target.value }))} value={tripDraft.vehicle_id}>
+                {rentalBook.vehicles.map((vehicle) => (
+                  <option key={vehicle.vehicle_id} value={vehicle.vehicle_id}>{vehicle.vehicle_name}</option>
+                ))}
+              </select>
               <input aria-label="Trip date" onChange={(event) => onTripDraftChange((draft) => ({ ...draft, date: event.target.value }))} placeholder="Date" value={tripDraft.date} />
               <select aria-label="Trip category" onChange={(event) => onTripDraftChange((draft) => ({ ...draft, category: event.target.value as VehicleTrip["category"] }))} value={tripDraft.category}>
                 <option>inspection</option>

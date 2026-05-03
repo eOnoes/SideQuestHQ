@@ -425,7 +425,6 @@ export const seedRentalBook: RentalBook = {
 export const appViews: Array<{ label: AppView; icon: IconName }> = [
   { label: "Command", icon: "grid" },
   { label: "Quests", icon: "clipboard" },
-  { label: "Rentals", icon: "home" },
   { label: "Assets", icon: "briefcase" },
   { label: "Ledger", icon: "dollar" },
   { label: "Paper Trail", icon: "file" },

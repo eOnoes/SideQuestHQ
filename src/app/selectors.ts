@@ -259,6 +259,31 @@ export function getRentalReportIndex(rentalBook: RentalBook, propertyId: string,
   ];
 }
 
+export function getVehicleSummaries(rentalBook: RentalBook, taxYear: number) {
+  const mileageRate = getMileageRateForYear(rentalBook, taxYear);
+  return rentalBook.vehicles.map((vehicle) => {
+    const trips = rentalBook.vehicleTrips.filter((trip) => trip.vehicle_id === vehicle.vehicle_id);
+    const expenses = rentalBook.vehicleExpenses.filter((expense) => expense.vehicle_id === vehicle.vehicle_id);
+    const totalMiles = trips.reduce((total, trip) => total + trip.miles, 0);
+    const businessMiles = trips.filter((trip) => trip.business_use).reduce((total, trip) => total + trip.miles, 0);
+    const businessUsePercentage = totalMiles > 0 ? businessMiles / totalMiles : 0;
+    const actualExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+    const leaseAnnualAmount = vehicle.owned_or_leased === "leased" ? vehicle.lease_monthly_amount * 12 : 0;
+
+    return {
+      actualExpenseEstimate: actualExpenses * businessUsePercentage,
+      businessMiles,
+      businessUsePercentage,
+      leaseAllocation: leaseAnnualAmount * businessUsePercentage,
+      personalMiles: totalMiles - businessMiles,
+      standardMileageEstimate: businessMiles * mileageRate.business_rate,
+      totalMiles,
+      tripCount: trips.length,
+      vehicle,
+    };
+  });
+}
+
 function getAllocatedExpenseAmount(expense: RentalExpense, propertyId: string) {
   if (!expense.allocation_property_ids?.length) return expense.amount;
   return expense.allocation_property_ids.includes(propertyId) ? expense.amount / expense.allocation_property_ids.length : 0;

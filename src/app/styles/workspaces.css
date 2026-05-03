@@ -117,6 +117,29 @@
   color: var(--red) !important;
 }
 
+.asset-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px 0;
+}
+
+.asset-tabs button {
+  min-height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--corner);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.asset-tabs button[data-selected="true"] {
+  border-color: var(--yellow);
+  background: rgba(255, 211, 61, 0.12);
+  color: var(--yellow);
+}
+
 .rentals-workspace {
   min-height: 0;
 }
@@ -333,6 +356,73 @@
 .rental-row b[data-state="urgent"],
 .rental-row b[data-state="pending"] {
   color: var(--red);
+}
+
+.garage-workspace {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px 20px;
+}
+
+.garage-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) 120px repeat(4, minmax(100px, 0.7fr)) 64px;
+  gap: 8px;
+}
+
+.garage-form input,
+.garage-form select,
+.garage-form button {
+  height: 34px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.garage-form button {
+  border: 1px solid var(--yellow);
+  border-radius: var(--corner);
+  background: var(--yellow);
+  color: #080808;
+  font-weight: 900;
+}
+
+.garage-list {
+  display: grid;
+  gap: 10px;
+}
+
+.garage-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.garage-row div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.garage-row span,
+.garage-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garage-row span {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.garage-row strong {
+  color: var(--text);
+  font-size: 12px;
 }
 
 .rental-report-panel {
