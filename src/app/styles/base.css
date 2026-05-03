@@ -25,6 +25,8 @@
 html,
 body {
   min-height: 100%;
+  scrollbar-color: var(--yellow) var(--bg-deep);
+  scrollbar-width: thin;
 }
 
 body {
@@ -216,6 +218,34 @@ select option {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 24px 32px 22px;
+}
+
+* {
+  scrollbar-color: var(--yellow) rgba(18, 18, 18, 0.86);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 18, 18, 0.92);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(18, 18, 18, 0.92);
+  border-radius: 0 0 8px 0;
+  background: var(--yellow);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--yellow-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(18, 18, 18, 0.92);
 }
 
 .workspace[data-view="Command"] {
