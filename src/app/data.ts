@@ -217,18 +217,7 @@ export const seedInvestmentSnapshots: InvestmentSnapshot[] = [
   },
 ];
 
-export const seedCryptoSnapshots: CryptoSnapshot[] = [
-  {
-    snapshot_id: "crypto-btc-baseline",
-    current_value: 1250,
-    notes: "Manual seed crypto snapshot. Replace with real token count/value when ready.",
-    snapshot_date: "2026-05-02",
-    token_count: 0.0125,
-    token_name: "Bitcoin",
-    token_symbol: "BTC",
-    wallet_label: "Manual wallet",
-  },
-];
+export const seedCryptoSnapshots: CryptoSnapshot[] = [];
 
 export const seedRentalBook: RentalBook = {
   properties: [

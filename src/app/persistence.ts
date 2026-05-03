@@ -38,7 +38,7 @@ export function loadStoredAppData(): StoredAppData {
   try {
     return {
       assets: readArray(ASSETS_STORAGE_KEY, seedAssets),
-      cryptoSnapshots: readArray(CRYPTO_SNAPSHOTS_STORAGE_KEY, seedCryptoSnapshots),
+      cryptoSnapshots: normalizeCryptoSnapshots(readArray(CRYPTO_SNAPSHOTS_STORAGE_KEY, seedCryptoSnapshots)),
       investmentSnapshots: readArray(INVESTMENT_SNAPSHOTS_STORAGE_KEY, seedInvestmentSnapshots),
       people: readArray(PEOPLE_STORAGE_KEY, seedPeople),
       quests: readArray(STORAGE_KEY, seedQuests),
@@ -80,6 +80,22 @@ function normalizeRentalBook(rentalBook: RentalBook): RentalBook {
   };
 }
 
+function normalizeCryptoSnapshots(cryptoSnapshots: CryptoSnapshot[]) {
+  return cryptoSnapshots.filter((snapshot) => {
+    const isSeedBitcoin =
+      snapshot.snapshot_id === "crypto-btc-baseline" ||
+      (
+        snapshot.current_value === 1250 &&
+        snapshot.snapshot_date === "2026-05-02" &&
+        snapshot.token_count === 0.0125 &&
+        snapshot.token_name === "Bitcoin" &&
+        snapshot.token_symbol === "BTC" &&
+        snapshot.wallet_label === "Manual wallet"
+      );
+    return !isSeedBitcoin;
+  });
+}
+
 function normalizeRentalStatus(status: RentalBook["properties"][number]["rental_status"] | "active" | "vacant" | "maintenance" | "planned" | "inactive") {
   if (status === "active") return "full";
   if (status === "vacant" || status === "planned" || status === "inactive") return "empty";
@@ -92,7 +108,7 @@ export function saveStoredAppData(data: StoredAppData) {
   window.localStorage.setItem(PEOPLE_STORAGE_KEY, JSON.stringify(data.people));
   window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(data.reminders));
   window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(data.assets));
-  window.localStorage.setItem(CRYPTO_SNAPSHOTS_STORAGE_KEY, JSON.stringify(data.cryptoSnapshots));
+  window.localStorage.setItem(CRYPTO_SNAPSHOTS_STORAGE_KEY, JSON.stringify(normalizeCryptoSnapshots(data.cryptoSnapshots)));
   window.localStorage.setItem(INVESTMENT_SNAPSHOTS_STORAGE_KEY, JSON.stringify(data.investmentSnapshots));
   window.localStorage.setItem(RENTAL_BOOK_STORAGE_KEY, JSON.stringify(normalizeRentalBook(data.rentalBook)));
 }
