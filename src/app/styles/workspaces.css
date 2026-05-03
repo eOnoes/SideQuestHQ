@@ -197,7 +197,7 @@
 
 .rental-asset-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.5fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) 150px 112px 76px;
   align-items: center;
   gap: 10px;
   min-height: 62px;
@@ -236,6 +236,8 @@
 }
 
 .rental-asset-row button {
+  justify-self: stretch;
+  min-width: 0;
   padding: 4px 8px;
   border: 0;
   border-radius: var(--corner);
