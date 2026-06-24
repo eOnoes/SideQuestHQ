@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garage · Grid Tiles</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#e8e8e8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:32px 24px}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .page-header h1{font-size:20px;font-weight:600;letter-spacing:-0.3px}
+  .page-header h1 span{color:#8b5cf6}
+  .page-header .subtitle{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;color:#666}
+
+  .totals-bar{display:flex;gap:20px;padding:16px 20px;background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:28px}
+  .totals-bar .stat{flex:1;text-align:center;padding:4px 0}
+  .totals-bar .stat-label{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+  .totals-bar .stat-value{font-size:18px;font-weight:700}
+  .totals-bar .stat-value.purple{color:#8b5cf6}
+  .totals-bar .stat-value.green{color:#64c896}
+  .totals-bar .stat-value.yellow{color:#ffd33d}
+  .totals-bar .stat-value.red{color:#e0696a}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.grid{grid-template-columns:1fr}}
+
+  .tile{background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;transition:border-color 0.2s}
+  .tile:hover{border-color:rgba(139,92,246,0.3)}
+  .tile .thumb{width:100%;height:180px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;position:relative}
+  .tile .thumb svg{width:80px;height:80px;stroke:#555;fill:none;stroke-width:1}
+  .tile .thumb .status-pip{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%}
+  .tile .thumb .status-pip.available{background:#64c896;box-shadow:0 0 8px rgba(100,200,150,0.4)}
+  .tile .thumb .status-pip.in-service{background:#ffd33d;box-shadow:0 0 8px rgba(255,211,61,0.4)}
+  .tile .body{padding:20px}
+  .tile .vehicle-name{font-size:17px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+  .tile .vehicle-name .year{font-size:13px;font-weight:400;color:#666;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+  .tile .data-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:14px}
+  .tile .field-label{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px}
+  .tile .field-value{font-size:13px;color:#e8e8e8}
+  .tag-paid{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+  .tag-paid.yes{background:rgba(100,200,150,0.12);color:#64c896}
+  .tag-paid.no{background:rgba(224,105,106,0.12);color:#e0696a}
+  .payment-line{color:#e0696a;font-weight:600}
+  .status-label{font-size:12px;display:flex;align-items:center;gap:5px}
+  .status-label::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block}
+  .status-label.available::before{background:#64c896}
+  .status-label.in-service::before{background:#ffd33d}
+
+  /* First tile spans full width to show featured */
+  .tile.featured{grid-column:1/-1}
+  .tile.featured .thumb{height:220px}
+  .tile.featured .thumb svg{width:100px;height:100px;stroke:#8b5cf6;stroke-width:0.8}
+  .tile.featured .body{display:flex;gap:32px;align-items:flex-start}
+  .tile.featured .vehicle-name-block{min-width:200px}
+  .tile.featured .vehicle-name{font-size:20px;flex-direction:column;align-items:flex-start;gap:2px}
+  .tile.featured .data-grid{margin-top:0}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1><span>◈</span> Garage</h1>
+  <div class="subtitle">3 vehicles · grid view</div>
+</div>
+
+<div class="totals-bar">
+  <div class="stat">
+    <div class="stat-label">Vehicles</div>
+    <div class="stat-value purple">3</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Est. Value</div>
+    <div class="stat-value green">$112,400</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Monthly</div>
+    <div class="stat-value red">$450</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Next Insurance</div>
+    <div class="stat-value yellow">Aug · $1,240</div>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Featured: Porsche -->
+  <div class="tile featured">
+    <div class="thumb">
+      <svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg"><path d="M10 35 Q10 25 18 22 L26 17 Q30 12 38 12 L52 12 Q58 12 62 17 L68 22 Q74 25 74 32 L74 35 Q74 38 71 38 L9 38 Q6 38 6 35 Z"/><circle cx="24" cy="40" r="5" stroke-width="1.5"/><circle cx="56" cy="40" r="5" stroke-width="1.5"/><line x1="30" y1="22" x2="50" y2="22"/><line x1="12" y1="30" x2="68" y2="30"/></svg>
+    </div>
+    <div class="body">
+      <div class="vehicle-name-block">
+        <div class="vehicle-name">Porsche Cayman <span class="year">2019</span></div>
+        <div style="margin-top:6px"><span class="tag-paid yes">PAID OFF</span></div>
+      </div>
+      <div class="data-grid">
+        <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-911</div></div>
+        <div class="field"><div class="field-label">Status</div><div class="field-value"><span class="status-label available">Available</span></div></div>
+        <div class="field"><div class="field-label">Insurance</div><div class="field-value">Mar 2026 · <span style="color:#ffd33d">$1,480</span></div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$58,000</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F-150 -->
+  <div class="tile">
+    <div class="thumb">
+      <div class="status-pip available"></div>
+      <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M6 28 Q6 22 10 20 L16 16 Q20 12 28 12 L48 12 Q54 12 56 16 L60 20 Q62 22 62 26 L62 28 Q62 30 60 30 L4 30 Q2 30 2 28 Z"/><circle cx="16" cy="32" r="5" stroke-width="2"/><circle cx="48" cy="32" r="5" stroke-width="2"/><line x1="28" y1="16" x2="38" y2="16"/><rect x="38" y="12" width="12" height="8" rx="1"/></svg>
+    </div>
+    <div class="body">
+      <div class="vehicle-name">Ford F-150 <span class="year">2021</span></div>
+      <div style="margin-top:6px"><span class="payment-line">$450/mo</span></div>
+      <div class="data-grid">
+        <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-F150</div></div>
+        <div class="field"><div class="field-label">Status</div><div class="field-value"><span class="status-label available">Available</span></div></div>
+        <div class="field"><div class="field-label">Insurance</div><div class="field-value">Aug 2025 · <span style="color:#ffd33d">$1,240</span></div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$38,200</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Civic -->
+  <div class="tile">
+    <div class="thumb">
+      <div class="status-pip in-service"></div>
+      <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 Q8 22 12 20 L20 15 Q24 11 32 11 L44 11 Q50 11 52 15 L56 20 Q60 22 60 26 L60 28 Q60 30 58 30 L6 30 Q4 30 4 28 Z"/><circle cx="18" cy="32" r="5" stroke-width="2"/><circle cx="46" cy="32" r="5" stroke-width="2"/><line x1="24" y1="15" x2="38" y2="15"/><line x1="12" y1="24" x2="52" y2="24"/></svg>
+    </div>
+    <div class="body">
+      <div class="vehicle-name">Honda Civic <span class="year">2020</span></div>
+      <div style="margin-top:6px"><span class="tag-paid yes">PAID OFF</span></div>
+      <div class="data-grid">
+        <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-CIV</div></div>
+        <div class="field"><div class="field-label">Status</div><div class="field-value"><span class="status-label in-service">In Service</span></div></div>
+        <div class="field"><div class="field-label">Insurance</div><div class="field-value">Nov 2025 · <span style="color:#ffd33d">$980</span></div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$16,200</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

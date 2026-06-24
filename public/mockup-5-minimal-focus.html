@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garage · Minimal Focus</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#e8e8e8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  .top-bar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+  .top-bar h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
+  .top-bar h1 span{color:#8b5cf6}
+  .top-bar .totals-mini{display:flex;gap:20px;align-items:center}
+  .top-bar .totals-mini .stat{display:flex;align-items:center;gap:6px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:11px;color:#666}
+  .top-bar .totals-mini .stat .dot{width:5px;height:5px;border-radius:50%}
+  .top-bar .totals-mini .stat .dot.purple{background:#8b5cf6}
+  .top-bar .totals-mini .stat .dot.green{background:#64c896}
+  .top-bar .totals-mini .stat .dot.yellow{background:#ffd33d}
+
+  .main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;position:relative}
+
+  .vehicle-view{display:none;flex-direction:row;gap:48px;max-width:900px;width:100%;align-items:center}
+  .vehicle-view.active{display:flex}
+
+  .thumb-large{width:340px;height:240px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+  .thumb-large svg{width:140px;height:140px;stroke:#444;fill:none;stroke-width:0.8}
+  .thumb-large .status-glow{position:absolute;top:16px;right:16px;width:10px;height:10px;border-radius:50%}
+  .thumb-large .status-glow.available{background:#64c896;box-shadow:0 0 12px rgba(100,200,150,0.5)}
+  .thumb-large .status-glow.in-service{background:#ffd33d;box-shadow:0 0 12px rgba(255,211,61,0.5)}
+
+  .detail-panel{flex:1}
+  .detail-panel .vehicle-title{font-size:32px;font-weight:700;letter-spacing:-0.5px;line-height:1.2}
+  .detail-panel .vehicle-title .year{font-size:18px;font-weight:400;color:#666;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;margin-left:8px}
+  .detail-panel .vehicle-subtitle{display:flex;gap:12px;margin-top:12px;align-items:center}
+  .detail-panel .tag-paid{display:inline-block;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:600;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+  .detail-panel .tag-paid.yes{background:rgba(100,200,150,0.12);color:#64c896}
+  .detail-panel .tag-paid.no{background:rgba(224,105,106,0.12);color:#e0696a}
+  .detail-panel .status-label{font-size:13px;display:flex;align-items:center;gap:6px;color:#999}
+  .detail-panel .status-label::before{content:'';width:6px;height:6px;border-radius:50%}
+  .detail-panel .status-label.available::before{background:#64c896}
+  .detail-panel .status-label.in-service::before{background:#ffd33d}
+
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 32px;margin-top:28px}
+  .detail-grid .field-label{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+  .detail-grid .field-value{font-size:16px;color:#e8e8e8}
+  .detail-grid .field-value.green{color:#64c896}
+  .detail-grid .field-value.red{color:#e0696a}
+  .detail-grid .field-value.yellow{color:#ffd33d}
+
+  /* Navigation arrows */
+  .nav-arrows{position:absolute;bottom:40px;display:flex;gap:24px;align-items:center}
+  .nav-btn{width:48px;height:48px;border-radius:50%;background:#111319;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;font-size:18px;transition:all 0.2s;user-select:none}
+  .nav-btn:hover{border-color:#8b5cf6;color:#8b5cf6;background:rgba(139,92,246,0.08)}
+  .nav-btn:active{transform:scale(0.95)}
+  .nav-dots{display:flex;gap:8px}
+  .nav-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s}
+  .nav-dot.active{background:#8b5cf6;box-shadow:0 0 8px rgba(139,92,246,0.4)}
+
+  .index-label{position:absolute;bottom:100px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;color:#666}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1><span>◈</span> Garage</h1>
+  <div class="totals-mini">
+    <div class="stat"><span class="dot purple"></span> 3 vehicles</div>
+    <div class="stat"><span class="dot green"></span> $112,400</div>
+    <div class="stat"><span class="dot yellow"></span> Next ins: Aug</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Vehicle 1: Porsche -->
+  <div class="vehicle-view active" id="v1">
+    <div class="thumb-large">
+      <div class="status-glow available"></div>
+      <svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg"><path d="M10 35 Q10 25 18 22 L26 17 Q30 12 38 12 L52 12 Q58 12 62 17 L68 22 Q74 25 74 32 L74 35 Q74 38 71 38 L9 38 Q6 38 6 35 Z"/><circle cx="24" cy="40" r="6" stroke-width="1.5"/><circle cx="56" cy="40" r="6" stroke-width="1.5"/><line x1="30" y1="22" x2="50" y2="22"/><line x1="12" y1="30" x2="68" y2="30"/><path d="M28 17 Q34 10 42 10 L50 10" stroke-dasharray="2 2"/></svg>
+    </div>
+    <div class="detail-panel">
+      <div class="vehicle-title">Porsche Cayman<span class="year">2019</span></div>
+      <div class="vehicle-subtitle">
+        <span class="tag-paid yes">PAID OFF</span>
+        <span class="status-label available">Available</span>
+      </div>
+      <div class="detail-grid">
+        <div class="field"><div class="field-label">Tag Number</div><div class="field-value">SQHQ-911</div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value green">$58,000</div></div>
+        <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value"><span class="yellow">Mar 2026</span> · $1,480</div></div>
+        <div class="field"><div class="field-label">Monthly Payment</div><div class="field-value green">$0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehicle 2: F-150 -->
+  <div class="vehicle-view" id="v2">
+    <div class="thumb-large">
+      <div class="status-glow available"></div>
+      <svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg"><path d="M6 35 Q6 27 12 24 L20 19 Q24 14 34 14 L56 14 Q62 14 66 19 L72 24 Q76 27 76 32 L76 35 Q76 38 73 38 L7 38 Q4 38 4 35 Z"/><circle cx="22" cy="40" r="6" stroke-width="1.5"/><circle cx="58" cy="40" r="6" stroke-width="1.5"/><line x1="34" y1="19" x2="48" y2="19"/><rect x="48" y="14" width="14" height="10" rx="1"/></svg>
+    </div>
+    <div class="detail-panel">
+      <div class="vehicle-title">Ford F-150<span class="year">2021</span></div>
+      <div class="vehicle-subtitle">
+        <span class="tag-paid no">$450/mo</span>
+        <span class="status-label available">Available</span>
+      </div>
+      <div class="detail-grid">
+        <div class="field"><div class="field-label">Tag Number</div><div class="field-value">SQHQ-F150</div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value green">$38,200</div></div>
+        <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value"><span class="yellow">Aug 2025</span> · $1,240</div></div>
+        <div class="field"><div class="field-label">Monthly Payment</div><div class="field-value red">$450/mo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehicle 3: Civic -->
+  <div class="vehicle-view" id="v3">
+    <div class="thumb-large">
+      <div class="status-glow in-service"></div>
+      <svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg"><path d="M10 35 Q10 27 16 24 L24 18 Q28 13 38 13 L52 13 Q58 13 62 18 L68 24 Q74 27 74 32 L74 35 Q74 38 71 38 L9 38 Q6 38 6 35 Z"/><circle cx="24" cy="40" r="6" stroke-width="1.5"/><circle cx="56" cy="40" r="6" stroke-width="1.5"/><line x1="28" y1="18" x2="48" y2="18"/><line x1="12" y1="28" x2="68" y2="28"/></svg>
+    </div>
+    <div class="detail-panel">
+      <div class="vehicle-title">Honda Civic<span class="year">2020</span></div>
+      <div class="vehicle-subtitle">
+        <span class="tag-paid yes">PAID OFF</span>
+        <span class="status-label in-service">In Service</span>
+      </div>
+      <div class="detail-grid">
+        <div class="field"><div class="field-label">Tag Number</div><div class="field-value">SQHQ-CIV</div></div>
+        <div class="field"><div class="field-label">Est. Value</div><div class="field-value green">$16,200</div></div>
+        <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value"><span class="yellow">Nov 2025</span> · $980</div></div>
+        <div class="field"><div class="field-label">Monthly Payment</div><div class="field-value green">$0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="index-label" id="indexLabel">01 / 03</div>
+
+  <div class="nav-arrows">
+    <div class="nav-btn" onclick="navigate(-1)">←</div>
+    <div class="nav-dots">
+      <div class="nav-dot active" onclick="goTo(0)"></div>
+      <div class="nav-dot" onclick="goTo(1)"></div>
+      <div class="nav-dot" onclick="goTo(2)"></div>
+    </div>
+    <div class="nav-btn" onclick="navigate(1)">→</div>
+  </div>
+
+</div>
+
+<script>
+  let current = 0;
+  const vehicles = ['v1','v2','v3'];
+  const dots = document.querySelectorAll('.nav-dot');
+  const label = document.getElementById('indexLabel');
+
+  function goTo(i) {
+    if (i < 0 || i >= vehicles.length) return;
+    document.getElementById(vehicles[current]).classList.remove('active');
+    dots[current].classList.remove('active');
+    current = i;
+    document.getElementById(vehicles[current]).classList.add('active');
+    dots[current].classList.add('active');
+    label.textContent = String(current+1).padStart(2,'0') + ' / ' + String(vehicles.length).padStart(2,'0');
+  }
+
+  function navigate(dir) {
+    let next = current + dir;
+    if (next < 0) next = vehicles.length - 1;
+    if (next >= vehicles.length) next = 0;
+    goTo(next);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') navigate(-1);
+    if (e.key === 'ArrowRight') navigate(1);
+  });
+</script>
+
+</body>
+</html>

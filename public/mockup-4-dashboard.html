@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garage · Dashboard</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#e8e8e8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:32px 24px}
+
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .page-header h1{font-size:20px;font-weight:600;letter-spacing:-0.3px}
+  .page-header h1 span{color:#8b5cf6}
+  .page-header .subtitle{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;color:#666}
+
+  /* Dashboard totals grid */
+  .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+  @media(max-width:700px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+  .dash-card{background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden}
+  .dash-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .dash-card.purple::after{background:#8b5cf6}
+  .dash-card.green::after{background:#64c896}
+  .dash-card.red::after{background:#e0696a}
+  .dash-card.yellow::after{background:#ffd33d}
+  .dash-card .label{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
+  .dash-card .value{font-size:28px;font-weight:700;line-height:1}
+  .dash-card .value.purple{color:#8b5cf6}
+  .dash-card .value.green{color:#64c896}
+  .dash-card .value.red{color:#e0696a}
+  .dash-card .value.yellow{color:#ffd33d}
+  .dash-card .detail{font-size:12px;color:#666;margin-top:6px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+
+  /* Accordion */
+  .accordion{display:flex;flex-direction:column;gap:8px}
+  .accordion-item{background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;transition:border-color 0.2s}
+  .accordion-item:hover{border-color:rgba(139,92,246,0.2)}
+  .accordion-item.open{border-color:rgba(139,92,246,0.3)}
+
+  .accordion-header{display:flex;align-items:center;gap:16px;padding:16px 20px;cursor:pointer;user-select:none}
+  .accordion-header .arrow{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#666;transition:transform 0.2s;font-size:12px}
+  .accordion-item.open .accordion-header .arrow{transform:rotate(90deg);color:#8b5cf6}
+  .accordion-header .thumb-sm{width:48px;height:36px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .accordion-header .thumb-sm svg{width:28px;height:28px;stroke:#555;fill:none;stroke-width:1.2}
+  .accordion-header .name-block{flex:1}
+  .accordion-header .vehicle-name{font-size:15px;font-weight:600}
+  .accordion-header .vehicle-year{font-size:12px;color:#666;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+  .accordion-header .quick-info{display:flex;gap:16px;align-items:center}
+  .accordion-header .quick-info .tag{font-size:11px;padding:3px 8px;border-radius:4px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-weight:600}
+  .accordion-header .quick-info .tag.paid{background:rgba(100,200,150,0.12);color:#64c896}
+  .accordion-header .quick-info .tag.due{background:rgba(224,105,106,0.12);color:#e0696a}
+  .accordion-header .quick-info .status-dot{width:7px;height:7px;border-radius:50%}
+  .accordion-header .quick-info .status-dot.available{background:#64c896}
+  .accordion-header .quick-info .status-dot.in-service{background:#ffd33d}
+
+  .accordion-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+  .accordion-item.open .accordion-body{max-height:300px}
+  .accordion-body-inner{padding:0 20px 20px 84px}
+  .accordion-body .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 24px}
+  .accordion-body .field-label{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px}
+  .accordion-body .field-value{font-size:13px;color:#e8e8e8}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1><span>◈</span> Garage Dashboard</h1>
+  <div class="subtitle">3 vehicles · dashboard view</div>
+</div>
+
+<!-- Totals Dashboard -->
+<div class="dashboard-grid">
+  <div class="dash-card purple">
+    <div class="label">Total Vehicles</div>
+    <div class="value purple">3</div>
+    <div class="detail">2 available · 1 in service</div>
+  </div>
+  <div class="dash-card green">
+    <div class="label">Est. Collection Value</div>
+    <div class="value green">$112,400</div>
+    <div class="detail">avg $37,467/unit</div>
+  </div>
+  <div class="dash-card red">
+    <div class="label">Monthly Payments</div>
+    <div class="value red">$450</div>
+    <div class="detail">1 active loan · F-150</div>
+  </div>
+  <div class="dash-card yellow">
+    <div class="label">Next Insurance Due</div>
+    <div class="value yellow">Aug</div>
+    <div class="detail">$1,240 · Ford F-150</div>
+  </div>
+</div>
+
+<!-- Accordion Vehicle List -->
+<div class="accordion">
+
+  <!-- Porsche (open by default) -->
+  <div class="accordion-item open">
+    <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="arrow">▶</div>
+      <div class="thumb-sm">
+        <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 Q8 20 16 18 L22 14 Q26 10 32 10 L44 10 Q50 10 52 14 L56 18 Q60 20 60 24 L60 28 Q60 30 58 30 L6 30 Q4 30 4 28 Z"/><circle cx="18" cy="32" r="5" stroke-width="2"/><circle cx="46" cy="32" r="5" stroke-width="2"/></svg>
+      </div>
+      <div class="name-block">
+        <div class="vehicle-name">Porsche Cayman</div>
+        <div class="vehicle-year">2019</div>
+      </div>
+      <div class="quick-info">
+        <span class="tag paid">PAID OFF</span>
+        <span class="status-dot available" title="Available"></span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div class="detail-grid">
+          <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-911</div></div>
+          <div class="field"><div class="field-label">Status</div><div class="field-value">Available</div></div>
+          <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$58,000</div></div>
+          <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value">Mar 2026 · <span style="color:#ffd33d">$1,480</span></div></div>
+          <div class="field"><div class="field-label">Payment</div><div class="field-value" style="color:#64c896">None</div></div>
+          <div class="field"><div class="field-label">VIN</div><div class="field-value" style="color:#666">WP0AB2A82KS…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F-150 -->
+  <div class="accordion-item">
+    <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="arrow">▶</div>
+      <div class="thumb-sm">
+        <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M6 28 Q6 22 10 20 L16 16 Q20 12 28 12 L48 12 Q54 12 56 16 L60 20 Q62 22 62 26 L62 28 Q62 30 60 30 L4 30 Q2 30 2 28 Z"/><circle cx="16" cy="32" r="5" stroke-width="2"/><circle cx="48" cy="32" r="5" stroke-width="2"/></svg>
+      </div>
+      <div class="name-block">
+        <div class="vehicle-name">Ford F-150</div>
+        <div class="vehicle-year">2021</div>
+      </div>
+      <div class="quick-info">
+        <span class="tag due">$450/mo</span>
+        <span class="status-dot available" title="Available"></span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div class="detail-grid">
+          <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-F150</div></div>
+          <div class="field"><div class="field-label">Status</div><div class="field-value">Available</div></div>
+          <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$38,200</div></div>
+          <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value">Aug 2025 · <span style="color:#ffd33d">$1,240</span></div></div>
+          <div class="field"><div class="field-label">Payment</div><div class="field-value" style="color:#e0696a">$450/mo</div></div>
+          <div class="field"><div class="field-label">Remaining Balance</div><div class="field-value" style="color:#e0696a">$18,600</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Civic -->
+  <div class="accordion-item">
+    <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="arrow">▶</div>
+      <div class="thumb-sm">
+        <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 Q8 22 12 20 L20 15 Q24 11 32 11 L44 11 Q50 11 52 15 L56 20 Q60 22 60 26 L60 28 Q60 30 58 30 L6 30 Q4 30 4 28 Z"/><circle cx="18" cy="32" r="5" stroke-width="2"/><circle cx="46" cy="32" r="5" stroke-width="2"/></svg>
+      </div>
+      <div class="name-block">
+        <div class="vehicle-name">Honda Civic</div>
+        <div class="vehicle-year">2020</div>
+      </div>
+      <div class="quick-info">
+        <span class="tag paid">PAID OFF</span>
+        <span class="status-dot in-service" title="In Service"></span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div class="detail-grid">
+          <div class="field"><div class="field-label">Tag #</div><div class="field-value">SQHQ-CIV</div></div>
+          <div class="field"><div class="field-label">Status</div><div class="field-value" style="color:#ffd33d">In Service</div></div>
+          <div class="field"><div class="field-label">Est. Value</div><div class="field-value" style="color:#64c896">$16,200</div></div>
+          <div class="field"><div class="field-label">Insurance Renewal</div><div class="field-value">Nov 2025 · <span style="color:#ffd33d">$980</span></div></div>
+          <div class="field"><div class="field-label">Payment</div><div class="field-value" style="color:#64c896">None</div></div>
+          <div class="field"><div class="field-label">Service Note</div><div class="field-value" style="color:#ffd33d">Brake pads due</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

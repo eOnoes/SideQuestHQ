@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>assets .houses — Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808; color: #e8e8e8; font-family: 'Inter', sans-serif;
+    min-height: 100vh; overflow-y: auto; -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 420px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header { padding: 16px 0 12px; border-bottom: 1px solid #1a1a1a; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .header-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #888; letter-spacing: 0.5px; }
+  .header-title .diamond { color: #bbb; margin-right: 6px; }
+  .header-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+  .header-stats { display: flex; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .header-stats .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .header-stats .dot.green { background: #2ecc71; }
+  .header-stats .dot.orange { background: #e67e22; }
+  .header-stats .dot.red { background: #e74c3c; }
+
+  /* Card Stack */
+  .card-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+  /* Accordion Card */
+  .property-card {
+    background: #111; border-radius: 10px; overflow: hidden;
+    position: relative; cursor: pointer; transition: background 0.2s ease;
+  }
+  .property-card:hover { background: #141414; }
+  .property-card.expanded { background: #0f0f0f; }
+
+  .property-card .left-line {
+    position: absolute; left: 0; top: 0; width: 3px; height: 100%;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .property-card .left-line.green { background: #2ecc71; }
+  .property-card .left-line.orange { background: #e67e22; }
+  .property-card .left-line.red { background: #e74c3c; }
+
+  .card-header { display: flex; align-items: center; padding: 14px 16px 14px 18px; gap: 12px; }
+
+  /* Big address number */
+  .card-number {
+    font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700;
+    color: #2a2a2a; min-width: 50px; line-height: 1;
+  }
+
+  .card-info { flex: 1; }
+
+  /* Stacked address */
+  .address-stack { margin-bottom: 2px; }
+  .address-state-city {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .address-street { font-size: 15px; font-weight: 600; color: #e8e8e8; }
+
+  .card-brief {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin-top: 2px;
+  }
+  .card-brief .sep { color: #333; margin: 0 6px; }
+
+  /* Insurance due badge (right side) */
+  .ins-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #e67e22;
+    background: rgba(230, 126, 34, 0.1); padding: 3px 8px; border-radius: 10px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  .expand-arrow {
+    font-size: 12px; color: #444; transition: transform 0.3s ease, color 0.2s; margin-left: 4px;
+  }
+  .card-index {
+    position: absolute; bottom: 8px; right: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #333; letter-spacing: 1px;
+  }
+  .property-card.expanded .card-index { bottom: 12px; }
+  .property-card.expanded .expand-arrow { transform: rotate(180deg); color: #666; }
+
+  /* Expanded Details */
+  .card-details {
+    max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .property-card.expanded .card-details { max-height: 500px; }
+  .details-inner { padding: 0 16px 16px 18px; border-top: 1px solid #1a1a1a; }
+
+  .status-row { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px;
+  }
+  .pill.green { color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+  .pill.orange { color: #e67e22; background: rgba(230, 126, 34, 0.1); }
+  .pill.red { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+  .pill.gray { color: #888; background: rgba(136, 136, 136, 0.1); }
+  .pill .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .pill.green .dot { background: #2ecc71; }
+  .pill.orange .dot { background: #e67e22; }
+  .pill.red .dot { background: #e74c3c; }
+
+  .data-rows { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .data-row { display: flex; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .data-key { color: #555; min-width: 160px; flex-shrink: 0; }
+  .data-key::after { content: ' :'; color: #333; }
+  .data-val { color: #e8e8e8; font-weight: 500; }
+  .data-val.green { color: #2ecc71; }
+  .data-val.orange { color: #e67e22; }
+  .data-val.red { color: #e74c3c; }
+
+  /* Mortgage progress bar */
+  .mortgage-bar-container { margin-top: 12px; padding-top: 12px; border-top: 1px solid #1a1a1a; }
+  .mortgage-bar-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  .mortgage-bar {
+    width: 100%; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden;
+  }
+  .mortgage-bar-fill { height: 100%; border-radius: 3px; background: #2ecc71; transition: width 0.4s ease; }
+
+  /* Unoccupied warning */
+  .vacancy-alert {
+    margin-top: 12px; padding: 10px 12px; background: rgba(231, 76, 60, 0.08);
+    border: 1px solid rgba(231, 76, 60, 0.2); border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #e74c3c;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vacancy-alert .alert-icon { font-size: 14px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px; padding: 16px 0; border-top: 1px solid #1a1a1a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-link { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; cursor: pointer; }
+  .footer-link:hover { color: #888; }
+  .cursor-blink {
+    display: inline-block; width: 8px; height: 14px; background: #2ecc71; opacity: 0.5;
+    animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title"><span class="diamond">◆</span>assets .houses</div>
+      <div class="header-count">2 properties</div>
+    </div>
+    <div class="header-stats">
+      <span><span class="dot green"></span>1 occupied</span>
+      <span><span class="dot red"></span>1 vacant</span>
+      <span><span class="dot orange"></span>Ins due: Aug</span>
+    </div>
+  </div>
+
+  <div class="card-stack">
+
+    <!-- Property 1: Occupied, paid off -->
+    <div class="property-card expanded" onclick="toggleCard(this)">
+      <div class="left-line green"></div>
+      <div class="card-header">
+        <div class="card-number">247</div>
+        <div class="card-info">
+          <div class="address-stack">
+            <div class="address-state-city">TN · Osceola</div>
+            <div class="address-street">W. Lee Ave</div>
+          </div>
+          <div class="card-brief">occupied<span class="sep">|</span>paid off</div>
+        </div>
+        <div class="ins-badge">Ins: Aug</div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="card-details">
+        <div class="details-inner">
+          <div class="status-row">
+            <div class="pill green"><span class="dot"></span>OCCUPIED</div>
+            <div class="pill green">PAID OFF</div>
+          </div>
+          <div class="data-rows">
+            <div class="data-row">
+              <span class="data-key">insurance_provider</span>
+              <span class="data-val">State Farm</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance_premium</span>
+              <span class="data-val">$1,800/yr</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance_due</span>
+              <span class="data-val orange">Aug 15</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">monthly_rent</span>
+              <span class="data-val green">$1,450</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">tenant</span>
+              <span class="data-val">J. Williams</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">lease_end</span>
+              <span class="data-val">Mar 2027</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-index">001</div>
+    </div>
+
+    <!-- Property 2: Vacant, financed — with mortgage tracker -->
+    <div class="property-card" onclick="toggleCard(this)">
+      <div class="left-line red"></div>
+      <div class="card-header">
+        <div class="card-number">512</div>
+        <div class="card-info">
+          <div class="address-stack">
+            <div class="address-state-city">TN · Memphis</div>
+            <div class="address-street">Poplar Ave</div>
+          </div>
+          <div class="card-brief">vacant<span class="sep">|</span>financed</div>
+        </div>
+        <div class="ins-badge">Ins: Nov</div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="card-details">
+        <div class="details-inner">
+          <div class="status-row">
+            <div class="pill red"><span class="dot"></span>VACANT</div>
+            <div class="pill orange">FINANCED</div>
+          </div>
+          <div class="data-rows">
+            <div class="data-row">
+              <span class="data-key">insurance_provider</span>
+              <span class="data-val">Allstate</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance_premium</span>
+              <span class="data-val">$2,200/yr</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance_due</span>
+              <span class="data-val orange">Nov 1</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">monthly_payment</span>
+              <span class="data-val">$1,150</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">payment_due</span>
+              <span class="data-val">1st of month</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">original_loan</span>
+              <span class="data-val">$185,000</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">remaining_balance</span>
+              <span class="data-val red">$142,300</span>
+            </div>
+          </div>
+
+          <!-- Mortgage progress -->
+          <div class="mortgage-bar-container">
+            <div class="mortgage-bar-label">
+              <span>paid down</span>
+              <span style="color: #2ecc71;">23%</span>
+            </div>
+            <div class="mortgage-bar">
+              <div class="mortgage-bar-fill" style="width: 23%;"></div>
+            </div>
+          </div>
+
+          <!-- Vacancy alert -->
+          <div class="vacancy-alert">
+            <span class="alert-icon">⚠</span>
+            <span>UNOCCUPIED — reminder active on main page</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-index">002</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <a class="footer-link">← back to sqhq</a>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">
+      <span class="cursor-blink"></span>
+    </span>
+  </div>
+
+</div>
+
+<script>
+  function toggleCard(card) {
+    const wasExpanded = card.classList.contains('expanded');
+    document.querySelectorAll('.property-card').forEach(c => c.classList.remove('expanded'));
+    if (!wasExpanded) card.classList.add('expanded');
+  }
+</script>
+</body>
+</html>

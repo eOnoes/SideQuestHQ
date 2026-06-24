@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ledger .focus — Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808; color: #e8e8e8; font-family: 'Inter', sans-serif;
+    min-height: 100vh; overflow-y: auto; -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 420px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header { padding: 16px 0 12px; border-bottom: 1px solid #1a1a1a; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .header-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #888; letter-spacing: 0.5px; }
+  .header-title .diamond { color: #bbb; margin-right: 6px; }
+  .header-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+  .header-stats { display: flex; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .header-stats .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .header-stats .dot.green { background: #2ecc71; }
+  .header-stats .dot.red { background: #e74c3c; }
+  .header-stats .dot.blue { background: #3498db; }
+
+  /* Net total banner */
+  .net-banner {
+    margin-top: 16px; padding: 14px 16px; background: #111; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .net-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+  .net-amount { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: #2ecc71; }
+  .net-amount.negative { color: #e74c3c; }
+  .net-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; margin-top: 2px; }
+
+  /* Category Section */
+  .section { margin-top: 16px; }
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0 8px; border-bottom: 1px solid #1a1a1a; cursor: pointer;
+  }
+  .section-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555;
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .section-total {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600;
+  }
+  .section-total.green { color: #2ecc71; }
+  .section-total.red { color: #e74c3c; }
+  .section-total.blue { color: #3498db; }
+
+  /* Transaction rows */
+  .tx-list { display: flex; flex-direction: column; }
+  .tx-row {
+    display: flex; align-items: center; padding: 10px 0;
+    border-bottom: 1px solid #111; gap: 10px;
+  }
+  .tx-row:last-child { border-bottom: none; }
+
+  .tx-color-bar { width: 3px; height: 28px; border-radius: 2px; flex-shrink: 0; }
+  .tx-color-bar.green { background: #2ecc71; }
+  .tx-color-bar.red { background: #e74c3c; }
+  .tx-color-bar.blue { background: #3498db; }
+
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 13px; font-weight: 500; color: #e8e8e8; }
+  .tx-detail { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; margin-top: 1px; }
+
+  .tx-amount {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600;
+    text-align: right; flex-shrink: 0;
+  }
+  .tx-amount.incoming { color: #2ecc71; }
+  .tx-amount.outgoing { color: #e74c3c; }
+  .tx-amount.neutral { color: #3498db; }
+
+  .tx-date {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;
+    text-align: right; flex-shrink: 0; min-width: 40px;
+  }
+
+  /* Running total bar */
+  .running-total {
+    margin-top: 16px; padding: 12px 16px; background: #111; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .running-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .running-amount { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: #2ecc71; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px; padding: 16px 0; border-top: 1px solid #1a1a1a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-link { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; cursor: pointer; }
+  .footer-link:hover { color: #888; }
+  .cursor-blink {
+    display: inline-block; width: 8px; height: 14px; background: #2ecc71; opacity: 0.5;
+    animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title"><span class="diamond">◆</span>ledger .focus</div>
+      <div class="header-count">June 2026</div>
+    </div>
+    <div class="header-stats">
+      <span><span class="dot green"></span>$4,850 in</span>
+      <span><span class="dot red"></span>$2,630 out</span>
+      <span><span class="dot blue"></span>+$2,220 net</span>
+    </div>
+  </div>
+
+  <!-- Net total -->
+  <div class="net-banner">
+    <div>
+      <div class="net-label">net this month</div>
+      <div class="net-sub">rental + retirement − expenses</div>
+    </div>
+    <div class="net-amount">+$2,220</div>
+  </div>
+
+  <!-- Income: Rental -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">▸ rental income</span>
+      <span class="section-total green">$2,900</span>
+    </div>
+    <div class="tx-list">
+      <div class="tx-row">
+        <div class="tx-color-bar green"></div>
+        <div class="tx-info">
+          <div class="tx-name">J. Williams — W. Lee Ave</div>
+          <div class="tx-detail">tenant · auto-pay</div>
+        </div>
+        <div class="tx-amount incoming">+$1,450</div>
+        <div class="tx-date">Jun 1</div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-color-bar green"></div>
+        <div class="tx-info">
+          <div class="tx-name">M. Davis — Poplar Ave</div>
+          <div class="tx-detail">tenant · zelle</div>
+        </div>
+        <div class="tx-amount incoming">+$1,450</div>
+        <div class="tx-date">Jun 3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Income: Retirement/Investments -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">▸ retirement / investments</span>
+      <span class="section-total blue">$1,950</span>
+    </div>
+    <div class="tx-list">
+      <div class="tx-row">
+        <div class="tx-color-bar blue"></div>
+        <div class="tx-info">
+          <div class="tx-name">401k — Employer Match</div>
+          <div class="tx-detail">locked · auto-contribution</div>
+        </div>
+        <div class="tx-amount neutral">+$1,200</div>
+        <div class="tx-date">Jun 15</div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-color-bar blue"></div>
+        <div class="tx-info">
+          <div class="tx-name">Roth IRA — Dividend</div>
+          <div class="tx-detail">locked · quarterly</div>
+        </div>
+        <div class="tx-amount neutral">+$750</div>
+        <div class="tx-date">Jun 15</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses: Properties -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">▸ property expenses</span>
+      <span class="section-total red">−$1,780</span>
+    </div>
+    <div class="tx-list">
+      <div class="tx-row">
+        <div class="tx-color-bar red"></div>
+        <div class="tx-info">
+          <div class="tx-name">Plumbing repair — W. Lee Ave</div>
+          <div class="tx-detail">repair · kitchen sink</div>
+        </div>
+        <div class="tx-amount outgoing">−$480</div>
+        <div class="tx-date">Jun 8</div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-color-bar red"></div>
+        <div class="tx-info">
+          <div class="tx-name">Lawn service — Poplar Ave</div>
+          <div class="tx-detail">maintenance · monthly</div>
+        </div>
+        <div class="tx-amount outgoing">−$150</div>
+        <div class="tx-date">Jun 10</div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-color-bar red"></div>
+        <div class="tx-info">
+          <div class="tx-name">Mortgage — Poplar Ave</div>
+          <div class="tx-detail">mortgage · monthly</div>
+        </div>
+        <div class="tx-amount outgoing">−$1,150</div>
+        <div class="tx-date">Jun 1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses: Personal -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">▸ personal expenses</span>
+      <span class="section-total red">−$850</span>
+    </div>
+    <div class="tx-list">
+      <div class="tx-row">
+        <div class="tx-color-bar red"></div>
+        <div class="tx-info">
+          <div class="tx-name">Auto insurance — Cayman</div>
+          <div class="tx-detail">insurance · 6-month</div>
+        </div>
+        <div class="tx-amount outgoing">−$740</div>
+        <div class="tx-date">Jun 5</div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-color-bar red"></div>
+        <div class="tx-info">
+          <div class="tx-name">Temu — "Parts"</div>
+          <div class="tx-detail">shopping · questionable</div>
+        </div>
+        <div class="tx-amount outgoing">−$110</div>
+        <div class="tx-date">Jun 12</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Running total -->
+  <div class="running-total">
+    <span class="running-label">running balance (rental only)</span>
+    <span class="running-amount">+$1,120</span>
+  </div>
+
+  <div class="footer">
+    <a class="footer-link">← back to sqhq</a>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">
+      <span class="cursor-blink"></span>
+    </span>
+  </div>
+
+</div>
+</body>
+</html>

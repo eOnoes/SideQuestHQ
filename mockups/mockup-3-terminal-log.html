@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garage · Terminal Log</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#e8e8e8;font-family:'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',monospace;min-height:100vh;padding:32px 24px;font-size:13px;line-height:1.7}
+
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .page-header h1{font-size:16px;font-weight:600;letter-spacing:-0.2px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+  .page-header h1 .accent{color:#8b5cf6}
+  .page-header .subtitle{font-size:12px;color:#666}
+
+  .prompt{color:#8b5cf6;user-select:none}
+  .comment{color:#444}
+  .key{color:#666}
+  .val{color:#e8e8e8}
+  .val.green{color:#64c896}
+  .val.red{color:#e0696a}
+  .val.yellow{color:#ffd33d}
+  .val.purple{color:#8b5cf6}
+  .divider{color:#333;margin:4px 0}
+  .blank{height:8px}
+
+  .section-header{color:#8b5cf6;margin:16px 0 6px;text-transform:uppercase;letter-spacing:1px;font-size:11px}
+  .section-header::before{content:'── ';color:#333}
+  .section-header::after{content:' ─────────────────────────────────────';color:#333}
+
+  .totals-block{background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:14px 18px;margin-bottom:20px}
+  .totals-block .row{display:flex;justify-content:space-between;padding:2px 0}
+  .totals-block .row .key{min-width:200px}
+
+  .vehicle-block{background:#111319;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:14px 18px;margin-bottom:10px;position:relative}
+  .vehicle-block::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:6px 0 0 6px}
+  .vehicle-block.porsche::before{background:#8b5cf6}
+  .vehicle-block.ford::before{background:#64c896}
+  .vehicle-block.honda::before{background:#ffd33d}
+
+  .vehicle-block .row{display:flex;padding:1px 0}
+  .vehicle-block .row .key{min-width:180px;display:flex;justify-content:space-between}
+  .vehicle-block .row .key::after{content:':'}
+  .vehicle-block .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .vehicle-block .status-dot.available{background:#64c896}
+  .vehicle-block .status-dot.in-service{background:#ffd33d}
+
+  .cursor-blink{display:inline-block;width:8px;height:14px;background:#8b5cf6;animation:blink 1s step-end infinite;vertical-align:middle;margin-left:4px}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  .thumb-inline{float:right;width:80px;height:50px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;display:flex;align-items:center;justify-content:center;margin-left:12px}
+  .thumb-inline svg{width:40px;height:40px;stroke:#555;fill:none;stroke-width:1}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1><span class="accent">◈</span> garage<span style="color:#666">.list</span></h1>
+  <div class="subtitle">last sync: 2025-06-24 09:41 UTC</div>
+</div>
+
+<div class="totals-block">
+  <div class="row"><span class="key">collection.summary</span><span></span></div>
+  <div class="row"><span class="key">  total_vehicles</span><span class="val purple">3</span></div>
+  <div class="row"><span class="key">  est_value</span><span class="val green">$112,400</span></div>
+  <div class="row"><span class="key">  monthly_payments</span><span class="val red">$450/mo</span></div>
+  <div class="row"><span class="key">  next_insurance_due</span><span class="val yellow">2025-08 · $1,240</span></div>
+</div>
+
+<div class="section-header">vehicles</div>
+
+<!-- Porsche -->
+<div class="vehicle-block porsche">
+  <div class="thumb-inline">
+    <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 Q8 20 16 18 L22 14 Q26 10 32 10 L44 10 Q50 10 52 14 L56 18 Q60 20 60 24 L60 28 Q60 30 58 30 L6 30 Q4 30 4 28 Z"/><circle cx="18" cy="32" r="5" stroke-width="2"/><circle cx="46" cy="32" r="5" stroke-width="2"/></svg>
+  </div>
+  <div class="row"><span class="key">  id</span><span class="val">001</span></div>
+  <div class="row"><span class="key">  make_model</span><span class="val">Porsche Cayman</span></div>
+  <div class="row"><span class="key">  year</span><span class="val">2019</span></div>
+  <div class="row"><span class="key">  paid_off</span><span class="val green">YES</span></div>
+  <div class="row"><span class="key">  tag_number</span><span class="val">SQHQ-911</span></div>
+  <div class="row"><span class="key">  insurance</span><span class="val">2026-03 · <span class="yellow">$1,480</span></span></div>
+  <div class="row"><span class="key">  status</span><span class="val"><span class="status-dot available"></span>AVAILABLE</span></div>
+  <div class="row"><span class="key">  est_value</span><span class="val green">$58,000</span></div>
+</div>
+
+<!-- F-150 -->
+<div class="vehicle-block ford">
+  <div class="thumb-inline">
+    <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M6 28 Q6 22 10 20 L16 16 Q20 12 28 12 L48 12 Q54 12 56 16 L60 20 Q62 22 62 26 L62 28 Q62 30 60 30 L4 30 Q2 30 2 28 Z"/><circle cx="16" cy="32" r="5" stroke-width="2"/><circle cx="48" cy="32" r="5" stroke-width="2"/></svg>
+  </div>
+  <div class="row"><span class="key">  id</span><span class="val">002</span></div>
+  <div class="row"><span class="key">  make_model</span><span class="val">Ford F-150</span></div>
+  <div class="row"><span class="key">  year</span><span class="val">2021</span></div>
+  <div class="row"><span class="key">  paid_off</span><span class="val red">NO</span></div>
+  <div class="row"><span class="key">  payment</span><span class="val red">$450 / monthly</span></div>
+  <div class="row"><span class="key">  tag_number</span><span class="val">SQHQ-F150</span></div>
+  <div class="row"><span class="key">  insurance</span><span class="val">2025-08 · <span class="yellow">$1,240</span></span></div>
+  <div class="row"><span class="key">  status</span><span class="val"><span class="status-dot available"></span>AVAILABLE</span></div>
+  <div class="row"><span class="key">  est_value</span><span class="val green">$38,200</span></div>
+</div>
+
+<!-- Civic -->
+<div class="vehicle-block honda">
+  <div class="thumb-inline">
+    <svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 Q8 22 12 20 L20 15 Q24 11 32 11 L44 11 Q50 11 52 15 L56 20 Q60 22 60 26 L60 28 Q60 30 58 30 L6 30 Q4 30 4 28 Z"/><circle cx="18" cy="32" r="5" stroke-width="2"/><circle cx="46" cy="32" r="5" stroke-width="2"/></svg>
+  </div>
+  <div class="row"><span class="key">  id</span><span class="val">003</span></div>
+  <div class="row"><span class="key">  make_model</span><span class="val">Honda Civic</span></div>
+  <div class="row"><span class="key">  year</span><span class="val">2020</span></div>
+  <div class="row"><span class="key">  paid_off</span><span class="val green">YES</span></div>
+  <div class="row"><span class="key">  tag_number</span><span class="val">SQHQ-CIV</span></div>
+  <div class="row"><span class="key">  insurance</span><span class="val">2025-11 · <span class="yellow">$980</span></span></div>
+  <div class="row"><span class="key">  status</span><span class="val"><span class="status-dot in-service"></span>IN_SERVICE</span></div>
+  <div class="row"><span class="key">  est_value</span><span class="val green">$16,200</span></div>
+</div>
+
+<div style="margin-top:20px;color:#666">
+  <span class="prompt">garage ▸</span> <span class="cursor-blink"></span>
+</div>
+
+</body>
+</html>

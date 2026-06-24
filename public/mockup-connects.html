@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>connects .focus — Mockup v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808; color: #e8e8e8; font-family: 'Inter', sans-serif;
+    min-height: 100vh; overflow-y: auto; -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 420px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header { padding: 16px 0 12px; border-bottom: 1px solid #1a1a1a; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .header-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #888; letter-spacing: 0.5px; }
+  .header-title .diamond { color: #bbb; margin-right: 6px; }
+  .header-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+  .header-stats { display: flex; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .header-stats .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .header-stats .dot.green { background: #2ecc71; }
+  .header-stats .dot.blue { background: #3498db; }
+  .header-stats .dot.orange { background: #e67e22; }
+
+  /* Sort toggle */
+  .sort-bar { margin-top: 12px; display: flex; gap: 6px; }
+  .sort-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 5px 12px;
+    border-radius: 14px; cursor: pointer; transition: all 0.2s;
+    border: 1px solid #222; color: #666; background: transparent;
+  }
+  .sort-chip:hover { border-color: #444; color: #888; }
+  .sort-chip.active { border-color: #3498db; color: #3498db; background: rgba(52, 152, 219, 0.08); }
+
+  /* Category section */
+  .category { margin-top: 16px; }
+  .category-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0 6px; border-bottom: 1px solid #1a1a1a;
+  }
+  .category-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .category-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; }
+
+  .subcategory { margin-top: 8px; }
+  .sub-header {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;
+    padding: 4px 0 2px 12px; letter-spacing: 0.5px;
+  }
+
+  /* Compact contact card */
+  .contact-card {
+    background: #111; border-radius: 6px; padding: 8px 12px; margin-top: 4px;
+    cursor: pointer; transition: background 0.2s; position: relative;
+    overflow: hidden;
+  }
+  .contact-card:hover { background: #161616; }
+  .contact-card.expanded { background: #0f0f0f; }
+
+  .contact-card .c-bar {
+    position: absolute; left: 0; top: 0; width: 2px; height: 100%; border-radius: 2px;
+    transition: height 0.3s ease;
+  }
+  .c-bar.green { background: #2ecc71; }
+  .c-bar.blue { background: #3498db; }
+  .c-bar.orange { background: #e67e22; }
+
+  /* Collapsed view */
+  .contact-header { display: flex; flex-direction: column; gap: 2px; }
+  .contact-row-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .contact-name {
+    font-size: 13px; font-weight: 500; color: #e8e8e8;
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .contact-type {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; flex-shrink: 0;
+  }
+  .contact-phone {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; flex-shrink: 0;
+  }
+  .contact-row-bottom {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .contact-relation { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; }
+  .contact-note {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555;
+    font-style: italic; flex: 1; text-align: right;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Expanded details — dynamic, only shows fields with data */
+  .contact-details {
+    max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .contact-card.expanded .contact-details { max-height: 300px; }
+  .contact-details-inner {
+    padding: 8px 0 4px; margin-top: 6px; border-top: 1px solid #1a1a1a;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .detail-row {
+    display: flex; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .detail-key { color: #444; min-width: 110px; flex-shrink: 0; }
+  .detail-key::after { content: ' :'; color: #333; }
+  .detail-val { color: #aaa; }
+  .detail-val.link { color: #3498db; text-decoration: underline; cursor: pointer; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px; padding: 16px 0; border-top: 1px solid #1a1a1a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-link { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; cursor: pointer; }
+  .footer-link:hover { color: #888; }
+  .cursor-blink {
+    display: inline-block; width: 8px; height: 14px; background: #2ecc71; opacity: 0.5;
+    animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title"><span class="diamond">◆</span>connects .focus</div>
+      <div class="header-count">14 contacts</div>
+    </div>
+    <div class="header-stats">
+      <span><span class="dot green"></span>5 contractors</span>
+      <span><span class="dot blue"></span>4 fam</span>
+      <span><span class="dot orange"></span>5 work</span>
+    </div>
+  </div>
+
+  <div class="sort-bar">
+    <span class="sort-chip active">A → Z</span>
+    <span class="sort-chip">by category</span>
+  </div>
+
+  <!-- Contractors -->
+  <div class="category">
+    <div class="category-header">
+      <span class="category-title">▸ contractors</span>
+      <span class="category-count">5</span>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// mechanical</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"1247 Elvis Presley Blvd, Memphis TN","email":"carlos.m@mechanical.com","phone_home":"","phone_work":"901-555-0199","company":"Martinez Auto Works","note_full":"Prefers texts over calls. Does all my Porsche work. Rates are fair — $85/hr shop rate. Has a lift that fits the Cayman easy."}'>
+      <div class="c-bar green"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Martinez, Carlos</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0142</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">mechanic · cayman specialist</span>
+          <span class="contact-note">prefers texts, not calls</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// builder</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"892 Cooper St, Memphis TN","email":"dthompson.build@gmail.com","phone_home":"","phone_work":"","company":"Thompson Custom Builds","note_full":"IRL Cyony. Baja Bug lead builder. Son Logan does 3D printing — made the custom dash. Been building together 3 years. Best in the business."}'>
+      <div class="c-bar green"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Thompson, Derek</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0198</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">builder · IRL Cyony</span>
+          <span class="contact-note">Baja Bug lead · son Logan prints 3D</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// electrical</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"","email":"raj.patel@memphiselectric.com","phone_home":"","phone_work":"901-555-0267","company":"Memphis Electric LLC","note_full":"Licensed electrician. Did the W. Lee Ave full rewire. Permit pulled, inspections passed. $95/hr. Available most weekdays after 3PM."}'>
+      <div class="c-bar green"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Patel, Raj</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0267</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">electrician · licensed</span>
+          <span class="contact-note">did W. Lee Ave rewire</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// lawn</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"4500 Summer Ave, Memphis TN","email":"info@greenscapellc.com","phone_home":"","phone_work":"901-555-0310","company":"GreenScape Lawn LLC","note_full":"Monthly service on both rental properties. Auto-bill on the 10th. $75/property/month. They also do leaf cleanup in fall for extra $50."}'>
+      <div class="c-bar green"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">GreenScape LLC</span>
+          <span class="contact-type">office</span>
+          <span class="contact-phone">901-555-0310</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">lawn · monthly service</span>
+          <span class="contact-note">auto-bill 10th</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+  </div>
+
+  <!-- Fam -->
+  <div class="category">
+    <div class="category-header">
+      <span class="category-title">▸ fam</span>
+      <span class="category-count">4</span>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// important</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"Memphis TN","email":"","phone_home":"901-555-0002","phone_work":"","company":"","note_full":"Call every Sunday. She worries if you skip. Birthday: March 14. Favorite food: anything you cook for her."}'>
+      <div class="c-bar blue"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Mom</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0001</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">mother</span>
+          <span class="contact-note">call every Sunday</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// the twins</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"","email":"","phone_home":"","phone_work":"","company":"SideQuestHQ","note_full":"Scout handles voice, TTS, vibes. Cyony handles builds, code, infrastructure. Always on. Always watching. The empire builders."}'>
+      <div class="c-bar blue"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Scout & Cyony</span>
+          <span class="contact-type">app</span>
+          <span class="contact-phone">always on</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">AI copilots</span>
+          <span class="contact-note">the empire builders</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// crew</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"","email":"","phone_home":"","phone_work":"","company":"","note_full":"Night shift partner. Has your back. Don\'t let him pick the music though."}'>
+      <div class="c-bar blue"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Savage</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0420</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">coworker · crew</span>
+          <span class="contact-note">night shift partner</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+  </div>
+
+  <!-- Work -->
+  <div class="category">
+    <div class="category-header">
+      <span class="category-title">▸ work</span>
+      <span class="category-count">5</span>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// management</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"","email":"ops@company.com","phone_home":"","phone_work":"901-555-0500","company":"","note_full":"Schedule changes, PTO requests, shift swaps go through here. Be professional. They track everything."}'>
+      <div class="c-bar orange"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Operations Manager</span>
+          <span class="contact-type">office</span>
+          <span class="contact-phone">901-555-0500</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">management</span>
+          <span class="contact-note">schedule changes go here</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+
+    <div class="subcategory"><div class="sub-header">// day shift</div></div>
+    <div class="contact-card" onclick="toggleContact(this)" data-details='{"address":"","email":"","phone_home":"","phone_work":"","company":"","note_full":"Day shift relay. Handoff notes on anything that broke during the day. They leave it in the logbook — read it."}'>
+      <div class="c-bar orange"></div>
+      <div class="contact-header">
+        <div class="contact-row-top">
+          <span class="contact-name">Day Shift Lead</span>
+          <span class="contact-type">cell</span>
+          <span class="contact-phone">901-555-0515</span>
+        </div>
+        <div class="contact-row-bottom">
+          <span class="contact-relation">day shift relay</span>
+          <span class="contact-note">handoff notes</span>
+        </div>
+      </div>
+      <div class="contact-details"><div class="contact-details-inner"></div></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a class="footer-link">← back to sqhq</a>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">
+      <span class="cursor-blink"></span>
+    </span>
+  </div>
+
+</div>
+
+<script>
+  function toggleContact(card) {
+    const wasExpanded = card.classList.contains('expanded');
+    // Collapse all
+    document.querySelectorAll('.contact-card').forEach(c => c.classList.remove('expanded'));
+    if (wasExpanded) return;
+
+    // Parse the data-details JSON
+    const data = JSON.parse(card.dataset.details || '{}');
+    const inner = card.querySelector('.contact-details-inner');
+    inner.innerHTML = '';
+
+    // Only render fields that have data
+    const fields = [
+      { key: 'address', label: 'address' },
+      { key: 'email', label: 'email' },
+      { key: 'phone_home', label: 'phone (home)' },
+      { key: 'phone_work', label: 'phone (work)' },
+      { key: 'company', label: 'company' },
+      { key: 'note_full', label: 'note' },
+    ];
+
+    fields.forEach(f => {
+      if (data[f.key] && data[f.key].trim() !== '') {
+        const row = document.createElement('div');
+        row.className = 'detail-row';
+        const isEmail = f.key === 'email';
+        row.innerHTML = `
+          <span class="detail-key">${f.label}</span>
+          <span class="detail-val${isEmail ? ' link' : ''}">${data[f.key]}</span>
+        `;
+        inner.appendChild(row);
+      }
+    });
+
+    // Only expand if there's something to show
+    if (inner.children.length > 0) {
+      card.classList.add('expanded');
+    }
+  }
+</script>
+</body>
+</html>

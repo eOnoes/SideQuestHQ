@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>paper trail .focus — Mockup v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808; color: #e8e8e8; font-family: 'Inter', sans-serif;
+    min-height: 100vh; overflow-y: auto; -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 420px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header { padding: 16px 0 12px; border-bottom: 1px solid #1a1a1a; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .header-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #888; letter-spacing: 0.5px; }
+  .header-title .diamond { color: #bbb; margin-right: 6px; }
+  .header-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+  .header-stats { display: flex; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .header-stats .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .header-stats .dot.green { background: #2ecc71; }
+  .header-stats .dot.orange { background: #e67e22; }
+  .header-stats .dot.purple { background: #9b59b6; }
+
+  /* Action bar: Filter icon + Export button */
+  .action-bar {
+    margin-top: 12px; display: flex; gap: 8px; align-items: center;
+  }
+
+  .filter-icon-btn {
+    width: 36px; height: 36px; border-radius: 8px; background: #111;
+    border: 1px solid #222; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0; color: #666; font-size: 16px;
+  }
+  .filter-icon-btn:hover { border-color: #444; color: #888; }
+  .filter-icon-btn.active { border-color: #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.08); }
+
+  .csv-btn {
+    flex: 1; max-width: 66%; padding: 8px 14px; background: #111;
+    border: 1px solid #222; border-radius: 8px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #2ecc71;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .csv-btn:hover { background: #161616; border-color: #2ecc71; }
+
+  /* Active filter pills (shown when filter is active) */
+  .active-filters {
+    margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .active-filter-pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 10px;
+    border-radius: 12px; color: #2ecc71; background: rgba(46, 204, 113, 0.08);
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    display: flex; align-items: center; gap: 4px; cursor: pointer;
+  }
+  .active-filter-pill .remove { font-size: 12px; opacity: 0.6; }
+  .active-filter-pill:hover .remove { opacity: 1; }
+
+  /* Filter slide-out panel */
+  .filter-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 100; opacity: 0;
+    pointer-events: none; transition: opacity 0.3s ease;
+  }
+  .filter-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .filter-panel {
+    position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px;
+    margin: 0 auto; background: #111; border-radius: 16px 16px 0 0;
+    padding: 20px 16px 32px; z-index: 101;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .filter-overlay.open .filter-panel { transform: translateY(0); }
+
+  .filter-panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .filter-panel-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #888;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .filter-panel-close {
+    font-size: 18px; color: #555; cursor: pointer; background: none; border: none;
+  }
+
+  .filter-section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;
+    text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 8px;
+  }
+  .filter-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .filter-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 14px;
+    border-radius: 14px; cursor: pointer; transition: all 0.2s;
+    border: 1px solid #222; color: #666; background: transparent;
+  }
+  .filter-chip:hover { border-color: #444; color: #888; }
+  .filter-chip.selected { border-color: #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.08); }
+
+  .filter-apply-btn {
+    margin-top: 16px; width: 100%; padding: 10px; background: #2ecc71;
+    border: none; border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: #080808; font-weight: 600; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .filter-apply-btn:hover { background: #27ae60; }
+
+  /* Receipt Group */
+  .receipt-group { margin-top: 16px; }
+  .group-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid #1a1a1a;
+  }
+  .group-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .group-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; }
+  .group-total { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e74c3c; }
+
+  /* Receipt card */
+  .receipt-card {
+    background: #111; border-radius: 8px; padding: 10px 12px; margin-top: 6px;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    transition: background 0.2s; position: relative;
+  }
+  .receipt-card:hover { background: #161616; }
+
+  .receipt-type-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+    padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+    flex-shrink: 0; min-width: 40px; text-align: center;
+  }
+  .receipt-type-badge.receipt { color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
+  .receipt-type-badge.manual { color: #e67e22; background: rgba(230, 126, 34, 0.1); }
+  .receipt-type-badge.digital { color: #3498db; background: rgba(52, 152, 219, 0.1); }
+
+  .receipt-info { flex: 1; }
+  .receipt-vendor { font-size: 13px; font-weight: 500; color: #e8e8e8; }
+  .receipt-detail { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; margin-top: 1px; }
+  .receipt-amount {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+    color: #e74c3c; flex-shrink: 0;
+  }
+  .receipt-date {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;
+    flex-shrink: 0; min-width: 36px; text-align: right;
+  }
+
+  /* Running total */
+  .running-total {
+    margin-top: 16px; padding: 12px 16px; background: #111; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; bottom: 8px; border: 1px solid #1a1a1a;
+  }
+  .running-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
+  .running-amount { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: #e74c3c; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px; padding: 16px 0; border-top: 1px solid #1a1a1a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-link { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; cursor: pointer; }
+  .footer-link:hover { color: #888; }
+  .cursor-blink {
+    display: inline-block; width: 8px; height: 14px; background: #2ecc71; opacity: 0.5;
+    animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title"><span class="diamond">◆</span>paper trail .focus</div>
+      <div class="header-count">23 receipts</div>
+    </div>
+    <div class="header-stats">
+      <span><span class="dot green"></span>3 assets</span>
+      <span><span class="dot orange"></span>6 categories</span>
+      <span><span class="dot purple"></span>YTD: $18,420</span>
+    </div>
+  </div>
+
+  <!-- Action bar: Filter icon + Export -->
+  <div class="action-bar">
+    <div class="filter-icon-btn" id="filterBtn" onclick="toggleFilter()">⚙</div>
+    <button class="csv-btn">
+      📊 Export
+    </button>
+  </div>
+
+  <!-- Active filter pills (show when filters applied) -->
+  <div class="active-filters" id="activeFilters" style="display: none;">
+    <span class="active-filter-pill">W. Lee Ave <span class="remove">✕</span></span>
+    <span class="active-filter-pill">receipts only <span class="remove">✕</span></span>
+  </div>
+
+  <!-- Receipts by asset -->
+  <div class="receipt-group">
+    <div class="group-header">
+      <span class="group-title">▸ W. Lee Ave</span>
+      <span class="group-count">8 receipts</span>
+      <span class="group-total">−$2,340</span>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge receipt">scan</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Memphis Plumbing Co.</div>
+        <div class="receipt-detail">repair · kitchen sink</div>
+      </div>
+      <div class="receipt-amount">−$480</div>
+      <div class="receipt-date">Jun 8</div>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge digital">auto</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">State Farm Insurance</div>
+        <div class="receipt-detail">insurance · annual premium</div>
+      </div>
+      <div class="receipt-amount">−$1,800</div>
+      <div class="receipt-date">Jun 1</div>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge manual">manual</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Home Depot</div>
+        <div class="receipt-detail">upgrade · bathroom tile</div>
+      </div>
+      <div class="receipt-amount">−$60</div>
+      <div class="receipt-date">Jun 14</div>
+    </div>
+  </div>
+
+  <div class="receipt-group">
+    <div class="group-header">
+      <span class="group-title">▸ Poplar Ave</span>
+      <span class="group-count">5 receipts</span>
+      <span class="group-total">−$1,520</span>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge digital">auto</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Allstate Insurance</div>
+        <div class="receipt-detail">insurance · annual premium</div>
+      </div>
+      <div class="receipt-amount">−$2,200</div>
+      <div class="receipt-date">Jun 1</div>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge receipt">scan</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">GreenScape Lawn</div>
+        <div class="receipt-detail">maintenance · monthly</div>
+      </div>
+      <div class="receipt-amount">−$150</div>
+      <div class="receipt-date">Jun 10</div>
+    </div>
+  </div>
+
+  <div class="receipt-group">
+    <div class="group-header">
+      <span class="group-title">▸ vehicles</span>
+      <span class="group-count">4 receipts</span>
+      <span class="group-total">−$1,150</span>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge digital">auto</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Progressive Auto</div>
+        <div class="receipt-detail">Cayman · 6-month premium</div>
+      </div>
+      <div class="receipt-amount">−$740</div>
+      <div class="receipt-date">Jun 5</div>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge manual">manual</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Shell Gas Station</div>
+        <div class="receipt-detail">fuel · F-150</div>
+      </div>
+      <div class="receipt-amount">−$85</div>
+      <div class="receipt-date">Jun 11</div>
+    </div>
+  </div>
+
+  <div class="receipt-group">
+    <div class="group-header">
+      <span class="group-title">▸ uncategorized</span>
+      <span class="group-count">2 receipts</span>
+      <span class="group-total">−$195</span>
+    </div>
+    <div class="receipt-card">
+      <span class="receipt-type-badge receipt">scan</span>
+      <div class="receipt-info">
+        <div class="receipt-vendor">Temu — "Parts"</div>
+        <div class="receipt-detail">uncategorized · needs review</div>
+      </div>
+      <div class="receipt-amount">−$110</div>
+      <div class="receipt-date">Jun 12</div>
+    </div>
+  </div>
+
+  <!-- Running total sticky -->
+  <div class="running-total">
+    <span class="running-label">total expenses (YTD)</span>
+    <span class="running-amount">−$18,420</span>
+  </div>
+
+  <div class="footer">
+    <a class="footer-link">← back to sqhq</a>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">
+      <span class="cursor-blink"></span>
+    </span>
+  </div>
+
+</div>
+
+<!-- Filter slide-out panel -->
+<div class="filter-overlay" id="filterOverlay" onclick="closeFilter()">
+  <div class="filter-panel" onclick="event.stopPropagation()">
+    <div class="filter-panel-header">
+      <span class="filter-panel-title">filter</span>
+      <button class="filter-panel-close" onclick="closeFilter()">✕</button>
+    </div>
+
+    <div class="filter-section-label">by asset</div>
+    <div class="filter-chips">
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">W. Lee Ave</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">Poplar Ave</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">Cayman</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">F-150</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">Baja Bug</span>
+    </div>
+
+    <div class="filter-section-label">by type</div>
+    <div class="filter-chips">
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">receipts</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">manual</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">auto</span>
+    </div>
+
+    <div class="filter-section-label">by category</div>
+    <div class="filter-chips">
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">fuel</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">insurance</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">mortgage</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">utilities</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">repairs</span>
+      <span class="filter-chip" onclick="this.classList.toggle('selected')">upgrades</span>
+    </div>
+
+    <button class="filter-apply-btn" onclick="closeFilter()">apply filters</button>
+  </div>
+</div>
+
+<script>
+  function toggleFilter() {
+    document.getElementById('filterOverlay').classList.toggle('open');
+    document.getElementById('filterBtn').classList.toggle('active');
+  }
+  function closeFilter() {
+    document.getElementById('filterOverlay').classList.remove('open');
+    document.getElementById('filterBtn').classList.remove('active');
+  }
+</script>
+</body>
+</html>

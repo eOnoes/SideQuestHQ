@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>garage .focus — Mockup 5: Accordion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #080808;
+    color: #e8e8e8;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-y: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 0 16px;
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 16px 0 12px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .header-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #888;
+    letter-spacing: 0.5px;
+  }
+
+  .header-title .diamond { color: #bbb; margin-right: 6px; }
+  .header-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
+
+  .header-stats {
+    display: flex;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #555;
+  }
+
+  .header-stats .dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .header-stats .dot.purple { background: #9b59b6; }
+  .header-stats .dot.green { background: #2ecc71; }
+  .header-stats .dot.orange { background: #e67e22; }
+
+  /* ── Card Stack ── */
+  .card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* ── Accordion Card ── */
+  .vehicle-card {
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .vehicle-card:hover {
+    background: #141414;
+  }
+
+  .vehicle-card.expanded {
+    background: #0f0f0f;
+  }
+
+  /* ── Left Border Line ── */
+  .vehicle-card .left-line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .vehicle-card .left-line.yellow { background: #f1c40f; }
+  .vehicle-card .left-line.green { background: #2ecc71; }
+  .vehicle-card .left-line.blue { background: #3498db; }
+
+  /* ── Collapsed Header (always visible) ── */
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px 14px 18px;
+    gap: 12px;
+  }
+
+  .card-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2a2a2a;
+    min-width: 40px;
+    line-height: 1;
+  }
+
+  .card-info {
+    flex: 1;
+  }
+
+  .card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e8e8e8;
+    margin-bottom: 2px;
+  }
+
+  .card-brief {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #555;
+  }
+
+  .card-brief .sep {
+    color: #333;
+    margin: 0 6px;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+  }
+
+  .card-icon svg {
+    width: 32px;
+    height: 20px;
+  }
+
+  .expand-arrow {
+    font-size: 12px;
+    color: #444;
+    transition: transform 0.3s ease, color 0.2s;
+    margin-left: 4px;
+  }
+
+  /* ── Card Index Badge (bottom right) ── */
+  .card-index {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 1px;
+  }
+
+  .vehicle-card.expanded .card-index {
+    bottom: 12px;
+  }
+
+  .vehicle-card.expanded .expand-arrow {
+    transform: rotate(180deg);
+    color: #666;
+  }
+
+  /* ── Expanded Details (hidden by default) ── */
+  .card-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .vehicle-card.expanded .card-details {
+    max-height: 400px;
+  }
+
+  .details-inner {
+    padding: 0 16px 16px 18px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  /* ── Status Pills ── */
+  .status-row {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .pill.green {
+    color: #2ecc71;
+    background: rgba(46, 204, 113, 0.1);
+  }
+
+  .pill.yellow {
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.1);
+  }
+
+  .pill.blue {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+  }
+
+  .pill.gray {
+    color: #888;
+    background: rgba(136, 136, 136, 0.1);
+  }
+
+  .pill .dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .pill.green .dot { background: #2ecc71; }
+  .pill.yellow .dot { background: #f1c40f; }
+  .pill.blue .dot { background: #3498db; }
+
+  /* ── Terminal Key:Value Rows ── */
+  .data-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .data-row {
+    display: flex;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .data-key {
+    color: #555;
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+
+  .data-key::after {
+    content: ' :';
+    color: #333;
+  }
+
+  .data-val {
+    color: #e8e8e8;
+    font-weight: 500;
+  }
+
+  .data-val.green { color: #2ecc71; }
+  .data-val.yellow { color: #f1c40f; }
+  .data-val.blue { color: #3498db; }
+
+  /* ── Thumbnails Row ── */
+  .thumbs-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .thumb {
+    width: 56px;
+    height: 40px;
+    border-radius: 6px;
+    background: #1a1a1a;
+    border: 1px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #555;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .thumb:hover {
+    border-color: #444;
+    background: #222;
+  }
+
+  .thumb.active {
+    border-color: #f1c40f;
+    background: rgba(241, 196, 15, 0.05);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 24px;
+    padding: 16px 0;
+    border-top: 1px solid #1a1a1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .footer-link:hover { color: #888; }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: #2ecc71;
+    opacity: 0.5;
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title"><span class="diamond">◆</span>garage .focus</div>
+      <div class="header-count">3 vehicles</div>
+    </div>
+    <div class="header-stats">
+      <span><span class="dot purple"></span>3 vehicles</span>
+      <span><span class="dot green"></span>$112,400</span>
+      <span><span class="dot orange"></span>Next ins: Aug</span>
+    </div>
+  </div>
+
+  <!-- ── Card Stack ── -->
+  <div class="card-stack">
+
+    <!-- Card 1: Cayman (expanded by default for demo) -->
+    <div class="vehicle-card expanded" data-card="1" onclick="toggleCard(this)">
+      <div class="left-line yellow"></div>
+      <div class="card-header">
+        <div class="card-number">19</div>
+        <div class="card-info">
+          <div class="card-name">Porsche Cayman</div>
+          <div class="card-brief">
+            tag: SQHQ-911<span class="sep">|</span>Ins Mar '26
+          </div>
+        </div>
+        <div class="card-icon">
+          <svg viewBox="0 0 40 20" fill="none" stroke="#888" stroke-width="1.2">
+            <path d="M6 14 L10 6 L28 6 L34 14 Z"/>
+            <circle cx="12" cy="15" r="3"/>
+            <circle cx="28" cy="15" r="3"/>
+            <path d="M15 6 L18 3 L24 3 L26 6"/>
+          </svg>
+        </div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="card-details">
+        <div class="details-inner">
+          <div class="status-row">
+            <div class="pill green"><span class="dot"></span>PAID OFF</div>
+            <div class="pill green"><span class="dot"></span>AVAILABLE</div>
+          </div>
+          <div class="data-rows">
+            <div class="data-row">
+              <span class="data-key">tag</span>
+              <span class="data-val">SQHQ-911</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">est_value</span>
+              <span class="data-val green">$58,000</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">monthly_payment</span>
+              <span class="data-val green">$0</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance</span>
+              <span class="data-val">Mar 2026 · $1,480</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">renewal_date</span>
+              <span class="data-val">Mar 2027</span>
+            </div>
+          </div>
+          <div class="thumbs-row">
+            <div class="thumb active">ext</div>
+            <div class="thumb">int</div>
+            <div class="thumb">dash</div>
+            <div class="thumb">+ add</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-index">001</div>
+    </div>
+
+    <!-- Card 2: F-150 (collapsed) -->
+    <div class="vehicle-card" data-card="2" onclick="toggleCard(this)">
+      <div class="left-line green"></div>
+      <div class="card-header">
+      <div class="card-number">21</div>
+        <div class="card-info">
+          <div class="card-name">Ford F-150</div>
+          <div class="card-brief">
+            tag: TBD<span class="sep">|</span>Ins Jun '26
+          </div>
+        </div>
+        <div class="card-icon">
+          <svg viewBox="0 0 40 20" fill="none" stroke="#888" stroke-width="1.2">
+            <path d="M4 14 L8 6 L30 6 L36 10 L36 14 Z"/>
+            <circle cx="11" cy="15" r="3"/>
+            <circle cx="30" cy="15" r="3"/>
+          </svg>
+        </div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="card-details">
+        <div class="details-inner">
+          <div class="status-row">
+            <div class="pill yellow"><span class="dot"></span>FINANCED</div>
+            <div class="pill green"><span class="dot"></span>AVAILABLE</div>
+          </div>
+          <div class="data-rows">
+            <div class="data-row">
+              <span class="data-key">tag</span>
+              <span class="data-val">TBD</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">est_value</span>
+              <span class="data-val green">$38,000</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">monthly_payment</span>
+              <span class="data-val">$485</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">insurance</span>
+              <span class="data-val">Jun 2026 · $1,200</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">renewal_date</span>
+              <span class="data-val">Jun 2027</span>
+            </div>
+          </div>
+          <div class="thumbs-row">
+            <div class="thumb active">ext</div>
+            <div class="thumb">int</div>
+            <div class="thumb">bed</div>
+            <div class="thumb">+ add</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-index">002</div>
+    </div>
+
+    <!-- Card 3: Baja Bug (collapsed) -->
+    <div class="vehicle-card" data-card="3" onclick="toggleCard(this)">
+      <div class="left-line blue"></div>
+      <div class="card-header">
+      <div class="card-number">60</div>
+        <div class="card-info">
+          <div class="card-name">VW Baja Bug</div>
+          <div class="card-brief">
+            tag: TBD<span class="sep">|</span>K20 swap
+          </div>
+        </div>
+        <div class="card-icon">
+          <svg viewBox="0 0 40 20" fill="none" stroke="#888" stroke-width="1.2">
+            <ellipse cx="20" cy="10" rx="16" ry="8"/>
+            <circle cx="12" cy="15" r="3"/>
+            <circle cx="28" cy="15" r="3"/>
+          </svg>
+        </div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="card-details">
+        <div class="details-inner">
+          <div class="status-row">
+            <div class="pill gray">PROJECT</div>
+            <div class="pill blue"><span class="dot"></span>IN PROGRESS</div>
+          </div>
+          <div class="data-rows">
+            <div class="data-row">
+              <span class="data-key">tag</span>
+              <span class="data-val">TBD</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">est_value</span>
+              <span class="data-val green">$16,400</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">engine</span>
+              <span class="data-val yellow">Honda K20</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">donor_year</span>
+              <span class="data-val">1960</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">conversion</span>
+              <span class="data-val">Beetle → Baja</span>
+            </div>
+            <div class="data-row">
+              <span class="data-key">status</span>
+              <span class="data-val blue">Fabrication</span>
+            </div>
+          </div>
+          <div class="thumbs-row">
+            <div class="thumb active">ext</div>
+            <div class="thumb">bay</div>
+            <div class="thumb">build</div>
+            <div class="thumb">+ add</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-index">003</div>
+    </div>
+
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <a class="footer-link">← back to sqhq</a>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">
+      <span class="cursor-blink"></span>
+    </span>
+  </div>
+
+</div>
+
+<script>
+  function toggleCard(card) {
+    const wasExpanded = card.classList.contains('expanded');
+
+    // Collapse all cards
+    document.querySelectorAll('.vehicle-card').forEach(c => {
+      c.classList.remove('expanded');
+    });
+
+    // If it wasn't expanded, expand it (toggle behavior)
+    if (!wasExpanded) {
+      card.classList.add('expanded');
+    }
+  }
+
+  // Start with card 1 expanded (already has class in HTML)
+</script>
+
+</body>
+</html>

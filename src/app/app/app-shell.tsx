@@ -4,6 +4,11 @@ import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { HomeFeed } from "../components/HomeFeed";
 import { CardView, type CardItem } from "../components/CardView";
+import { GarageWorkspace } from "../components/workspaces/GarageWorkspace";
+import { HousesWorkspace } from "../components/workspaces/HousesWorkspace";
+import { LedgerWorkspace } from "../components/workspaces/LedgerWorkspace";
+import { PaperTrailWorkspace } from "../components/workspaces/PaperTrailWorkspace";
+import { ConnectsWorkspace } from "../components/workspaces/ConnectsWorkspace";
 import { MenuCards } from "../components/MenuCards";
 import { ScoutPanel } from "../components/ScoutPanel";
 import { QuestWorkspace } from "../components/QuestWorkspace";
@@ -278,6 +283,14 @@ export default function AppShell() {
             onOpenReminder={handleOpenReminder}
             setActiveView={setActiveView}
           />
+        ) : activeView === "Assets" ? (
+          <GarageWorkspace onBack={() => setActiveView("Command")} />
+        ) : activeView === "Ledger" ? (
+          <LedgerWorkspace onBack={() => setActiveView("Command")} />
+        ) : activeView === "Paper Trail" ? (
+          <PaperTrailWorkspace onBack={() => setActiveView("Command")} />
+        ) : activeView === "People" ? (
+          <ConnectsWorkspace onBack={() => setActiveView("Command")} />
         ) : (
           <CardView
             key={activeView}
