@@ -1,0 +1,455 @@
+/* === Voice Agent (Chloe) === */
+.voice-agent {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  height: -webkit-fill-available;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.5s ease;
+  background: linear-gradient(180deg, rgba(255, 211, 61, 0.06) 0%, rgba(255, 211, 61, 0.02) 30%, transparent 60%);
+}
+
+.voice-agent[data-mode="voice"] {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.04) 30%, transparent 60%);
+}
+
+/* Header */
+.va-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 211, 61, 0.15);
+  background: linear-gradient(180deg, rgba(255, 211, 61, 0.1) 0%, transparent 100%);
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.va-header[data-mode="voice"] {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.18) 0%, transparent 100%);
+  border-bottom-color: rgba(139, 92, 246, 0.25);
+}
+
+.va-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Mode toggle in header */
+.va-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.va-mode-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.va-mode-btn.active {
+  background: rgba(255, 211, 61, 0.15);
+  color: #ffd33d;
+  border-color: rgba(255, 211, 61, 0.3);
+}
+
+.va-header[data-mode="voice"] .va-mode-btn.active {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.va-title {
+  font-family: var(--font-mono, inherit);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #e0e0e0);
+  margin: 0;
+}
+
+.va-status {
+  font-size: 10px;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.va-mic-blocked {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.va-mic-hint {
+  padding: 8px 16px;
+  font-size: 10px;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+  border-top: 1px solid rgba(239, 68, 68, 0.15);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.va-mic-btn.hidden {
+  display: none;
+}
+
+/* Mood bar */
+.va-mood-bar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border, #1a1a1a);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.va-mood-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.va-mood-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  background: #0d0d0d;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.va-mood-btn:hover {
+  border-color: #444;
+  color: #ccc;
+  background: #121212;
+}
+
+.va-mood-btn.active {
+  border-color: #555;
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.va-mood-label {
+  font-family: var(--font-mono, inherit);
+}
+
+/* Messages area */
+.va-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.va-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.va-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.va-messages::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Empty state */
+.va-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #555;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.va-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.va-empty p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.va-empty-hint {
+  font-size: 11px !important;
+  color: #444 !important;
+  margin-top: 8px !important;
+}
+
+/* Message bubbles */
+.va-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+  animation: fadeIn 0.2s ease;
+}
+
+.va-msg.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.va-msg.assistant {
+  align-self: flex-start;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.va-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.va-msg.user .va-msg-avatar {
+  background: #222;
+  color: #888;
+  order: 1;
+}
+
+.va-msg.assistant .va-msg-avatar {
+  background: #1a1a2e;
+  color: #8888cc;
+}
+
+.va-msg-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.va-msg-bubble {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.va-msg.user .va-msg-bubble {
+  background: #1a1a1a;
+  color: #ccc;
+  border: 1px solid #2a2a2a;
+}
+
+.va-msg.assistant .va-msg-bubble {
+  background: #0d0d1a;
+  color: #c8c8e0;
+  border: 1px solid #1a1a2e;
+}
+
+.va-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  color: #555;
+}
+
+.va-play-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+  transition: color 0.15s;
+}
+
+.va-play-btn:hover {
+  color: #aaa;
+}
+
+.va-play-btn.playing {
+  color: #8888cc;
+}
+
+/* Typing indicator */
+.va-typing {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 16px !important;
+}
+
+.va-dot {
+  animation: bounce 1.4s infinite;
+  font-size: 16px;
+  color: #666;
+}
+
+.va-dot:nth-child(2) { animation-delay: 0.2s; }
+.va-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* Input bar */
+.va-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border, #1a1a1a);
+  background: rgba(10, 12, 8, 0.95);
+  backdrop-filter: blur(6px);
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.va-input {
+  flex: 1;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ccc;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.va-input:focus {
+  border-color: #444;
+}
+
+.va-input::placeholder {
+  color: #555;
+}
+
+.va-mic-btn,
+.va-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #2a2a2a;
+  background: #0d0d0d;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.va-mic-btn:hover,
+.va-send-btn:hover {
+  border-color: #444;
+  color: #ccc;
+}
+
+.va-mic-btn.active {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.va-send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 760px) {
+  .va-mood-bar {
+    padding: 6px 12px;
+    gap: 3px;
+  }
+
+  .va-mood-btn {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .va-messages {
+    padding: 12px;
+  }
+
+  .va-input-bar {
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .va-msg {
+    max-width: 90%;
+  }
+}
+
+/* Error message with countdown */
+.va-error-msg {
+  animation: errorSlideIn 0.3s ease-out;
+}
+
+.va-error-bubble {
+  background: rgba(255, 59, 48, 0.15) !important;
+  border: 1px solid rgba(255, 59, 48, 0.3) !important;
+  color: #ff6b6b !important;
+  font-size: 13px;
+}
+
+.va-error-countdown {
+  color: rgba(255, 107, 107, 0.7);
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+@keyframes errorSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

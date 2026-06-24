@@ -11,3 +11,8 @@ yarn-error.log*
 pnpm-debug.log*
 .next-dev.*.log
 *.tsbuildinfo
+.next
+node_modules
+*.db
+.env.local
+data/

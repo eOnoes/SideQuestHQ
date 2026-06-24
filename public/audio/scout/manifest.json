@@ -1,0 +1,287 @@
+{
+  "s0_1": {
+    "ogg": "s0_1.ogg",
+    "text": "I guess we're just ignoring that one. Cool.",
+    "category": "snooze"
+  },
+  "s0_2": {
+    "ogg": "s0_2.ogg",
+    "text": "Snoozed. No judgment. Okay, a little judgment.",
+    "category": "snooze"
+  },
+  "s0_3": {
+    "ogg": "s0_3.ogg",
+    "text": "First one? Bold move. I'll allow it.",
+    "category": "snooze"
+  },
+  "s0_4": {
+    "ogg": "s0_4.ogg",
+    "text": "And so it begins. That's one snooze on the board.",
+    "category": "snooze"
+  },
+  "s0_5": {
+    "ogg": "s0_5.ogg",
+    "text": "Swept under the rug. For now.",
+    "category": "snooze"
+  },
+  "s1_1": {
+    "ogg": "s1_1.ogg",
+    "text": "Oh, another one? Cool cool cool.",
+    "category": "snooze"
+  },
+  "s1_2": {
+    "ogg": "s1_2.ogg",
+    "text": "Two snoozes. I'm keeping count now.",
+    "category": "snooze"
+  },
+  "s1_3": {
+    "ogg": "s1_3.ogg",
+    "text": "That's the second one. I see you.",
+    "category": "snooze"
+  },
+  "s1_4": {
+    "ogg": "s1_4.ogg",
+    "text": "Building quite the collection there, huh?",
+    "category": "snooze"
+  },
+  "s1_5": {
+    "ogg": "s1_5.ogg",
+    "text": "Again? Fine. I'll remind you again later.",
+    "category": "snooze"
+  },
+  "s2_1": {
+    "ogg": "s2_1.ogg",
+    "text": "Zero responsibilities. Got it.",
+    "category": "snooze"
+  },
+  "s2_2": {
+    "ogg": "s2_2.ogg",
+    "text": "Third snooze. That's a pattern now.",
+    "category": "snooze"
+  },
+  "s2_3": {
+    "ogg": "s2_3.ogg",
+    "text": "You know these come back, right? They always come back.",
+    "category": "snooze"
+  },
+  "s2_4": {
+    "ogg": "s2_4.ogg",
+    "text": "Piling up. Just saying.",
+    "category": "snooze"
+  },
+  "s2_5": {
+    "ogg": "s2_5.ogg",
+    "text": "I'm starting to take this personally.",
+    "category": "snooze"
+  },
+  "s3_1": {
+    "ogg": "s3_1.ogg",
+    "text": "Why even make reminders at this point?",
+    "category": "snooze"
+  },
+  "s3_2": {
+    "ogg": "s3_2.ogg",
+    "text": "Four snoozes. I'm not mad. I'm disappointed. Actually no, I'm mad.",
+    "category": "snooze"
+  },
+  "s3_3": {
+    "ogg": "s3_3.ogg",
+    "text": "You're basically just swiping for sport now.",
+    "category": "snooze"
+  },
+  "s3_4": {
+    "ogg": "s3_4.ogg",
+    "text": "The snooze button isn't a to-do list, Eddie.",
+    "category": "snooze"
+  },
+  "s3_5": {
+    "ogg": "s3_5.ogg",
+    "text": "At this rate, just delete the reminder. Be honest with yourself.",
+    "category": "snooze"
+  },
+  "s4_1": {
+    "ogg": "s4_1.ogg",
+    "text": "Five snoozes. I'm not even mad, I'm impressed.",
+    "category": "snooze"
+  },
+  "s4_2": {
+    "ogg": "s4_2.ogg",
+    "text": "This is a snooze championship and you're in first place. Congratulations.",
+    "category": "snooze"
+  },
+  "s4_3": {
+    "ogg": "s4_3.ogg",
+    "text": "I quit. Find yourself a new AI. I can't do this anymore.",
+    "category": "snooze"
+  },
+  "s4_4": {
+    "ogg": "s4_4.ogg",
+    "text": "You know what? Snooze everything. Snooze your life. I'm done.",
+    "category": "snooze"
+  },
+  "s4_5": {
+    "ogg": "s4_5.ogg",
+    "text": "I need therapy after this. Robot therapy. You've broken me.",
+    "category": "snooze"
+  },
+  "s5_1": {
+    "ogg": "s5_1.ogg",
+    "text": "And that's the last one. Every single reminder snoozed. You absolute menace.",
+    "category": "snooze"
+  },
+  "s5_2": {
+    "ogg": "s5_2.ogg",
+    "text": "Zero remaining. You did it. You snoozed everything. I'm nominating you for an award.",
+    "category": "snooze"
+  },
+  "s5_3": {
+    "ogg": "s5_3.ogg",
+    "text": "The last one falls. Perfect score. I hope you're proud.",
+    "category": "snooze"
+  },
+  "s5_4": {
+    "ogg": "s5_4.ogg",
+    "text": "And the crowd goes wild. Every reminder, snoozed. The streak is complete.",
+    "category": "snooze"
+  },
+  "s5_5": {
+    "ogg": "s5_5.ogg",
+    "text": "That's all of them. I'll just be over here. In the corner. Crying.",
+    "category": "snooze"
+  },
+  "sr_1": {
+    "ogg": "sr_1.ogg",
+    "text": "Whoa whoa slow down! You're just mowing through these!",
+    "category": "snooze"
+  },
+  "sr_2": {
+    "ogg": "sr_2.ogg",
+    "text": "Speed snoozer over here! Pace yourself!",
+    "category": "snooze"
+  },
+  "sr_3": {
+    "ogg": "sr_3.ogg",
+    "text": "Back to back to back? Really?!",
+    "category": "snooze"
+  },
+  "sr_4": {
+    "ogg": "sr_4.ogg",
+    "text": "Slow down! I can't even keep up with your disregard!",
+    "category": "snooze"
+  },
+  "sr_5": {
+    "ogg": "sr_5.ogg",
+    "text": "You're on a roll! A terrible, terrible roll!",
+    "category": "snooze"
+  },
+  "srp_1": {
+    "ogg": "srp_1.ogg",
+    "text": "This one again? You snoozed this one yesterday too.",
+    "category": "snooze"
+  },
+  "srp_2": {
+    "ogg": "srp_2.ogg",
+    "text": "D\u00e9j\u00e0 vu. Same reminder, same snooze. I'm noticing a trend.",
+    "category": "snooze"
+  },
+  "srp_3": {
+    "ogg": "srp_3.ogg",
+    "text": "You've snoozed this one before. Multiple times. I have receipts.",
+    "category": "snooze"
+  },
+  "srp_4": {
+    "ogg": "srp_4.ogg",
+    "text": "This reminder has more snooze history than a broken alarm clock.",
+    "category": "snooze"
+  },
+  "srp_5": {
+    "ogg": "srp_5.ogg",
+    "text": "Again? This reminder is basically your nemesis at this point.",
+    "category": "snooze"
+  },
+  "c_1": {
+    "ogg": "c_1.ogg",
+    "text": "Well look at you being productive.",
+    "category": "complete"
+  },
+  "c_2": {
+    "ogg": "c_2.ogg",
+    "text": "Done! Filed! Forgotten! By me, not by you probably.",
+    "category": "complete"
+  },
+  "c_3": {
+    "ogg": "c_3.ogg",
+    "text": "One down. How many to go? Don't ask.",
+    "category": "complete"
+  },
+  "c_4": {
+    "ogg": "c_4.ogg",
+    "text": "And THAT is how it's done.",
+    "category": "complete"
+  },
+  "c_5": {
+    "ogg": "c_5.ogg",
+    "text": "Marking that off before you change your mind.",
+    "category": "complete"
+  },
+  "af_1": {
+    "ogg": "af_1.ogg",
+    "text": "Interesting. Give me a second.",
+    "category": "agent_filler"
+  },
+  "af_2": {
+    "ogg": "af_2.ogg",
+    "text": "Hmm. Let me look into that.",
+    "category": "agent_filler"
+  },
+  "af_3": {
+    "ogg": "af_3.ogg",
+    "text": "Okay. Working on it.",
+    "category": "agent_filler"
+  },
+  "af_4": {
+    "ogg": "af_4.ogg",
+    "text": "Got it. One moment.",
+    "category": "agent_filler"
+  },
+  "af_5": {
+    "ogg": "af_5.ogg",
+    "text": "Let me think about that for a sec.",
+    "category": "agent_filler"
+  },
+  "af_6": {
+    "ogg": "af_6.ogg",
+    "text": "Processing. Bear with me.",
+    "category": "agent_filler"
+  },
+  "int_1": {
+    "ogg": "int_1.ogg",
+    "text": "Huh.",
+    "category": "interrupt"
+  },
+  "int_2": {
+    "ogg": "int_2.ogg",
+    "text": "Excuse me?",
+    "category": "interrupt"
+  },
+  "int_3": {
+    "ogg": "int_3.ogg",
+    "text": "Oh. Okay then.",
+    "category": "interrupt"
+  },
+  "int_4": {
+    "ogg": "int_4.ogg",
+    "text": "Wow. Rude.",
+    "category": "interrupt"
+  },
+  "int_5": {
+    "ogg": "int_5.ogg",
+    "text": "Seriously?",
+    "category": "interrupt"
+  },
+  "int_6": {
+    "ogg": "int_6.ogg",
+    "text": "I was talking.",
+    "category": "interrupt"
+  }
+}

@@ -1,0 +1,146 @@
+/* ─── Swipeable Card ───────────────────────────────── */
+
+.swipeable-card-outer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Collapse outer wrapper after snooze animation completes */
+.swipeable-card-outer-collapse {
+  animation: outerCollapse 0.3s ease-out forwards;
+}
+
+@keyframes outerCollapse {
+  to {
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+}
+
+.swipeable-card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  touch-action: pan-y;
+}
+
+/* Action reveal layer (behind the card) */
+.swipeable-action-reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 24px;
+  gap: 4px;
+  border-radius: 12px;
+  transition: opacity 0.15s ease-out;
+}
+
+.swipeable-action-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.swipeable-action-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* The actual card surface */
+.swipeable-card {
+  position: relative;
+  z-index: 1;
+  background: var(--card-bg, #1a1a1a);
+  border-radius: 12px;
+  will-change: transform;
+  cursor: pointer;
+}
+
+/* Only smooth transition during idle (snap-back) */
+.swipeable-card:not([class*="swipeable-card-shrink"]):not([class*="swipeable-card-tucked"]):not([class*="flyaway"]):not([class*="fade-out"]) {
+  transition: transform 0.15s ease-out;
+}
+
+/* ─── Swipe right → complete (fly away) ─── */
+
+.swipeable-card-flyaway {
+  animation: cardFlyAway 0.35s ease-in forwards;
+}
+
+@keyframes cardFlyAway {
+  to {
+    transform: translateX(120%) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+/* ─── Swipe left → snooze (shrink & tuck) ─── */
+
+.swipeable-card-shrink-left {
+  animation: cardShrinkLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes cardShrinkLeft {
+  0% {
+    transform: translateX(var(--swipe-offset, -80px)) rotate(-3deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-20px) scale(0.7) rotate(-2deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-4px) scale(0.6) rotate(0deg);
+    opacity: 0.5;
+    max-height: 60px;
+    overflow: hidden;
+  }
+}
+
+.swipeable-card-tucked-left {
+  transform: translateX(-4px) scale(0.6) rotate(0deg);
+  opacity: 0.45;
+  max-height: 60px;
+  overflow: hidden;
+  filter: grayscale(0.3);
+  transition: opacity 0.3s, filter 0.3s;
+}
+
+.swipeable-card-fade-out {
+  animation: cardFadeOut 0.3s ease-out forwards;
+}
+
+@keyframes cardFadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(-4px) scale(0.5);
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ─── Mutter bubble ─── */
+
+.swipeable-mutter-bubble {
+  animation: mutterSlideIn 0.3s ease-out 0.15s both;
+}
+
+@keyframes mutterSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

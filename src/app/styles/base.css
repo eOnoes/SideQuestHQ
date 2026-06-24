@@ -18,12 +18,21 @@
   --corner: 0 0 18px 0;
 }
 
+/* Voice mode — app-wide purple accent */
+.app-shell[data-mode="voice"] {
+  --yellow: #a78bfa;
+  --yellow-hover: #c4b5fd;
+  --yellow-glow: rgba(139, 92, 246, 0.32);
+  --line-strong: rgba(139, 92, 246, 0.42);
+}
+
 * {
   box-sizing: border-box;
 }
 
 html,
 body {
+  height: 100%;
   min-height: 100%;
   scrollbar-color: var(--yellow) var(--bg-deep);
   scrollbar-width: thin;
@@ -78,6 +87,68 @@ select option {
 .app-shell {
   height: 100vh;
   overflow: hidden;
+}
+
+/* ─── Mobile Bottom Nav ─── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--base);
+  border-top: 1px solid var(--line);
+  z-index: 100;
+  padding: 4px 0 env(safe-area-inset-bottom, 4px);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 4px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-nav-item.active {
+  color: var(--accent);
+}
+
+.mobile-nav-item .icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.mobile-nav-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .mobile-nav {
+    display: flex;
+  }
+
+  .app-shell {
+    padding-bottom: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
 }
 
 .sidebar {
@@ -218,6 +289,15 @@ select option {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 24px 32px 22px;
+  background: rgba(10, 12, 8, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    margin-left: 0;
+    padding: 16px 16px calc(64px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
 }
 
 * {

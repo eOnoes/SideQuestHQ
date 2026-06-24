@@ -1,0 +1,326 @@
+/* ─── Menu Cards (Tinder-style navigation) ────────── */
+
+.menu-cards-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.92);
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(12px) grayscale(1) brightness(0.3);
+  -webkit-backdrop-filter: blur(12px) grayscale(1) brightness(0.3);
+}
+
+.menu-cards-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px 16px;
+}
+
+/* Hint arrows */
+.menu-cards-hints {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 4px;
+}
+
+.menu-hint-left,
+.menu-hint-right {
+  font-size: 13px;
+  color: var(--quiet, #666);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: color 0.15s;
+  user-select: none;
+}
+
+.menu-hint-left:hover,
+.menu-hint-right:hover {
+  color: var(--text, #eee);
+}
+
+/* Card stack container */
+.menu-card-stack {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  min-height: 300px;
+}
+
+/* Shared card base */
+.menu-card {
+  width: 100%;
+  max-width: 320px;
+  min-height: 280px;
+  border-radius: 20px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  background: var(--card-bg, #1a1a1a);
+  border: 1px solid var(--card-border, #2a2a2a);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.menu-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* Mood colors */
+.menu-card[data-mood="calm"] {
+  border-color: rgba(100, 140, 255, 0.2);
+}
+.menu-card[data-mood="calm"]::before {
+  background: radial-gradient(circle at 30% 20%, rgba(100, 140, 255, 0.06), transparent 60%);
+}
+
+.menu-card[data-mood="playful"] {
+  border-color: rgba(255, 140, 100, 0.2);
+}
+.menu-card[data-mood="playful"]::before {
+  background: radial-gradient(circle at 70% 30%, rgba(255, 140, 100, 0.06), transparent 60%);
+}
+
+.menu-card[data-mood="chill"] {
+  border-color: rgba(100, 220, 180, 0.2);
+}
+.menu-card[data-mood="chill"]::before {
+  background: radial-gradient(circle at 50% 80%, rgba(100, 220, 180, 0.06), transparent 60%);
+}
+
+.menu-card[data-mood="annoyed"] {
+  border-color: rgba(255, 80, 80, 0.2);
+}
+.menu-card[data-mood="annoyed"]::before {
+  background: radial-gradient(circle at 60% 40%, rgba(255, 80, 80, 0.06), transparent 60%);
+}
+
+/* Top card */
+.menu-card-top {
+  z-index: 2;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Only apply smooth transition while actively dragging (snap-back) */
+.menu-card-top:not(.card-exit-left):not(.card-exit-right) {
+  transition: transform 0.15s ease-out;
+}
+
+.menu-card-top:active {
+  cursor: grabbing;
+}
+
+/* Behind card — sits behind, follows the drag */
+.menu-card-behind {
+  z-index: 1;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Exit animations */
+.card-exit-left {
+  animation: cardExitLeft 0.28s ease-in forwards;
+}
+
+.card-exit-right {
+  animation: cardExitRight 0.28s ease-in forwards;
+}
+
+.card-zoom-in {
+  animation: cardZoomIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+  cursor: default;
+  z-index: 10;
+}
+
+@keyframes cardExitLeft {
+  to {
+    transform: translateX(-140%) rotate(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cardExitRight {
+  to {
+    transform: translateX(140%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cardZoomIn {
+  0% {
+    transform: scale(1);
+    border-radius: 20px;
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.8);
+    border-radius: 12px;
+    opacity: 1;
+  }
+  100% {
+    transform: scale(5);
+    border-radius: 0;
+    opacity: 0;
+  }
+}
+
+/* Overlay fade on select — fades to dark, not transparent */
+.menu-cards-overlay.overlay-fading {
+  transition: background 0.6s ease-out, backdrop-filter 0.6s ease-out;
+  background: rgba(0, 0, 0, 1);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+
+/* Card content */
+.menu-card-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.menu-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 2px solid rgba(0, 255, 136, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.menu-card-avatar-wtf {
+  border-color: rgba(255, 100, 100, 0.4);
+  box-shadow: 0 0 20px rgba(255, 100, 100, 0.15);
+  animation: avatar-shake 0.3s ease;
+}
+
+@keyframes avatar-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+.menu-card-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text, #eee);
+  margin: 0;
+}
+
+.menu-card-tagline {
+  font-size: 14px;
+  color: var(--quiet, #888);
+  text-align: center;
+  margin: 0;
+  max-width: 220px;
+}
+
+.menu-card-agent-badge {
+  font-size: 13px;
+  color: #6ea8fe;
+  margin: 0;
+  padding: 6px 14px;
+  background: rgba(110, 168, 254, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(110, 168, 254, 0.2);
+}
+
+/* Action buttons */
+.menu-cards-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.menu-action-btn {
+  padding: 12px 28px;
+  border-radius: 30px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s;
+}
+
+.menu-action-btn:active {
+  transform: scale(0.95);
+}
+
+.menu-action-skip {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--quiet, #888);
+  border: 1px solid var(--card-border, #2a2a2a);
+}
+
+.menu-action-skip:hover {
+  background: rgba(255, 80, 80, 0.15);
+  color: #ff6b6b;
+}
+
+.menu-action-select {
+  background: rgba(100, 200, 150, 0.25);
+  color: #64c896;
+  border: 1px solid rgba(100, 200, 150, 0.3);
+}
+
+.menu-action-select:hover {
+  background: rgba(100, 200, 150, 0.35);
+}
+
+/* Dots */
+.menu-cards-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.menu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.menu-dot.active {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.3);
+}
+
+/* Close button */
+.menu-cards-close {
+  background: none;
+  border: none;
+  color: var(--quiet, #666);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-top: 4px;
+}
+
+.menu-cards-close:hover {
+  color: var(--text, #ccc);
+}

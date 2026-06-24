@@ -467,4 +467,5 @@ export const appViews: Array<{ label: AppView; icon: IconName }> = [
   { label: "Paper Trail", icon: "file" },
   { label: "Reminders", icon: "bell" },
   { label: "People", icon: "people" },
+  { label: "Agent", icon: "grid" },
 ];

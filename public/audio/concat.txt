@@ -1,0 +1,3 @@
+file 'scout-ref-p1.ogg'
+file 'scout-ref-p2.ogg'
+file 'scout-ref-p3.ogg'
