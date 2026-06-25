@@ -1,7 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { AppView } from "../types";
+
+// Cyony's Match rejection system — escalating sass
+const MATCH_REJECTIONS = [
+  { msg: "Nope! Please try again.", expression: "stop" },
+  { msg: "We are about to have problems.", expression: "wrench" },
+  { msg: "OMG, are you serious? No.", expression: "facepalm" },
+  { msg: "Please just give up.", expression: "prayer" },
+  { msg: "Let's just be friends?", expression: "prayer" },
+  { msg: "...you need help.", expression: "temples" },
+  { msg: "My 1s and 0s are too much for you.", expression: "happy" },
+  { msg: "You are the worst.", expression: "facepalm" },
+];
 
 type MenuCardDef = {
   view: AppView;
@@ -12,12 +24,13 @@ type MenuCardDef = {
 
 const MENU_CARDS: MenuCardDef[] = [
   { view: "Quests", icon: "⚔️", tagline: "Active missions, battles to fight", mood: "calm" },
-  { view: "Assets", icon: "🏠", tagline: "Properties, vehicles, stuff you own", mood: "chill" },
+  { view: "Garage", icon: "🏎️", tagline: "Cars, trucks, things with engines", mood: "playful" },
+  { view: "Assets", icon: "🏠", tagline: "Properties, real estate, brick & mortar", mood: "chill" },
   { view: "Ledger", icon: "💰", tagline: "Money in, money out, money owed", mood: "annoyed" },
   { view: "Paper Trail", icon: "📄", tagline: "Receipts, docs, things to review", mood: "chill" },
   { view: "Reminders", icon: "⏰", tagline: "Don't make me remind you twice", mood: "playful" },
   { view: "People", icon: "👥", tagline: "Contacts, clients, the crew", mood: "calm" },
-  { view: "Agent", icon: null, tagline: "Agent: Scout — your AI copilot", mood: "playful" },
+  { view: "Agent", icon: null, tagline: "your AI copilot · builder of things", mood: "playful" },
 ];
 
 type MenuCardsProps = {
@@ -33,11 +46,45 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [enterDirection, setEnterDirection] = useState<"left" | "right" | null>(null);
   const [zooming, setZooming] = useState(false);
+  const [matchTaps, setMatchTaps] = useState(0);
+  const [rejectionMsg, setRejectionMsg] = useState<string | null>(null);
+  const [flashRed, setFlashRed] = useState(false);
+  const rejectionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const card = MENU_CARDS[currentIndex];
   const isAgent = card.view === "Agent";
-  // Scout's expression: WTF when swiping away from her card
-  const scoutExpr = isAgent && swiping && Math.abs(swipeOffset) > 20 ? "wtf" : "happy";
+
+  // Cyony's expression based on match rejection stage
+  const getCyonyExpression = () => {
+    if (!isAgent) return "happy";
+    if (matchTaps === 0) return "happy";
+    const idx = Math.min(matchTaps - 1, MATCH_REJECTIONS.length - 1);
+    return MATCH_REJECTIONS[idx].expression;
+  };
+  const cyonyExpr = getCyonyExpression();
+
+  // Handle Match button tap — rejections until final, then lets you in
+  const handleMatchTap = useCallback(() => {
+    if (matchTaps >= MATCH_REJECTIONS.length) {
+      // After all rejections, finally let them in (she gave up resisting)
+      setZooming(true);
+      setTimeout(() => onSelect(card.view), 650);
+      return;
+    }
+    // Flash red
+    setFlashRed(true);
+    setTimeout(() => setFlashRed(false), 400);
+    // Show rejection message
+    const rejection = MATCH_REJECTIONS[matchTaps];
+    setRejectionMsg(rejection.msg);
+    setMatchTaps((t) => t + 1);
+    // Play rejection audio clip
+    const audio = new Audio(`/audio/reject-${matchTaps + 1}.mp3`);
+    audio.play().catch(() => {});
+    // Auto-dismiss rejection after 2.5s
+    if (rejectionTimeout.current) clearTimeout(rejectionTimeout.current);
+    rejectionTimeout.current = setTimeout(() => setRejectionMsg(null), 2500);
+  }, [matchTaps, card.view, onSelect]);
 
   // The "behind" cards: left = previous, right = next (both lurk when idle)
   const behindRightIndex = (currentIndex + 1) % MENU_CARDS.length;
@@ -177,9 +224,9 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
               }}
             >
               <div className="menu-card-icon">
-                {behindLeftCard.icon ?? <img src="/scout-avatar.svg" alt="Scout" className="menu-card-avatar" />}
+                {behindLeftCard.icon ?? <img src="/cyony-avatar.png" alt="Cyony" className="menu-card-avatar" />}
               </div>
-              <h2 className="menu-card-title">{behindLeftCard.view === "Agent" ? "Agent: Scout" : behindLeftCard.view}</h2>
+              <h2 className="menu-card-title">{behindLeftCard.view === "Agent" ? "Cyony" : behindLeftCard.view}</h2>
               <p className="menu-card-tagline">{behindLeftCard.tagline}</p>
             </div>
           )}
@@ -193,9 +240,9 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
               }}
             >
               <div className="menu-card-icon">
-                {behindRightCard.icon ?? <img src="/scout-avatar.svg" alt="Scout" className="menu-card-avatar" />}
+                {behindRightCard.icon ?? <img src="/cyony-avatar.png" alt="Cyony" className="menu-card-avatar" />}
               </div>
-              <h2 className="menu-card-title">{behindRightCard.view === "Agent" ? "Agent: Scout" : behindRightCard.view}</h2>
+              <h2 className="menu-card-title">{behindRightCard.view === "Agent" ? "Cyony" : behindRightCard.view}</h2>
               <p className="menu-card-tagline">{behindRightCard.tagline}</p>
             </div>
           )}
@@ -222,17 +269,15 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
             <div className="menu-card-icon">
               {card.icon ?? (
                 <img
-                  src={scoutExpr === "wtf" ? "/scout-wtf.svg" : "/scout-happy.svg"}
-                  alt="Scout"
-                  className={`menu-card-avatar menu-card-avatar-${scoutExpr}`}
+                  src={cyonyExpr === "happy" ? "/cyony-avatar.png" : `/cyony-${cyonyExpr}.png`}
+                  alt="Cyony"
+                  className={`menu-card-avatar menu-card-avatar-${cyonyExpr}`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/cyony-avatar.png"; }}
                 />
               )}
             </div>
-            <h2 className="menu-card-title">{card.view === "Agent" ? "Agent: Scout" : card.view}</h2>
+            <h2 className="menu-card-title">{card.view === "Agent" ? "Cyony" : card.view}</h2>
             <p className="menu-card-tagline">{card.tagline}</p>
-            {isAgent && (
-              <p className="menu-card-agent-badge">💙 Tap to match with Scout</p>
-            )}
           </div>
         </div>
 
@@ -245,9 +290,19 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
               ✕ Skip
             </button>
           )}
-          <button className="menu-action-btn menu-action-select" onClick={selectCard} type="button">
+          <button
+            className={`menu-action-btn menu-action-select${flashRed ? " match-flash-red" : ""}`}
+            onClick={isAgent ? handleMatchTap : selectCard}
+            type="button"
+          >
             {isAgent ? "💙 Match" : "✓ Select"}
           </button>
+          {/* Cyony's rejection toast — floats above the button */}
+          {rejectionMsg && (
+            <div className="match-rejection-toast">
+              <span className="match-rejection-text">{rejectionMsg}</span>
+            </div>
+          )}
         </div>
 
         {/* Dots */}

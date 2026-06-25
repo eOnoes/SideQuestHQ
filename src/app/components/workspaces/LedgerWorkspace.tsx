@@ -45,21 +45,18 @@ export function LedgerWorkspace({ onBack }: { onBack: () => void }) {
         <button className="workspace-back" onClick={onBack} type="button">←</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ ledger .focus</span>
-          <span className="workspace-count">June 2026</span>
-        </div>
-        <div className="workspace-stats">
-          <span><span className="ws-dot" style={{ background: "#2ecc71" }} />$4,850 in</span>
-          <span><span className="ws-dot" style={{ background: "#e74c3c" }} />$2,630 out</span>
-          <span><span className="ws-dot" style={{ background: "#3498db" }} />+$2,220 net</span>
         </div>
       </div>
 
-      <div className="net-banner">
-        <div>
-          <div className="net-label">net this month</div>
-          <div className="net-sub">rental + retirement − expenses</div>
+      <div className="workspace-scoreboard">
+        <div className="scoreboard-main">
+          <span className="scoreboard-label">net this month</span>
+          <span className="scoreboard-value green">+$2,220</span>
         </div>
-        <div className="net-amount">+$2,220</div>
+        <div className="scoreboard-stats">
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#2ecc71" }} />$4,850 in</span>
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#e74c3c" }} />$2,630 out</span>
+        </div>
       </div>
 
       {SECTIONS.map((s) => (

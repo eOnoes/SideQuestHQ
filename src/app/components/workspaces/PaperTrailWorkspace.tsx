@@ -48,12 +48,17 @@ export function PaperTrailWorkspace({ onBack }: { onBack: () => void }) {
         <button className="workspace-back" onClick={onBack} type="button">←</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ paper trail .focus</span>
-          <span className="workspace-count">23 receipts</span>
         </div>
-        <div className="workspace-stats">
-          <span><span className="ws-dot" style={{ background: "#2ecc71" }} />3 assets</span>
-          <span><span className="ws-dot" style={{ background: "#e67e22" }} />6 categories</span>
-          <span><span className="ws-dot" style={{ background: "#9b59b6" }} />YTD: $18,420</span>
+      </div>
+
+      <div className="workspace-scoreboard">
+        <div className="scoreboard-main">
+          <span className="scoreboard-label">expenses YTD</span>
+          <span className="scoreboard-value red">−$18,420</span>
+        </div>
+        <div className="scoreboard-stats">
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#2ecc71" }} />3 assets</span>
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#e67e22" }} />23 receipts</span>
         </div>
       </div>
 

@@ -202,9 +202,9 @@
 }
 
 .menu-card-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
+  width: 140px;
+  height: 140px;
+  border-radius: 20px;
   object-fit: cover;
   border: 2px solid rgba(0, 255, 136, 0.2);
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
@@ -253,6 +253,7 @@
   display: flex;
   gap: 16px;
   margin-top: 8px;
+  position: relative;
 }
 
 .menu-action-btn {
@@ -288,6 +289,45 @@
 
 .menu-action-select:hover {
   background: rgba(100, 200, 150, 0.35);
+}
+
+/* Match button rejection — flash red */
+.match-flash-red {
+  animation: match-flash 0.4s ease-out;
+}
+
+@keyframes match-flash {
+  0% { background: rgba(255, 50, 50, 0.6); color: #ff4444; border-color: #ff4444; transform: scale(1.05); }
+  50% { background: rgba(255, 50, 50, 0.3); color: #ff6666; border-color: #ff6666; }
+  100% { background: rgba(100, 200, 150, 0.25); color: #64c896; border-color: rgba(100, 200, 150, 0.3); transform: scale(1); }
+}
+
+/* Match rejection toast */
+.match-rejection-toast {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: 12px;
+  padding: 10px 18px;
+  z-index: 10;
+  animation: toast-in 0.3s ease-out;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.match-rejection-text {
+  color: #ff8888;
+  font-size: 14px;
+  font-weight: 500;
+  font-style: italic;
+}
+
+@keyframes toast-in {
+  0% { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* Dots */

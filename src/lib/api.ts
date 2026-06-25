@@ -11,7 +11,7 @@ import type {
   InvestmentSnapshot,
   CryptoSnapshot,
 } from "../app/types";
-import type { ChatMessage } from "./store";
+import type { ChatMessage, ChatSession } from "./store";
 
 const BASE = "";
 
@@ -155,14 +155,34 @@ export async function getCryptoSnapshots(): Promise<CryptoSnapshot[]> {
 
 /* ─── Chat ─────────────────────────────────────── */
 
-export async function getChatMessages(): Promise<ChatMessage[]> {
-  return api("/api/chat");
+export async function getChatMessages(sessionId?: string): Promise<ChatMessage[]> {
+  const qs = sessionId ? `?session_id=${sessionId}` : "";
+  return api(`/api/chat${qs}`);
 }
 
-export async function addChatMessage(role: "user" | "scout", text: string): Promise<ChatMessage> {
-  return api("/api/chat", { method: "POST", body: JSON.stringify({ role, text }) });
+export async function addChatMessage(role: "user" | "scout", text: string, sessionId?: string): Promise<ChatMessage> {
+  return api("/api/chat", { method: "POST", body: JSON.stringify({ role, text, session_id: sessionId }) });
 }
 
-export async function clearChatHistory(): Promise<void> {
-  await api("/api/chat", { method: "DELETE" });
+export async function clearChatHistory(sessionId?: string): Promise<void> {
+  const qs = sessionId ? `?session_id=${sessionId}` : "";
+  await api(`/api/chat${qs}`, { method: "DELETE" });
+}
+
+/* ─── Chat Sessions ────────────────────────────── */
+
+export async function getChatSessions(): Promise<ChatSession[]> {
+  return api("/api/chat/sessions");
+}
+
+export async function createChatSession(title?: string): Promise<ChatSession> {
+  return api("/api/chat/sessions", { method: "POST", body: JSON.stringify({ title }) });
+}
+
+export async function getChatMessagesForSession(sessionId: string): Promise<ChatMessage[]> {
+  return api(`/api/chat?session_id=${sessionId}`);
+}
+
+export async function searchChatMessages(query: string): Promise<Array<ChatMessage & { session_title: string }>> {
+  return api(`/api/chat/search?q=${encodeURIComponent(query)}`);
 }

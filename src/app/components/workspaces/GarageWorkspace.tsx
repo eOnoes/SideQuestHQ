@@ -64,11 +64,18 @@ export function GarageWorkspace({ onBack }: { onBack: () => void }) {
         <button className="workspace-back" onClick={onBack} type="button">←</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ garage .focus</span>
-          <span className="workspace-count">{VEHICLES.length} vehicles</span>
         </div>
-        <div className="workspace-stats">
-          <span><span className="ws-dot" style={{ background: "#9b59b6" }} />{VEHICLES.length} vehicles</span>
-          <span><span className="ws-dot" style={{ background: "#2ecc71" }} />{totalValue}</span>
+      </div>
+
+      <div className="workspace-scoreboard">
+        <div className="scoreboard-main">
+          <span className="scoreboard-label">fleet value</span>
+          <span className="scoreboard-value green">{totalValue}</span>
+        </div>
+        <div className="scoreboard-stats">
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#f1c40f" }} />Cayman</span>
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#2ecc71" }} />F-150</span>
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#3498db" }} />Baja</span>
         </div>
       </div>
 

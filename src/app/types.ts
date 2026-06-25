@@ -1,7 +1,7 @@
 export type LedgerState = "Paid" | "Open" | "Draft";
 export type StepState = "Done" | "Now" | "Next";
 export type QuestType = "Rental Property" | "Customer Build" | "Build Project" | "Investment" | "Personal Plan" | "Side Quest";
-export type AppView = "Command" | "Quests" | "Assets" | "Ledger" | "Paper Trail" | "Reminders" | "People" | "Agent";
+export type AppView = "Command" | "Quests" | "Assets" | "Garage" | "Ledger" | "Paper Trail" | "Reminders" | "People" | "Agent";
 export type AssetTab = "Portfolio" | "Rentals" | "Garage" | "Investments" | "Crypto";
 
 export type Quest = {

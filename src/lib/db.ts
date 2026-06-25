@@ -112,9 +112,19 @@ function initSchema(db: Database.Database) {
       notes TEXT NOT NULL DEFAULT ''
     );
 
-    -- Chat messages
+    -- Chat sessions
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL DEFAULT 'New Chat',
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000),
+      archived INTEGER NOT NULL DEFAULT 0
+    );
+
+    -- Chat messages (now session-aware)
     CREATE TABLE IF NOT EXISTS chat_messages (
       id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL DEFAULT 'default',
       role TEXT NOT NULL,
       text TEXT NOT NULL,
       timestamp INTEGER NOT NULL,

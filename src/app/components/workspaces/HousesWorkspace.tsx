@@ -53,11 +53,17 @@ export function HousesWorkspace({ onBack }: { onBack: () => void }) {
         <button className="workspace-back" onClick={onBack} type="button">←</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ assets .houses</span>
-          <span className="workspace-count">{PROPERTIES.length} properties</span>
         </div>
-        <div className="workspace-stats">
-          <span><span className="ws-dot" style={{ background: "#2ecc71" }} />1 occupied</span>
-          <span><span className="ws-dot" style={{ background: "#e74c3c" }} />1 vacant</span>
+      </div>
+
+      <div className="workspace-scoreboard">
+        <div className="scoreboard-main">
+          <span className="scoreboard-label">portfolio</span>
+          <span className="scoreboard-value green">{PROPERTIES.length} properties</span>
+        </div>
+        <div className="scoreboard-stats">
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#2ecc71" }} />1 occupied</span>
+          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#e74c3c" }} />1 vacant</span>
         </div>
       </div>
 

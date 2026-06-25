@@ -283,8 +283,10 @@ export default function AppShell() {
             onOpenReminder={handleOpenReminder}
             setActiveView={setActiveView}
           />
-        ) : activeView === "Assets" ? (
+        ) : activeView === "Garage" ? (
           <GarageWorkspace onBack={() => setActiveView("Command")} />
+        ) : activeView === "Assets" ? (
+          <HousesWorkspace onBack={() => setActiveView("Command")} />
         ) : activeView === "Ledger" ? (
           <LedgerWorkspace onBack={() => setActiveView("Command")} />
         ) : activeView === "Paper Trail" ? (
@@ -329,7 +331,7 @@ export default function AppShell() {
           {responseMode === "text" ? "📝" : "🎙️"}
         </button>
         <button className="fab-button" onClick={() => setShowScout(true)} type="button" aria-label="Scout">
-            🎯
+            🔧
           </button>
       </div>
 

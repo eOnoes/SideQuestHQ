@@ -23,9 +23,19 @@ import * as api from "./api";
 
 export type ChatMessage = {
   id: string;
+  session_id?: string;
   role: "user" | "scout";
   text: string;
   timestamp: number;
+};
+
+export type ChatSession = {
+  id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+  message_count: number;
+  last_message: string | null;
 };
 
 /* ─── Cache ────────────────────────────────────── */
@@ -338,8 +348,8 @@ export function getChatMessages(): ChatMessage[] {
   return _chatMessages;
 }
 
-export async function addChatMessage(role: ChatMessage["role"], text: string): Promise<ChatMessage> {
-  const msg = await api.addChatMessage(role, text);
+export async function addChatMessage(role: ChatMessage["role"], text: string, sessionId?: string): Promise<ChatMessage> {
+  const msg = await api.addChatMessage(role, text, sessionId);
   _chatMessages = [..._chatMessages, msg];
   notify();
   return msg;
@@ -349,4 +359,22 @@ export async function clearChatHistory(): Promise<void> {
   await api.clearChatHistory();
   _chatMessages = [];
   notify();
+}
+
+/* ─── Chat sessions ────────────────────────────── */
+
+export async function getChatSessions(): Promise<ChatSession[]> {
+  return api.getChatSessions();
+}
+
+export async function createChatSession(title?: string): Promise<ChatSession> {
+  return api.createChatSession(title);
+}
+
+export async function getChatMessagesForSession(sessionId: string): Promise<ChatMessage[]> {
+  return api.getChatMessagesForSession(sessionId);
+}
+
+export async function searchChatMessages(query: string): Promise<Array<ChatMessage & { session_title: string }>> {
+  return api.searchChatMessages(query);
 }

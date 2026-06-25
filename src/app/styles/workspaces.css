@@ -1,16 +1,73 @@
 /* ─── Workspace Pages (Garage, Houses, Ledger, Paper Trail, Connects) ── */
 
 .workspace-page {
-  padding: 0 16px 40px;
+  padding: 0 6px 40px;
   max-width: 420px;
   margin: 0 auto;
   min-height: 100vh;
+  position: relative;
 }
 
 /* Header */
 .workspace-header {
-  padding: 16px 0 12px;
-  border-bottom: 1px solid #1a1a1a;
+  padding: 16px 6px 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #080808;
+}
+
+/* ─── Scoreboard (floating digital readout) ──────── */
+.workspace-scoreboard {
+  position: sticky;
+  top: 52px;
+  z-index: 45;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+}
+.scoreboard-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.scoreboard-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #e8e8e8;
+}
+.scoreboard-value.green { color: #2ecc71; }
+.scoreboard-value.red { color: #e74c3c; }
+.scoreboard-stats {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.scoreboard-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+.scoreboard-stat .ws-dot {
+  width: 6px;
+  height: 6px;
+}
+.scoreboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .workspace-back {
   background: none; border: none; color: #555; font-size: 18px;
@@ -51,7 +108,7 @@
   transition: background 0.3s;
 }
 .accordion-header {
-  display: flex; align-items: center; padding: 14px 16px 14px 18px; gap: 12px;
+  display: flex; align-items: center; padding: 16px 16px 16px 18px; gap: 12px;
 }
 .accordion-year {
   font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700;
@@ -125,8 +182,9 @@
 
 /* ─── Ledger ──────────────────────────────────── */
 .net-banner {
-  margin-top: 16px; padding: 14px 16px; background: #111; border-radius: 10px;
+  margin-top: 16px; padding: 16px 16px; background: #111; border-radius: 10px;
   display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 80px; z-index: 40; border: 1px solid #1a1a1a;
 }
 .net-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555; }
 .net-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; margin-top: 2px; }
@@ -172,7 +230,7 @@
 .running-amount.red { color: #e74c3c; }
 
 /* ─── Paper Trail ─────────────────────────────── */
-.action-bar { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+.action-bar { margin-top: 12px; display: flex; gap: 8px; align-items: center; position: sticky; top: 80px; z-index: 40; background: #080808; padding: 8px 0; }
 .filter-icon-btn {
   width: 36px; height: 36px; border-radius: 8px; background: #111;
   border: 1px solid #222; display: flex; align-items: center; justify-content: center;
@@ -258,7 +316,7 @@
 .receipt-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; flex-shrink: 0; min-width: 36px; text-align: right; }
 
 /* ─── Connects ────────────────────────────────── */
-.sort-bar { margin-top: 12px; display: flex; gap: 6px; }
+.sort-bar { margin-top: 12px; display: flex; gap: 6px; position: sticky; top: 80px; z-index: 40; background: #080808; padding: 8px 0; }
 .sort-chip {
   font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 5px 12px;
   border-radius: 14px; cursor: pointer; transition: all 0.2s;
@@ -283,12 +341,12 @@
 }
 
 .contact-card {
-  background: #111; border-radius: 6px; padding: 8px 12px; margin-top: 4px;
+  background: #111; border-radius: 8px; padding: 12px 14px; margin-top: 6px;
   cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden;
 }
 .contact-card:hover { background: #161616; }
 .contact-card.expanded { background: #0f0f0f; }
-.contact-bar { position: absolute; left: 0; top: 0; width: 2px; height: 100%; }
+.contact-bar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; }
 .contact-bar.green { background: #2ecc71; }
 .contact-bar.blue { background: #3498db; }
 .contact-bar.orange { background: #e67e22; }
@@ -296,15 +354,15 @@
 .contact-header-row {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
-.contact-name { font-size: 13px; font-weight: 500; color: #e8e8e8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-type { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; flex-shrink: 0; }
-.contact-phone { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; flex-shrink: 0; }
+.contact-name { font-size: 15px; font-weight: 600; color: #e8e8e8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-type { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; flex-shrink: 0; }
+.contact-phone { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #888; flex-shrink: 0; }
 .contact-sub-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px;
 }
-.contact-relation { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; }
+.contact-relation { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; }
 .contact-note {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666;
   font-style: italic; flex: 1; text-align: right;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
