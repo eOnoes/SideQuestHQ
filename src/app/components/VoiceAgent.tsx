@@ -71,6 +71,7 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [errorCountdown, setErrorCountdown] = useState(5)
   const [showJumpBtn, setShowJumpBtn] = useState(false)
+  const [pendingSessions, setPendingSessions] = useState<Set<string>>(new Set())
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -209,7 +210,7 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
   }
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || loading) return
+    if (!text.trim()) return
     const trimmed = text.trim()
 
     // If no session, create one
@@ -227,6 +228,9 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
     sessionStorage.removeItem('sqhq-draft-input')
     setLoading(true)
 
+    // Mark session as having a pending response
+    setPendingSessions(prev => new Set(prev).add(sessionId!))
+
     try {
       const res = await fetch('/api/voice', {
         method: 'POST',
@@ -236,8 +240,14 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
 
-      addChatMessage('scout', data.text || '...', sessionId)
-      setMessages(prev => [...prev, { id: `resp-${Date.now()}`, role: 'scout', text: data.text || '...', timestamp: Date.now() }])
+      addChatMessage('scout', data.text || '...', sessionId!)
+      // Always update messages, even if user navigated away
+      setMessages(prev => {
+        // Only add if not already present (avoid duplicates)
+        const exists = prev.some(m => m.role === 'scout' && m.text === data.text)
+        if (exists) return prev
+        return [...prev, { id: `resp-${Date.now()}`, role: 'scout', text: data.text || '...', timestamp: Date.now() }]
+      })
 
       if (responseMode === 'voice' && data.audio && audioRef.current) {
         const blobUrl = base64ToBlobUrl(data.audio, 'audio/wav')
@@ -252,6 +262,12 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
       setErrorCountdown(5)
     } finally {
       setLoading(false)
+      // Remove pending state
+      setPendingSessions(prev => {
+        const next = new Set(prev)
+        next.delete(sessionId!)
+        return next
+      })
       loadSessions()
     }
   }
@@ -363,7 +379,12 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
                   <div className="va-history-label">Recent Conversations</div>
                   {sessions.map(s => (
                     <div key={s.id} className="va-history-item" onClick={() => resumeSession(s.id)}>
-                      <div className="va-history-title">{s.title}</div>
+                      <div className="va-history-title">
+                        {s.title}
+                        {pendingSessions.has(s.id) && (
+                          <span className="va-pending-badge" title="Cyony is responding...">⚡</span>
+                        )}
+                      </div>
                       <div className="va-history-meta">
                         <span>{s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
                         <span>{formatDate(s.updated_at)}</span>

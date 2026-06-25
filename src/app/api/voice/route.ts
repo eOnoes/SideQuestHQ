@@ -56,6 +56,36 @@ function stripStageDirections(text: string): string {
     .trim()
 }
 
+// Pet name router — detect and strip pet names, return cleaned text + flag
+const PET_NAMES = [
+  'babe', 'baby', 'babes', 'bby', 'boo', 'honey', 'hon', 'hun',
+  'sweetheart', 'sweetie', 'darling', 'dear', 'love', 'sweetpea',
+  'pumpkin', 'sugar', 'doll', 'cutie', 'handsome', 'gorgeous',
+  'beautiful', 'pretty', 'princess', 'queen', 'angel',
+]
+
+function routePetNames(text: string): { cleaned: string; hadPetName: boolean; petName: string | null } {
+  const lower = text.toLowerCase()
+  let cleaned = text
+  let foundPetName: string | null = null
+
+  for (const pet of PET_NAMES) {
+    // Match at word boundaries, case insensitive
+    const regex = new RegExp(`\\b${pet}\\b`, 'gi')
+    if (regex.test(lower)) {
+      foundPetName = pet
+      cleaned = cleaned.replace(regex, '').replace(/\s{2,}/g, ' ').trim()
+      break // Only strip the first pet name found
+    }
+  }
+
+  return {
+    cleaned,
+    hadPetName: !!foundPetName,
+    petName: foundPetName
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { text, mood, session_id } = await req.json()
@@ -63,6 +93,9 @@ export async function POST(req: NextRequest) {
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'text is required' }, { status: 400 })
     }
+
+    // Pet name router — strip pet names for business context
+    const { cleaned, hadPetName, petName } = routePetNames(text)
 
     // Fetch conversation history for context
     let conversationHistory: Array<{ role: string; content: string }> = []
@@ -81,14 +114,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const systemMsg = mood
-      ? `${CHLOE_SYSTEM}\n\nRespond in ${mood} mood.`
+    let systemMsg = mood
+      ? `${CHLOE_SYSTEM}\\n\\nRespond in ${mood} mood.`
       : CHLOE_SYSTEM
 
+    // If pet name detected, tell Cyony to be sassy about it
+    if (hadPetName) {
+      systemMsg += `\\n\\n[PET NAME DETECTED: "${petName}" — The user called you "${petName}" in a business app. Respond with dry, sassy professionalism. Acknowledge the pet name with a witty remark but stay focused on the actual task. Examples: "I appreciate the sentiment, but my name is Cyony." or "Noted. Now about that contractor..." or "Did you just call me ${petName} in a work app? Bold."]`
+    }
+
     // Build messages array with history (current message already saved to DB by frontend)
+    // Replace last user message with cleaned version if pet name was stripped
+    const history = [...conversationHistory.slice(-20)]
+    if (hadPetName && history.length > 0) {
+      const lastMsg = history[history.length - 1]
+      if (lastMsg.role === 'user') {
+        lastMsg.content = cleaned
+      }
+    }
+
     const messages = [
       { role: 'system', content: systemMsg },
-      ...conversationHistory.slice(-20) // Last 20 messages for context
+      ...history
     ]
 
     // 1. MiMo generates Chloe's response

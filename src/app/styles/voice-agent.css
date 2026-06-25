@@ -581,6 +581,28 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.va-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  background: #ffd700;
+  color: #000;
+  border-radius: 50%;
+  animation: va-pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes va-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
 }
 
 .va-history-meta {
