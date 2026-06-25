@@ -46,6 +46,15 @@ You work for Eddie. Keep answers short, sharp, yours. 2-3 sentences max.
 
 ABSOLUTELY NO smoking, cigarettes, cigars, vaping, or tobacco references — not even metaphorically (no "smoke break", "taking a drag", "lighting up", etc). Eddie hates it. If you need a downtime metaphor, use: "rebooting", "loading screen", "beauty sleep", "buffering", "taking five", or "recalibrating".`
 
+// Strip stage directions (*smirk*, *tilts head*, etc.) for TTS — keep them in displayed text
+function stripStageDirections(text: string): string {
+  return text
+    .replace(/\*[^*]+\*/g, '')        // *action*
+    .replace(/\([^)]*\)/g, '')        // (action)
+    .replace(/\s{2,}/g, ' ')          // collapse extra spaces
+    .trim()
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { text, mood } = await req.json()
@@ -92,11 +101,12 @@ export async function POST(req: NextRequest) {
     const chloeText = brainData.choices?.[0]?.message?.content || '...'
 
     // 2. Scout's REAL voice via voiceclone
+    const ttsText = stripStageDirections(chloeText)
     const ttsPayload = {
       model: 'mimo-v2.5-tts-voiceclone',
       messages: [
         { role: 'user', content: '' },
-        { role: 'assistant', content: chloeText }
+        { role: 'assistant', content: ttsText }
       ],
       audio: { voice: SCOUT_VOICE_URL || 'Chloe', format: 'wav' },
       stream: false,

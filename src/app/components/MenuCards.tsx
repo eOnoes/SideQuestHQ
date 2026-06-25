@@ -23,7 +23,7 @@ type MenuCardDef = {
 };
 
 const MENU_CARDS: MenuCardDef[] = [
-  { view: "Quests", icon: "⚔️", tagline: "Active missions, battles to fight", mood: "calm" },
+  { view: "Command" as any, icon: "🏠", tagline: "Back to the main page", mood: "calm" },
   { view: "Garage", icon: "🏎️", tagline: "Cars, trucks, things with engines", mood: "playful" },
   { view: "Assets", icon: "🏠", tagline: "Properties, real estate, brick & mortar", mood: "chill" },
   { view: "Ledger", icon: "💰", tagline: "Money in, money out, money owed", mood: "annoyed" },

@@ -3,6 +3,10 @@
 import { useState, useRef, type FormEvent } from "react";
 import { addReminder, addChatMessage } from "@/lib/store";
 
+const FONT_MIN = 12
+const FONT_MAX = 22
+const FONT_DEFAULT = 15
+
 type ScoutPanelProps = {
   onClose: () => void;
   onOpenMenu: () => void;
@@ -10,11 +14,23 @@ type ScoutPanelProps = {
 };
 
 export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelProps) {
-  const [mode, setMode] = useState<"choose" | "compose">("choose");
+  const [mode, setMode] = useState<"choose" | "compose" | "options">("choose");
   const [input, setInput] = useState("");
   const [voiceMode, setVoiceMode] = useState<"text" | "voice">("text");
   const [sending, setSending] = useState(false);
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window === 'undefined') return FONT_DEFAULT
+    const stored = localStorage.getItem('sqhq-font-size')
+    return stored ? parseInt(stored, 10) : FONT_DEFAULT
+  })
   const pendingRef = useRef(false);
+
+  const applyFontSize = (size: number) => {
+    const clamped = Math.max(FONT_MIN, Math.min(FONT_MAX, size))
+    setFontSize(clamped)
+    document.documentElement.style.setProperty('--app-font-size', `${clamped}px`)
+    localStorage.setItem('sqhq-font-size', String(clamped))
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -99,12 +115,36 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelPro
           <button className="scout-choice-btn" onClick={onOpenMenu} type="button">
             ☰ Open Menu
           </button>
+          <button className="scout-choice-btn" onClick={() => setMode("options")} type="button">
+            ⚙️ Options
+          </button>
           <button className="scout-choice-btn scout-choice-cancel" onClick={onClose} type="button">
             Never mind
           </button>
         </div>
       </div>
     );
+  }
+
+  if (mode === "options") {
+    return (
+      <div className="scout-panel scout-panel-options">
+        <div className="scout-mood-bar" data-mood="calm">
+          <p>"Dial it in, sugar."</p>
+        </div>
+        <div className="scout-options-content">
+          <div className="scout-option-row">
+            <span className="scout-option-label">Font Size</span>
+            <div className="scout-font-controls">
+              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize - 1)} disabled={fontSize <= FONT_MIN} type="button">A-</button>
+              <span className="scout-font-value">{fontSize}px</span>
+              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize + 1)} disabled={fontSize >= FONT_MAX} type="button">A+</button>
+            </div>
+          </div>
+        </div>
+        <button className="scout-compose-cancel" onClick={() => setMode("choose")} type="button">← Back</button>
+      </div>
+    )
   }
 
   return (

@@ -48,6 +48,13 @@ export default function AppShell() {
   const [dataLoaded, setDataLoaded] = useState(isLoaded());
 
   // Load data from API on mount
+  // Restore font size from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('sqhq-font-size')
+    if (stored) {
+      document.documentElement.style.setProperty('--app-font-size', `${stored}px`)
+    }
+  }, [])
   useEffect(() => {
     if (!loading && user && !isLoaded()) {
       loadAll().then(() => setDataLoaded(true));

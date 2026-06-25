@@ -50,6 +50,14 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
+  // Persist input across tab switches
+  useEffect(() => {
+    const stored = sessionStorage.getItem('sqhq-draft-input')
+    if (stored) setInput(stored)
+  }, [])
+  useEffect(() => {
+    sessionStorage.setItem('sqhq-draft-input', input)
+  }, [input])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<ChatMessage & { session_title: string }>>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -216,6 +224,7 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
     addChatMessage('user', trimmed, sessionId)
     setMessages(prev => [...prev, { id: `tmp-${Date.now()}`, role: 'user', text: trimmed, timestamp: Date.now() }])
     setInput('')
+    sessionStorage.removeItem('sqhq-draft-input')
     setLoading(true)
 
     try {
@@ -297,8 +306,8 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
             <span className="va-status">online</span>
           </div>
           <div className="va-mode-toggle">
-            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
-            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
+            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
+            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
           </div>
         </div>
 
@@ -395,27 +404,28 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
           <span className="va-status">online</span>
           <button
             className="va-gear-btn"
+            onMouseDown={e => e.preventDefault()}
             onClick={() => setShowMoodPicker(!showMoodPicker)}
             title="Cyony mood override"
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.5, padding: '2px 6px', marginLeft: '4px' }}
           >⚙️</button>
         </div>
         <div className="va-header-right">
-          <button className="va-new-btn" onClick={startNewChat} title="New Chat" type="button">+</button>
+          <button className={`va-new-btn${messages.length === 0 ? ' va-disabled' : ''}`} onClick={messages.length === 0 ? undefined : startNewChat} title={messages.length === 0 ? 'Already in new chat' : 'New Chat'} type="button" style={messages.length === 0 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}>+</button>
           <div className="va-mode-toggle">
-            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
-            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
+            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
+            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
           </div>
         </div>
       </div>
 
       {showMoodPicker && (
         <div className="va-mood-bar">
-          <button className={`va-mood-btn ${mood === 'auto' ? 'active' : ''}`} onClick={() => setMood('auto')}>
+          <button className={`va-mood-btn ${mood === 'auto' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => setMood('auto')}>
             🤖<span className="va-mood-label">auto</span>
           </button>
           {MOOD_BTNS.map(m => (
-            <button key={m.id} className={`va-mood-btn ${mood === m.id ? 'active' : ''}`} onClick={() => setMood(m.id)}>
+            <button key={m.id} className={`va-mood-btn ${mood === m.id ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => setMood(m.id)}>
               {m.emoji}<span className="va-mood-label">{m.label}</span>
             </button>
           ))}

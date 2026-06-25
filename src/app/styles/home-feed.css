@@ -1079,6 +1079,73 @@
   text-align: center;
 }
 
+/* Options mode */
+.scout-panel-options {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.scout-options-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scout-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line, rgba(255,255,255,0.12));
+  border-radius: 12px;
+}
+
+.scout-option-label {
+  color: var(--text, #fff);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scout-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scout-font-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line, rgba(255,255,255,0.15));
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text, #fff);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.scout-font-btn:active {
+  background: rgba(255,255,255,0.12);
+}
+
+.scout-font-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.scout-font-value {
+  color: var(--yellow, #ffd33d);
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 40px;
+  text-align: center;
+}
+
 /* Sending mode — panel shrinks to just the indicator */
 .scout-panel-sending {
   align-items: center;
