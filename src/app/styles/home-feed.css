@@ -1146,6 +1146,35 @@
   text-align: center;
 }
 
+/* Mood grid in options */
+.scout-mood-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scout-mood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--line, rgba(255,255,255,0.15));
+  border-radius: 20px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text, #ccc);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.scout-mood-chip:active,
+.scout-mood-chip.active {
+  background: var(--yellow, #ffd33d);
+  color: #000;
+  border-color: var(--yellow, #ffd33d);
+}
+
 /* Sending mode — panel shrinks to just the indicator */
 .scout-panel-sending {
   align-items: center;

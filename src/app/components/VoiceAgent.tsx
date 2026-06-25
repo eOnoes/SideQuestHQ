@@ -44,7 +44,12 @@ function base64ToBlobUrl(b64: string, mime: string): string {
 
 type View = 'landing' | 'chat'
 
-export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onModeChange?: (mode: "text" | "voice") => void }) {
+export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodChange }: { 
+  onBack?: () => void; 
+  onModeChange?: (mode: "text" | "voice") => void;
+  mood?: string;
+  onMoodChange?: (mood: string) => void;
+}) {
   const [view, setView] = useState<View>('landing')
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
@@ -63,7 +68,9 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
   const [isSearching, setIsSearching] = useState(false)
   const [listening, setListening] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [mood, setMood] = useState<Mood>('auto')
+  // Use external mood if provided, otherwise internal
+  const mood = externalMood || 'auto'
+  const setMood = onMoodChange || (() => {})
   const [showMoodPicker, setShowMoodPicker] = useState(false)
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
   const [micPermission, setMicPermission] = useState<'prompt' | 'granted' | 'denied' | 'unavailable'>('prompt')
@@ -423,13 +430,6 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
           <img src="/cyony-avatar.png" alt="Cyony" className="va-avatar-img" />
           <h2 className="va-title">Cyony</h2>
           <span className="va-status">online</span>
-          <button
-            className="va-gear-btn"
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => setShowMoodPicker(!showMoodPicker)}
-            title="Cyony mood override"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.5, padding: '2px 6px', marginLeft: '4px' }}
-          >⚙️</button>
         </div>
         <div className="va-header-right">
           <button className={`va-new-btn${messages.length === 0 ? ' va-disabled' : ''}`} onClick={messages.length === 0 ? undefined : startNewChat} title={messages.length === 0 ? 'Already in new chat' : 'New Chat'} type="button" style={messages.length === 0 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}>+</button>
@@ -439,19 +439,6 @@ export function VoiceAgent({ onBack, onModeChange }: { onBack?: () => void; onMo
           </div>
         </div>
       </div>
-
-      {showMoodPicker && (
-        <div className="va-mood-bar">
-          <button className={`va-mood-btn ${mood === 'auto' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => setMood('auto')}>
-            🤖<span className="va-mood-label">auto</span>
-          </button>
-          {MOOD_BTNS.map(m => (
-            <button key={m.id} className={`va-mood-btn ${mood === m.id ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => setMood(m.id)}>
-              {m.emoji}<span className="va-mood-label">{m.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Messages */}
       <div className="va-messages" ref={listRef} onScroll={handleScroll}>

@@ -88,6 +88,8 @@ export default function AppShell() {
   const [messageCount, setMessageCount] = useState(getChatMessages().length);
   // App-wide color mode — purple=voice, yellow=text
   const [responseMode, setResponseMode] = useState<"text" | "voice">("text");
+  // App-wide mood override
+  const [mood, setMood] = useState<string>("auto");
 
   // Auto-dismiss the reply bubble after 5s
   useEffect(() => {
@@ -239,7 +241,7 @@ export default function AppShell() {
   // ─── Render ─────────────────────────────────────
 
   if (activeView === "Agent") {
-    return <VoiceAgent onBack={() => setActiveView("Command")} onModeChange={setAgentMode} />;
+    return <VoiceAgent onBack={() => setActiveView("Command")} onModeChange={setAgentMode} mood={mood} onMoodChange={setMood} />;
   }
 
   return (
@@ -350,6 +352,8 @@ export default function AppShell() {
               onClose={() => setShowScout(false)}
               onOpenMenu={handleOpenMenu}
               onRequestSent={handleRequestSent}
+              mood={mood}
+              onMoodChange={setMood}
             />
           </div>
         </div>

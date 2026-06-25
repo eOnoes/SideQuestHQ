@@ -11,9 +11,11 @@ type ScoutPanelProps = {
   onClose: () => void;
   onOpenMenu: () => void;
   onRequestSent: (mode: "text" | "voice") => void;
+  mood?: string;
+  onMoodChange?: (mood: string) => void;
 };
 
-export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelProps) {
+export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalMood, onMoodChange }: ScoutPanelProps) {
   const [mode, setMode] = useState<"choose" | "compose" | "options">("choose");
   const [input, setInput] = useState("");
   const [voiceMode, setVoiceMode] = useState<"text" | "voice">("text");
@@ -127,6 +129,20 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelPro
   }
 
   if (mode === "options") {
+    const currentMood = externalMood || 'auto'
+    const MOOD_OPTIONS = [
+      { id: 'auto', emoji: '🤖', label: 'auto' },
+      { id: 'calm', emoji: '😌', label: 'calm' },
+      { id: 'annoyed', emoji: '😤', label: 'annoyed' },
+      { id: 'playful', emoji: '😏', label: 'playful' },
+      { id: 'sassy', emoji: '💅', label: 'sassy' },
+      { id: 'deadpan', emoji: '😐', label: 'deadpan' },
+      { id: 'eureka', emoji: '💡', label: 'eureka' },
+      { id: 'chill', emoji: '💤', label: 'chill' },
+      { id: 'mischievous', emoji: '😈', label: 'mischievous' },
+      { id: 'confident', emoji: '👑', label: 'confident' },
+    ]
+
     return (
       <div className="scout-panel scout-panel-options">
         <div className="scout-mood-bar" data-mood="calm">
@@ -139,6 +155,21 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelPro
               <button className="scout-font-btn" onClick={() => applyFontSize(fontSize - 1)} disabled={fontSize <= FONT_MIN} type="button">A-</button>
               <span className="scout-font-value">{fontSize}px</span>
               <button className="scout-font-btn" onClick={() => applyFontSize(fontSize + 1)} disabled={fontSize >= FONT_MAX} type="button">A+</button>
+            </div>
+          </div>
+          <div className="scout-option-row">
+            <span className="scout-option-label">Mood</span>
+            <div className="scout-mood-grid">
+              {MOOD_OPTIONS.map(m => (
+                <button
+                  key={m.id}
+                  className={`scout-mood-chip${currentMood === m.id ? ' active' : ''}`}
+                  onClick={() => onMoodChange?.(m.id)}
+                  type="button"
+                >
+                  {m.emoji} {m.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
