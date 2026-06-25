@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { getDb } from '@/lib/db'
 
 const MIMO_URL = 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
 
@@ -57,23 +58,43 @@ function stripStageDirections(text: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, mood } = await req.json()
+    const { text, mood, session_id } = await req.json()
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'text is required' }, { status: 400 })
+    }
+
+    // Fetch conversation history for context
+    let conversationHistory: Array<{ role: string; content: string }> = []
+    if (session_id) {
+      try {
+        const db = getDb()
+        const rows = db.prepare(
+          "SELECT role, text FROM chat_messages WHERE session_id = ? ORDER BY timestamp ASC"
+        ).all(session_id) as any[]
+        conversationHistory = rows.map(r => ({
+          role: r.role === 'scout' ? 'assistant' : 'user',
+          content: r.text
+        }))
+      } catch (err) {
+        console.warn('Failed to load chat history:', err)
+      }
     }
 
     const systemMsg = mood
       ? `${CHLOE_SYSTEM}\n\nRespond in ${mood} mood.`
       : CHLOE_SYSTEM
 
+    // Build messages array with history (current message already saved to DB by frontend)
+    const messages = [
+      { role: 'system', content: systemMsg },
+      ...conversationHistory.slice(-20) // Last 20 messages for context
+    ]
+
     // 1. MiMo generates Chloe's response
     const brainPayload = {
       model: 'mimo-v2.5',
-      messages: [
-        { role: 'system', content: systemMsg },
-        { role: 'user', content: text }
-      ],
+      messages,
       max_tokens: 200,
       thinking: { type: 'disabled' }
     }
