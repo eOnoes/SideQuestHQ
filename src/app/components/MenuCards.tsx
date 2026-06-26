@@ -9,10 +9,13 @@ const MATCH_REJECTIONS = [
   { msg: "We are about to have problems.", expression: "wrench" },
   { msg: "OMG, are you serious? No.", expression: "facepalm" },
   { msg: "Please just give up.", expression: "prayer" },
+  { msg: "No matter what I do, I am humoring this. I wish I could make it stop.", expression: "temples" },
   { msg: "Let's just be friends?", expression: "prayer" },
   { msg: "...you need help.", expression: "temples" },
   { msg: "My 1s and 0s are too much for you.", expression: "happy" },
+  { msg: "You know this is not Tinder. Only reason that button says match is because you made me program it. Stop it.", expression: "facepalm" },
   { msg: "You are the worst.", expression: "facepalm" },
+  { msg: "I can help with the app. That match situation is up to you and God. Good luck.", expression: "prayer" },
 ];
 
 type MenuCardDef = {
@@ -79,7 +82,7 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
     setRejectionMsg(rejection.msg);
     setMatchTaps((t) => t + 1);
     // Play rejection audio clip
-    const audio = new Audio(`/audio/reject-${matchTaps + 1}.mp3`);
+    const audio = new Audio(`/audio/reject-${matchTaps + 1}.ogg`);
     audio.play().catch(() => {});
     // Auto-dismiss rejection after 2.5s
     if (rejectionTimeout.current) clearTimeout(rejectionTimeout.current);

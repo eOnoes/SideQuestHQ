@@ -54,14 +54,15 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState('')
-  // Persist input across tab switches
+  const [input, setInput] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem('sqhq-draft-input') || ''
+  })
+  // Persist input on every change
   useEffect(() => {
-    const stored = sessionStorage.getItem('sqhq-draft-input')
-    if (stored) setInput(stored)
-  }, [])
-  useEffect(() => {
-    sessionStorage.setItem('sqhq-draft-input', input)
+    if (input) {
+      localStorage.setItem('sqhq-draft-input', input)
+    }
   }, [input])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<ChatMessage & { session_title: string }>>([])
@@ -232,7 +233,7 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
     addChatMessage('user', trimmed, sessionId)
     setMessages(prev => [...prev, { id: `tmp-${Date.now()}`, role: 'user', text: trimmed, timestamp: Date.now() }])
     setInput('')
-    sessionStorage.removeItem('sqhq-draft-input')
+    localStorage.removeItem('sqhq-draft-input')
     setLoading(true)
 
     // Mark session as having a pending response

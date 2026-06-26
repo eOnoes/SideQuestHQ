@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { addReminder, addChatMessage } from "@/lib/store";
 
 const FONT_MIN = 12
@@ -17,7 +17,10 @@ type ScoutPanelProps = {
 
 export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalMood, onMoodChange }: ScoutPanelProps) {
   const [mode, setMode] = useState<"choose" | "compose" | "options">("choose");
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem('sqhq-scout-draft') || ''
+  });
   const [voiceMode, setVoiceMode] = useState<"text" | "voice">("text");
   const [sending, setSending] = useState(false);
   const [fontSize, setFontSize] = useState(() => {
@@ -25,11 +28,18 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
     const stored = localStorage.getItem('sqhq-font-size')
     return stored ? parseInt(stored, 10) : FONT_DEFAULT
   })
+  // Persist draft
+  useEffect(() => {
+    if (input) localStorage.setItem('sqhq-scout-draft', input)
+  }, [input])
   const pendingRef = useRef(false);
 
   const applyFontSize = (size: number) => {
     const clamped = Math.max(FONT_MIN, Math.min(FONT_MAX, size))
     setFontSize(clamped)
+    // Use zoom to scale the entire UI proportionally (overrides won't fight it)
+    const scale = clamped / FONT_DEFAULT
+    document.documentElement.style.zoom = String(scale)
     document.documentElement.style.setProperty('--app-font-size', `${clamped}px`)
     localStorage.setItem('sqhq-font-size', String(clamped))
   }
@@ -39,6 +49,7 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
     const text = input.trim();
     if (!text || pendingRef.current) return;
     setInput("");
+    localStorage.removeItem('sqhq-scout-draft');
     setSending(true);
     pendingRef.current = true;
     sendToScout(text);

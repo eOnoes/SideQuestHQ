@@ -52,6 +52,9 @@ export default function AppShell() {
   useEffect(() => {
     const stored = localStorage.getItem('sqhq-font-size')
     if (stored) {
+      const size = parseInt(stored, 10)
+      const scale = size / 15
+      document.documentElement.style.zoom = String(scale)
       document.documentElement.style.setProperty('--app-font-size', `${stored}px`)
     }
   }, [])
