@@ -13,6 +13,7 @@ import { MenuCards } from "../components/MenuCards";
 import { ScoutPanel } from "../components/ScoutPanel";
 import { QuestWorkspace } from "../components/QuestWorkspace";
 import { VoiceAgent } from "../components/VoiceAgent";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import type { AppView, LedgerState } from "../types";
 import { addChatMessage, getChatMessages, loadAll, isLoaded, subscribe, type ChatMessage } from "@/lib/store";
 import {
@@ -296,22 +297,34 @@ export default function AppShell() {
             setActiveView={setActiveView}
           />
         ) : activeView === "Garage" ? (
-          <GarageWorkspace onBack={() => setActiveView("Command")} />
+          <ErrorBoundary name="Garage" onRetry={() => setRefreshKey(k => k + 1)}>
+            <GarageWorkspace onBack={() => setActiveView("Command")} />
+          </ErrorBoundary>
         ) : activeView === "Assets" ? (
-          <HousesWorkspace onBack={() => setActiveView("Command")} />
+          <ErrorBoundary name="Houses" onRetry={() => setRefreshKey(k => k + 1)}>
+            <HousesWorkspace onBack={() => setActiveView("Command")} />
+          </ErrorBoundary>
         ) : activeView === "Ledger" ? (
-          <LedgerWorkspace onBack={() => setActiveView("Command")} />
+          <ErrorBoundary name="Ledger" onRetry={() => setRefreshKey(k => k + 1)}>
+            <LedgerWorkspace onBack={() => setActiveView("Command")} />
+          </ErrorBoundary>
         ) : activeView === "Paper Trail" ? (
-          <PaperTrailWorkspace onBack={() => setActiveView("Command")} />
+          <ErrorBoundary name="PaperTrail" onRetry={() => setRefreshKey(k => k + 1)}>
+            <PaperTrailWorkspace onBack={() => setActiveView("Command")} />
+          </ErrorBoundary>
         ) : activeView === "People" ? (
-          <ConnectsWorkspace onBack={() => setActiveView("Command")} />
+          <ErrorBoundary name="Connects" onRetry={() => setRefreshKey(k => k + 1)}>
+            <ConnectsWorkspace onBack={() => setActiveView("Command")} />
+          </ErrorBoundary>
         ) : (
-          <CardView
-            key={activeView}
-            initialCategory={viewToCategory(activeView)}
-            onBack={() => setActiveView("Command")}
-            onViewDetails={handleViewDetails}
-          />
+          <ErrorBoundary name="Cards" onRetry={() => setRefreshKey(k => k + 1)}>
+            <CardView
+              key={activeView}
+              initialCategory={viewToCategory(activeView)}
+              onBack={() => setActiveView("Command")}
+              onViewDetails={handleViewDetails}
+            />
+          </ErrorBoundary>
         )}
       </div>
 
