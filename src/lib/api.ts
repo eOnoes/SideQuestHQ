@@ -170,6 +170,56 @@ export async function clearChatHistory(sessionId?: string): Promise<void> {
 }
 
 /* ─── Chat Sessions ────────────────────────────── */
+/* ─── Vehicles ────────────────────────────────── */
+
+export async function getVehicles(): Promise<any[]> {
+  return api("/api/vehicles");
+}
+
+export async function addVehicle(vehicle: any): Promise<any> {
+  return api("/api/vehicles", { method: "POST", body: JSON.stringify(vehicle) });
+}
+
+/* ─── Contacts ────────────────────────────────── */
+
+export async function getContacts(): Promise<any[]> {
+  return api("/api/contacts");
+}
+
+export async function addContact(contact: any): Promise<any> {
+  return api("/api/contacts", { method: "POST", body: JSON.stringify(contact) });
+}
+
+/* ─── Properties ──────────────────────────────── */
+
+export async function getProperties(): Promise<any[]> {
+  return api("/api/properties");
+}
+
+export async function addProperty(property: any): Promise<any> {
+  return api("/api/properties", { method: "POST", body: JSON.stringify(property) });
+}
+
+/* ─── Global Ledger ────────────────────────────── */
+
+export async function getGlobalLedger(): Promise<any[]> {
+  return api("/api/ledger");
+}
+
+export async function addLedgerItem(item: any): Promise<any> {
+  return api("/api/ledger", { method: "POST", body: JSON.stringify(item) });
+}
+
+/* ─── Global Documents ─────────────────────────── */
+
+export async function getGlobalDocuments(): Promise<any[]> {
+  return api("/api/documents");
+}
+
+export async function addDocument(doc: any): Promise<any> {
+  return api("/api/documents", { method: "POST", body: JSON.stringify(doc) });
+}
+
 
 export async function getChatSessions(): Promise<ChatSession[]> {
   return api("/api/chat/sessions");
@@ -186,3 +236,5 @@ export async function getChatMessagesForSession(sessionId: string): Promise<Chat
 export async function searchChatMessages(query: string): Promise<Array<ChatMessage & { session_title: string }>> {
   return api(`/api/chat/search?q=${encodeURIComponent(query)}`);
 }
+
+

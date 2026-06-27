@@ -311,6 +311,48 @@ function initSchema(db: Database.Database) {
       acknowledged INTEGER NOT NULL DEFAULT 0
     );
 
+    -- Contacts (Connects workspace)
+    CREATE TABLE IF NOT EXISTS contacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      contact_type TEXT NOT NULL DEFAULT 'cell',
+      phone TEXT NOT NULL DEFAULT '',
+      relation TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL DEFAULT 'general',
+      subcategory TEXT NOT NULL DEFAULT '',
+      bar_color TEXT NOT NULL DEFAULT 'green',
+      details_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Global Ledger (Ledger workspace)
+    CREATE TABLE IF NOT EXISTS global_ledger (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      detail TEXT NOT NULL DEFAULT '',
+      amount TEXT NOT NULL DEFAULT '$0',
+      date TEXT NOT NULL DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'neutral',
+      section TEXT NOT NULL DEFAULT 'uncategorized',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Global Documents (Paper Trail workspace)
+    CREATE TABLE IF NOT EXISTS global_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vendor TEXT NOT NULL,
+      detail TEXT NOT NULL DEFAULT '',
+      amount TEXT NOT NULL DEFAULT '$0',
+      date TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL DEFAULT 'uncategorized',
+      badge TEXT NOT NULL DEFAULT 'manual',
+      badge_color TEXT NOT NULL DEFAULT 'manual',
+      receipt_url TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- Seed default user if not exists
     -- bcrypt hash of 'hualslx' (cost 12)
     INSERT OR IGNORE INTO users (id, password_hash, name)
