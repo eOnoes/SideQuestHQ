@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import bcrypt from "bcryptjs";
 import path from "path";
 
 const DB_PATH = path.join(process.cwd(), "data", "sqhq.db");
@@ -311,8 +312,9 @@ function initSchema(db: Database.Database) {
     );
 
     -- Seed default user if not exists
+    -- bcrypt hash of 'hualslx' (cost 12)
     INSERT OR IGNORE INTO users (id, password_hash, name)
-    VALUES ('eddie', 'hualslx', 'Eddie');
+    VALUES ('eddie', '$2b$12$WVMZPQpl.6z1ls0c2YSLfux7gMUAMSgQU92dy.Uh7DqtvNX3PPk2S', 'Eddie');
   `);
 }
 

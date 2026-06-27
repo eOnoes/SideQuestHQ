@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { getDb } from '@/lib/db'
+import { getSession } from '@/lib/session'
 
 const MIMO_URL = 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
 
@@ -88,6 +89,12 @@ function routePetNames(text: string): { cleaned: string; hadPetName: boolean; pe
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth check — voice endpoint requires login
+    const session = await getSession()
+    if (!session.isLoggedIn) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { text, mood, session_id } = await req.json()
 
     if (!text || typeof text !== 'string') {

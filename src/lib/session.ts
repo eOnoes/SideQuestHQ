@@ -7,7 +7,7 @@ export interface SessionData {
 }
 
 export const sessionOptions: SessionOptions = {
-  password: process.env.SESSION_SECRET || "fallback-dev-secret-change-me-in-production-32c",
+  password: process.env.SESSION_SECRET!,
   cookieName: "sqhq_session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
