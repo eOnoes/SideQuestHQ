@@ -209,6 +209,9 @@ export async function getGlobalLedger(): Promise<any[]> {
 export async function addLedgerItem(item: any): Promise<any> {
   return api("/api/ledger", { method: "POST", body: JSON.stringify(item) });
 }
+export async function addGlobalEntry(item: any): Promise<any> {
+  return addLedgerItem(item);
+}
 
 /* ─── Global Documents ─────────────────────────── */
 
@@ -218,6 +221,9 @@ export async function getGlobalDocuments(): Promise<any[]> {
 
 export async function addDocument(doc: any): Promise<any> {
   return api("/api/documents", { method: "POST", body: JSON.stringify(doc) });
+}
+export async function addGlobalDocument(doc: any): Promise<any> {
+  return addDocument(doc);
 }
 
 

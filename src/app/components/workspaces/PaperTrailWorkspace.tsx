@@ -1,77 +1,97 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as api from "@/lib/api";
 
-type Receipt = {
-  id: number;
-  vendor: string;
-  detail: string;
-  amount: string;
-  date: string;
-  category: string;
-  badge: string;
-  badge_color: string;
-  receipt_url: string;
-  notes: string;
-};
+/* ─── Types ──────────────────────────────────── */
+type Receipt = { id: string; vendor: string; detail: string; amount: string; date: string; badge: string; badgeColor: string };
+type ReceiptGroup = { title: string; count: string; total: string; items: Receipt[] };
 
+function mapDocument(d: any): Receipt {
+  return {
+    id: String(d.id),
+    vendor: d.vendor || "—",
+    detail: d.detail || "",
+    amount: d.amount || "$0",
+    date: d.date || "",
+    badge: d.badge || "manual",
+    badgeColor: d.badge_color || "manual",
+  };
+}
+
+const FILTER_CHIPS = ["all", "property", "vehicle", "personal", "uncategorized"];
+
+/* ─── Component ──────────────────────────────── */
 export function PaperTrailWorkspace({ onBack }: { onBack: () => void }) {
   const [documents, setDocuments] = useState<Receipt[]>([]);
+  const [groups, setGroups] = useState<ReceiptGroup[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
-    vendor: "",
-    detail: "",
-    amount: "",
-    date: "",
-    category: "uncategorized",
-    badge: "manual",
-    badge_color: "manual",
-    receipt_url: "",
-    notes: "",
+    vendor: "", detail: "", amount: "$0", date: "", category: "uncategorized",
   });
 
-  useEffect(() => {
-    api.getGlobalDocuments().then((data) => {
-      setDocuments(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  useEffect(() => { loadDocuments(); }, []);
 
-  // Build filter chips from categories
-  const categories = [...new Set(documents.map(d => d.category))];
-  const FILTER_CHIPS = ["all", ...categories];
+  async function loadDocuments() {
+    try {
+      const data = await api.getGlobalDocuments();
+      const mapped = data.map(mapDocument);
+      setDocuments(mapped);
+      buildGroups(mapped);
+    } catch (e) { console.error("Failed to load documents:", e); }
+    finally { setLoading(false); }
+  }
 
-  // Filter documents
-  const filteredDocs = activeFilter === "all"
-    ? documents
-    : documents.filter(d => d.category === activeFilter);
+  function buildGroups(items: Receipt[]) {
+    const grouped: Record<string, Receipt[]> = {};
+    for (const item of items) {
+      const cat = item.badgeColor === "digital" ? "digital" : item.badgeColor === "receipt" ? "receipts" : "manual";
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(item);
+    }
 
-  // Group by category
-  const groups: Record<string, Receipt[]> = {};
-  filteredDocs.forEach((d) => {
-    const cat = d.category || "uncategorized";
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(d);
-  });
+    const result: ReceiptGroup[] = [];
+    for (const [title, items] of Object.entries(grouped)) {
+      let total = 0;
+      for (const item of items) {
+        total += parseFloat(item.amount.replace(/[^0-9.\-]/g, "")) || 0;
+      }
+      result.push({
+        title,
+        count: `${items.length} receipt${items.length !== 1 ? "s" : ""}`,
+        total: `−$${Math.abs(total).toLocaleString()}`,
+        items,
+      });
+    }
+    setGroups(result);
+  }
 
-  // Calculate total
-  const totalYTD = filteredDocs.reduce((sum, d) => {
-    const num = parseFloat(d.amount.replace(/[^0-9.-]/g, "")) || 0;
-    return sum + num;
-  }, 0);
+  async function handleAdd() {
+    if (!form.vendor) return;
+    try {
+      await api.addGlobalDocument({
+        vendor: form.vendor,
+        detail: form.detail,
+        amount: form.amount,
+        date: form.date,
+        category: form.category,
+        badge: "manual",
+        badge_color: "manual",
+      });
+      setForm({ vendor: "", detail: "", amount: "$0", date: "", category: "uncategorized" });
+      setShowForm(false);
+      setLoading(true);
+      await loadDocuments();
+    } catch (e) { console.error("Failed to add document:", e); }
+  }
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.vendor.trim()) return;
-    await api.addDocument(form);
-    setForm({ vendor: "", detail: "", amount: "", date: "", category: "uncategorized", badge: "manual", badge_color: "manual", receipt_url: "", notes: "" });
-    setShowForm(false);
-    const data = await api.getGlobalDocuments();
-    setDocuments(data);
+  // Compute total
+  let totalExpenses = 0;
+  for (const doc of documents) {
+    totalExpenses += parseFloat(doc.amount.replace(/[^0-9.\-]/g, "")) || 0;
   }
 
   return (
@@ -80,81 +100,25 @@ export function PaperTrailWorkspace({ onBack }: { onBack: () => void }) {
         <button className="workspace-back" onClick={onBack} type="button">←</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ paper trail .focus</span>
-          <button className="workspace-add-btn" onClick={() => setShowForm(!showForm)} type="button">
-            {showForm ? "✕" : "+"}
-          </button>
         </div>
       </div>
 
       <div className="workspace-scoreboard">
         <div className="scoreboard-main">
           <span className="scoreboard-label">expenses YTD</span>
-          <span className="scoreboard-value red">{totalYTD < 0 ? "−" : ""}${Math.abs(totalYTD).toFixed(0)}</span>
+          <span className="scoreboard-value red">−${Math.abs(totalExpenses).toLocaleString()}</span>
         </div>
         <div className="scoreboard-stats">
-          <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#2ecc71" }} />{categories.length} categories</span>
           <span className="scoreboard-stat"><span className="ws-dot" style={{ background: "#e67e22" }} />{documents.length} receipts</span>
         </div>
       </div>
 
       <div className="action-bar">
         <button className={`filter-icon-btn${showFilter ? " active" : ""}`} onClick={() => setShowFilter(!showFilter)} type="button">⚙</button>
-        <button className="csv-btn" type="button">📊 Export</button>
+        <button className="csv-btn" onClick={() => setShowForm(!showForm)} type="button">
+          {showForm ? "✕ Cancel" : "+ Add Receipt"}
+        </button>
       </div>
-
-      {showForm && (
-        <form className="add-form" onSubmit={handleAdd}>
-          <div className="form-row">
-            <input
-              className="form-input"
-              placeholder="Vendor (e.g. Home Depot)"
-              value={form.vendor}
-              onChange={(e) => setForm({ ...form, vendor: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-row form-row-split">
-            <input
-              className="form-input"
-              placeholder="Amount (e.g. −$60)"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            />
-            <input
-              className="form-input"
-              placeholder="Date (e.g. Jun 14)"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-            />
-          </div>
-          <div className="form-row">
-            <input
-              className="form-input"
-              placeholder="Detail (e.g. upgrade · bathroom tile)"
-              value={form.detail}
-              onChange={(e) => setForm({ ...form, detail: e.target.value })}
-            />
-          </div>
-          <div className="form-row form-row-split">
-            <select
-              className="form-input"
-              value={form.badge}
-              onChange={(e) => setForm({ ...form, badge: e.target.value, badge_color: e.target.value === "scan" ? "receipt" : e.target.value === "auto" ? "digital" : "manual" })}
-            >
-              <option value="manual">manual</option>
-              <option value="scan">scan</option>
-              <option value="auto">auto</option>
-            </select>
-            <input
-              className="form-input"
-              placeholder="Category (e.g. vehicles)"
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-            />
-          </div>
-          <button className="form-submit" type="submit">Add Receipt</button>
-        </form>
-      )}
 
       {showFilter && (
         <div className="filter-overlay open" onClick={() => setShowFilter(false)}>
@@ -166,11 +130,8 @@ export function PaperTrailWorkspace({ onBack }: { onBack: () => void }) {
             <div className="filter-section-label">by category</div>
             <div className="filter-chips">
               {FILTER_CHIPS.map((chip) => (
-                <span
-                  key={chip}
-                  className={`filter-chip${activeFilter === chip ? " selected" : ""}`}
-                  onClick={() => setActiveFilter(chip)}
-                >
+                <span key={chip} className={`filter-chip${activeFilter === chip ? " selected" : ""}`}
+                  onClick={() => setActiveFilter(chip)}>
                   {chip}
                 </span>
               ))}
@@ -180,45 +141,61 @@ export function PaperTrailWorkspace({ onBack }: { onBack: () => void }) {
         </div>
       )}
 
-      {loading ? (
-        <div className="workspace-loading">Loading documents...</div>
-      ) : documents.length === 0 ? (
-        <div className="workspace-empty">
-          <p>No receipts yet</p>
-          <button className="workspace-empty-btn" onClick={() => setShowForm(true)} type="button">+ Add your first receipt</button>
-        </div>
-      ) : (
-        Object.entries(groups).map(([title, items]) => {
-          const groupTotal = items.reduce((sum, d) => {
-            const num = parseFloat(d.amount.replace(/[^0-9.-]/g, "")) || 0;
-            return sum + num;
-          }, 0);
-          return (
-            <div key={title} className="receipt-group">
-              <div className="receipt-group-header">
-                <span className="receipt-group-title">▸ {title}</span>
-                <span className="receipt-group-count">{items.length} receipts</span>
-                <span className="receipt-group-total">{groupTotal < 0 ? "−" : ""}${Math.abs(groupTotal).toFixed(0)}</span>
-              </div>
-              {items.map((r) => (
-                <div key={r.id} className="receipt-card">
-                  <span className={`receipt-badge ${r.badge_color}`}>{r.badge}</span>
-                  <div className="receipt-info">
-                    <div className="receipt-vendor">{r.vendor}</div>
-                    <div className="receipt-detail">{r.detail}</div>
-                  </div>
-                  <div className="receipt-amount">{r.amount}</div>
-                  <div className="receipt-date">{r.date}</div>
-                </div>
-              ))}
+      {showForm && (
+        <div style={{ background: "#111", borderRadius: 10, padding: 14, marginTop: 8, border: "1px solid #1a1a1a" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input placeholder="Vendor / Source" value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
+              style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
+            <input placeholder="Detail" value={form.detail} onChange={e => setForm({ ...form, detail: e.target.value })}
+              style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input placeholder="Amount ($)" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
+                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
+              <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
+                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
             </div>
-          );
-        })
+            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+              style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
+              <option value="property">property</option>
+              <option value="vehicle">vehicle</option>
+              <option value="personal">personal</option>
+              <option value="uncategorized">uncategorized</option>
+            </select>
+            <button className="filter-apply-btn" onClick={handleAdd} type="button">Save Receipt</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 40, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555" }}>loading...</div>
+      ) : groups.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555" }}>no receipts yet — add one above</div>
+      ) : (
+        groups.map((g) => (
+          <div key={g.title} className="receipt-group">
+            <div className="receipt-group-header">
+              <span className="receipt-group-title">▸ {g.title}</span>
+              <span className="receipt-group-count">{g.count}</span>
+              <span className="receipt-group-total">{g.total}</span>
+            </div>
+            {g.items.map((r) => (
+              <div key={r.id} className="receipt-card">
+                <span className={`receipt-badge ${r.badgeColor}`}>{r.badge}</span>
+                <div className="receipt-info">
+                  <div className="receipt-vendor">{r.vendor}</div>
+                  <div className="receipt-detail">{r.detail}</div>
+                </div>
+                <div className="receipt-amount">{r.amount}</div>
+                <div className="receipt-date">{r.date}</div>
+              </div>
+            ))}
+          </div>
+        ))
       )}
 
       <div className="running-total sticky">
         <span className="running-label">total expenses (YTD)</span>
-        <span className="running-amount red">{totalYTD < 0 ? "−" : ""}${Math.abs(totalYTD).toFixed(0)}</span>
+        <span className="running-amount red">−${Math.abs(totalExpenses).toLocaleString()}</span>
       </div>
     </div>
   );
