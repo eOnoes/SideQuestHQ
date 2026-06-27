@@ -228,6 +228,194 @@ Do them in this order:
 
 ---
 
+## Phase 2F: Paper Trail — PDF Viewer & Document Storage
+
+**This is a NEW addition to Phase 2 — added June 27, 2026**
+
+### Goal
+
+Allow Eddie to upload, view, and organize insurance cards, receipts, and documents directly in the app. PDFs should be viewable inline without downloading.
+
+### New Table (if not exists):
+
+```sql
+CREATE TABLE IF NOT EXISTS documents (
+  document_id TEXT PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT 'uncategorized',
+  source TEXT NOT NULL DEFAULT '',
+  document_type TEXT NOT NULL DEFAULT 'receipt',
+  file_url TEXT NOT NULL DEFAULT '',
+  file_name TEXT NOT NULL DEFAULT '',
+  file_size INTEGER DEFAULT 0,
+  amount REAL DEFAULT 0,
+  date TEXT NOT NULL DEFAULT '',
+  expiry_date TEXT DEFAULT '',
+  tags TEXT NOT NULL DEFAULT '[]',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+### New API Routes:
+
+```
+POST   /api/documents/upload           — Upload file (saves to /public/uploads/documents/)
+GET    /api/documents                  — List all (with filters)
+GET    /api/documents/:id              — Get single document
+PUT    /api/documents/:id              — Update metadata
+DELETE /api/documents/:id              — Remove document + file
+GET    /api/documents/:id/view         — Serve file for inline viewing
+```
+
+### Upload Handler:
+
+```typescript
+// src/app/api/documents/upload/route.ts
+// Accept multipart/form-data
+// Save to: public/uploads/documents/{document_id}_{filename}
+// Return: { document_id, file_url, file_name, file_size }
+```
+
+### UI Requirements for PaperTrailWorkspace.tsx:
+
+1. **Upload button** — "Add Document" opens file picker
+   - Accept: .pdf, .jpg, .jpeg, .png
+   - On upload: show progress, save to server, add to list
+
+2. **Document list** — cards showing:
+   - Title / file name
+   - Category (insurance/receipt/other)
+   - Amount (if applicable)
+   - Expiry date (if applicable, highlighted if approaching)
+   - Preview thumbnail (first page for PDFs, image for photos)
+
+3. **PDF Viewer** — when tapping a document:
+   - Open in a modal/overlay with inline PDF viewer
+   - Use `<iframe>` or `<embed>` for PDF rendering
+   - Mobile-friendly: pinch to zoom, scroll to navigate
+   - Close button to return to list
+
+4. **Expiration tracker** — for insurance documents:
+   - If `expiry_date` is set, show countdown
+   - Red highlight if within 30 days
+   - Orange highlight if within 90 days
+   - Dashboard card on HomeFeed for upcoming expirations
+
+5. **Tags** — allow tagging documents:
+   - Auto-suggest: "cayman", "f-150", "baja", "cfmoto", "w-lee", "poplar"
+   - Filter by tag
+
+### PDF Viewer Component:
+
+```tsx
+// src/components/PdfViewer.tsx
+"use client";
+
+type PdfViewerProps = {
+  url: string;
+  title: string;
+  onClose: () => void;
+};
+
+export function PdfViewer({ url, title, onClose }: PdfViewerProps) {
+  return (
+    <div className="pdf-viewer-overlay" onClick={onClose}>
+      <div className="pdf-viewer-container" onClick={(e) => e.stopPropagation()}>
+        <div className="pdf-viewer-header">
+          <span className="pdf-viewer-title">{title}</span>
+          <button className="pdf-viewer-close" onClick={onClose}>✕</button>
+        </div>
+        <iframe
+          src={url}
+          className="pdf-viewer-frame"
+          title={title}
+        />
+      </div>
+    </div>
+  );
+}
+```
+
+### CSS for PDF Viewer:
+
+```css
+.pdf-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pdf-viewer-container {
+  width: 100%;
+  max-width: 800px;
+  height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pdf-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pdf-viewer-title {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.pdf-viewer-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.pdf-viewer-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+}
+```
+
+### File Structure:
+
+```
+public/uploads/documents/          — Uploaded files
+src/components/PdfViewer.tsx       — PDF viewer component
+src/app/api/documents/             — API routes
+src/app/api/documents/upload/      — Upload handler
+```
+
+### Acceptance Criteria:
+
+- [ ] Can upload PDF and image files
+- [ ] Files save to server and persist
+- [ ] Document list shows all uploaded files
+- [ ] Tapping a document opens inline PDF viewer
+- [ ] PDF viewer works on mobile (pinch zoom)
+- [ ] Expiration dates highlighted with color coding
+- [ ] Can tag documents by vehicle/property
+- [ ] Can filter documents by tag
+- [ ] Can delete documents (removes file + DB record)
+- [ ] TypeScript passes
+- [ ] Build passes
+
+---
+
 ## Verification Checklist
 
 For EACH workspace:
