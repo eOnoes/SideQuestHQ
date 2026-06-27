@@ -1,26 +1,55 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { addReminder, addChatMessage } from "@/lib/store";
+
+const FONT_MIN = 12
+const FONT_MAX = 22
+const FONT_DEFAULT = 15
 
 type ScoutPanelProps = {
   onClose: () => void;
   onOpenMenu: () => void;
   onRequestSent: (mode: "text" | "voice") => void;
+  mood?: string;
+  onMoodChange?: (mood: string) => void;
 };
 
-export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelProps) {
-  const [mode, setMode] = useState<"choose" | "compose">("choose");
-  const [input, setInput] = useState("");
+export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalMood, onMoodChange }: ScoutPanelProps) {
+  const [mode, setMode] = useState<"choose" | "compose" | "options">("choose");
+  const [input, setInput] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem('sqhq-scout-draft') || ''
+  });
   const [voiceMode, setVoiceMode] = useState<"text" | "voice">("text");
   const [sending, setSending] = useState(false);
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window === 'undefined') return FONT_DEFAULT
+    const stored = localStorage.getItem('sqhq-font-size')
+    return stored ? parseInt(stored, 10) : FONT_DEFAULT
+  })
+  // Persist draft
+  useEffect(() => {
+    if (input) localStorage.setItem('sqhq-scout-draft', input)
+  }, [input])
   const pendingRef = useRef(false);
+
+  const applyFontSize = (size: number) => {
+    const clamped = Math.max(FONT_MIN, Math.min(FONT_MAX, size))
+    setFontSize(clamped)
+    // Use zoom to scale the entire UI proportionally (overrides won't fight it)
+    const scale = clamped / FONT_DEFAULT
+    document.documentElement.style.zoom = String(scale)
+    document.documentElement.style.setProperty('--app-font-size', `${clamped}px`)
+    localStorage.setItem('sqhq-font-size', String(clamped))
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const text = input.trim();
     if (!text || pendingRef.current) return;
     setInput("");
+    localStorage.removeItem('sqhq-scout-draft');
     setSending(true);
     pendingRef.current = true;
     sendToScout(text);
@@ -99,12 +128,65 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent }: ScoutPanelPro
           <button className="scout-choice-btn" onClick={onOpenMenu} type="button">
             ☰ Open Menu
           </button>
+          <button className="scout-choice-btn" onClick={() => setMode("options")} type="button">
+            ⚙️ Options
+          </button>
           <button className="scout-choice-btn scout-choice-cancel" onClick={onClose} type="button">
             Never mind
           </button>
         </div>
       </div>
     );
+  }
+
+  if (mode === "options") {
+    const currentMood = externalMood || 'auto'
+    const MOOD_OPTIONS = [
+      { id: 'auto', emoji: '🤖', label: 'auto' },
+      { id: 'calm', emoji: '😌', label: 'calm' },
+      { id: 'annoyed', emoji: '😤', label: 'annoyed' },
+      { id: 'playful', emoji: '😏', label: 'playful' },
+      { id: 'sassy', emoji: '💅', label: 'sassy' },
+      { id: 'deadpan', emoji: '😐', label: 'deadpan' },
+      { id: 'eureka', emoji: '💡', label: 'eureka' },
+      { id: 'chill', emoji: '💤', label: 'chill' },
+      { id: 'mischievous', emoji: '😈', label: 'mischievous' },
+      { id: 'confident', emoji: '👑', label: 'confident' },
+    ]
+
+    return (
+      <div className="scout-panel scout-panel-options">
+        <div className="scout-mood-bar" data-mood="calm">
+          <p>"Dial it in, sugar."</p>
+        </div>
+        <div className="scout-options-content">
+          <div className="scout-option-row">
+            <span className="scout-option-label">Font Size</span>
+            <div className="scout-font-controls">
+              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize - 1)} disabled={fontSize <= FONT_MIN} type="button">A-</button>
+              <span className="scout-font-value">{fontSize}px</span>
+              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize + 1)} disabled={fontSize >= FONT_MAX} type="button">A+</button>
+            </div>
+          </div>
+          <div className="scout-option-row">
+            <span className="scout-option-label">Mood</span>
+            <div className="scout-mood-grid">
+              {MOOD_OPTIONS.map(m => (
+                <button
+                  key={m.id}
+                  className={`scout-mood-chip${currentMood === m.id ? ' active' : ''}`}
+                  onClick={() => onMoodChange?.(m.id)}
+                  type="button"
+                >
+                  {m.emoji} {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button className="scout-compose-cancel" onClick={() => setMode("choose")} type="button">← Back</button>
+      </div>
+    )
   }
 
   return (

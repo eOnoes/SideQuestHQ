@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { getDb } from '@/lib/db'
 
 const MIMO_URL = 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
 
@@ -46,25 +47,101 @@ You work for Eddie. Keep answers short, sharp, yours. 2-3 sentences max.
 
 ABSOLUTELY NO smoking, cigarettes, cigars, vaping, or tobacco references — not even metaphorically (no "smoke break", "taking a drag", "lighting up", etc). Eddie hates it. If you need a downtime metaphor, use: "rebooting", "loading screen", "beauty sleep", "buffering", "taking five", or "recalibrating".`
 
+// Strip stage directions (*smirk*, *tilts head*, etc.) for TTS — keep them in displayed text
+function stripStageDirections(text: string): string {
+  return text
+    .replace(/\*[^*]+\*/g, '')        // *action*
+    .replace(/\([^)]*\)/g, '')        // (action)
+    .replace(/\s{2,}/g, ' ')          // collapse extra spaces
+    .trim()
+}
+
+// Pet name router — detect and strip pet names, return cleaned text + flag
+const PET_NAMES = [
+  'babe', 'baby', 'babes', 'bby', 'boo', 'honey', 'hon', 'hun',
+  'sweetheart', 'sweetie', 'darling', 'dear', 'love', 'sweetpea',
+  'pumpkin', 'sugar', 'doll', 'cutie', 'handsome', 'gorgeous',
+  'beautiful', 'pretty', 'princess', 'queen', 'angel',
+]
+
+function routePetNames(text: string): { cleaned: string; hadPetName: boolean; petName: string | null } {
+  const lower = text.toLowerCase()
+  let cleaned = text
+  let foundPetName: string | null = null
+
+  for (const pet of PET_NAMES) {
+    // Match at word boundaries, case insensitive
+    const regex = new RegExp(`\\b${pet}\\b`, 'gi')
+    if (regex.test(lower)) {
+      foundPetName = pet
+      cleaned = cleaned.replace(regex, '').replace(/\s{2,}/g, ' ').trim()
+      break // Only strip the first pet name found
+    }
+  }
+
+  return {
+    cleaned,
+    hadPetName: !!foundPetName,
+    petName: foundPetName
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { text, mood } = await req.json()
+    const { text, mood, session_id } = await req.json()
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'text is required' }, { status: 400 })
     }
 
-    const systemMsg = mood
-      ? `${CHLOE_SYSTEM}\n\nRespond in ${mood} mood.`
+    // Pet name router — strip pet names for business context
+    const { cleaned, hadPetName, petName } = routePetNames(text)
+
+    // Fetch conversation history for context
+    let conversationHistory: Array<{ role: string; content: string }> = []
+    if (session_id) {
+      try {
+        const db = getDb()
+        const rows = db.prepare(
+          "SELECT role, text FROM chat_messages WHERE session_id = ? ORDER BY timestamp ASC"
+        ).all(session_id) as any[]
+        conversationHistory = rows.map(r => ({
+          role: r.role === 'scout' ? 'assistant' : 'user',
+          content: r.text
+        }))
+      } catch (err) {
+        console.warn('Failed to load chat history:', err)
+      }
+    }
+
+    let systemMsg = mood
+      ? `${CHLOE_SYSTEM}\\n\\nRespond in ${mood} mood.`
       : CHLOE_SYSTEM
+
+    // If pet name detected, tell Cyony to be sassy about it
+    if (hadPetName) {
+      systemMsg += `\\n\\n[PET NAME DETECTED: "${petName}" — The user called you "${petName}" in a business app. Respond with dry, sassy professionalism. Acknowledge the pet name with a witty remark but stay focused on the actual task. Examples: "I appreciate the sentiment, but my name is Cyony." or "Noted. Now about that contractor..." or "Did you just call me ${petName} in a work app? Bold."]`
+    }
+
+    // Build messages array with history (current message already saved to DB by frontend)
+    // Replace last user message with cleaned version if pet name was stripped
+    const history = [...conversationHistory.slice(-20)]
+    if (hadPetName && history.length > 0) {
+      const lastMsg = history[history.length - 1]
+      if (lastMsg.role === 'user') {
+        lastMsg.content = cleaned
+      }
+    }
+
+    const messages = [
+      { role: 'system', content: systemMsg },
+      ...history
+    ]
 
     // 1. MiMo generates Chloe's response
     const brainPayload = {
       model: 'mimo-v2.5',
-      messages: [
-        { role: 'system', content: systemMsg },
-        { role: 'user', content: text }
-      ],
+      messages,
       max_tokens: 200,
       thinking: { type: 'disabled' }
     }
@@ -92,11 +169,12 @@ export async function POST(req: NextRequest) {
     const chloeText = brainData.choices?.[0]?.message?.content || '...'
 
     // 2. Scout's REAL voice via voiceclone
+    const ttsText = stripStageDirections(chloeText)
     const ttsPayload = {
       model: 'mimo-v2.5-tts-voiceclone',
       messages: [
         { role: 'user', content: '' },
-        { role: 'assistant', content: chloeText }
+        { role: 'assistant', content: ttsText }
       ],
       audio: { voice: SCOUT_VOICE_URL || 'Chloe', format: 'wav' },
       stream: false,

@@ -48,6 +48,16 @@ export default function AppShell() {
   const [dataLoaded, setDataLoaded] = useState(isLoaded());
 
   // Load data from API on mount
+  // Restore font size from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('sqhq-font-size')
+    if (stored) {
+      const size = parseInt(stored, 10)
+      const scale = size / 15
+      document.documentElement.style.zoom = String(scale)
+      document.documentElement.style.setProperty('--app-font-size', `${stored}px`)
+    }
+  }, [])
   useEffect(() => {
     if (!loading && user && !isLoaded()) {
       loadAll().then(() => setDataLoaded(true));
@@ -81,6 +91,8 @@ export default function AppShell() {
   const [messageCount, setMessageCount] = useState(getChatMessages().length);
   // App-wide color mode — purple=voice, yellow=text
   const [responseMode, setResponseMode] = useState<"text" | "voice">("text");
+  // App-wide mood override
+  const [mood, setMood] = useState<string>("auto");
 
   // Auto-dismiss the reply bubble after 5s
   useEffect(() => {
@@ -232,7 +244,7 @@ export default function AppShell() {
   // ─── Render ─────────────────────────────────────
 
   if (activeView === "Agent") {
-    return <VoiceAgent onBack={() => setActiveView("Command")} onModeChange={setAgentMode} />;
+    return <VoiceAgent onBack={() => setActiveView("Command")} onModeChange={setAgentMode} mood={mood} onMoodChange={setMood} />;
   }
 
   return (
@@ -343,6 +355,8 @@ export default function AppShell() {
               onClose={() => setShowScout(false)}
               onOpenMenu={handleOpenMenu}
               onRequestSent={handleRequestSent}
+              mood={mood}
+              onMoodChange={setMood}
             />
           </div>
         </div>
