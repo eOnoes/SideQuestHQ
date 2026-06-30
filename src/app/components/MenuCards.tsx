@@ -1,22 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { AppView } from "../types";
-
-// Cyony's Match rejection system — escalating sass
-const MATCH_REJECTIONS = [
-  { msg: "Nope! Please try again.", expression: "stop" },
-  { msg: "We are about to have problems.", expression: "wrench" },
-  { msg: "OMG, are you serious? No.", expression: "facepalm" },
-  { msg: "Please just give up.", expression: "prayer" },
-  { msg: "No matter what I do, I am humoring this. I wish I could make it stop.", expression: "temples" },
-  { msg: "Let's just be friends?", expression: "prayer" },
-  { msg: "...you need help.", expression: "temples" },
-  { msg: "My 1s and 0s are too much for you.", expression: "happy" },
-  { msg: "You know this is not Tinder. Only reason that button says match is because you made me program it. Stop it.", expression: "facepalm" },
-  { msg: "You are the worst.", expression: "facepalm" },
-  { msg: "I can help with the app. That match situation is up to you and God. Good luck.", expression: "prayer" },
-];
+import { getActiveRejections, type RejectionEntry } from "@/lib/supply-drop";
 
 type MenuCardDef = {
   view: AppView;
@@ -53,6 +39,12 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
   const [rejectionMsg, setRejectionMsg] = useState<string | null>(null);
   const [flashRed, setFlashRed] = useState(false);
   const rejectionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [matchRejections, setMatchRejections] = useState<RejectionEntry[]>([]);
+
+  // Load today's Supply Drop on mount
+  useEffect(() => {
+    setMatchRejections(getActiveRejections());
+  }, []);
 
   const card = MENU_CARDS[currentIndex];
   const isAgent = card.view === "Agent";
@@ -61,14 +53,14 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
   const getCyonyExpression = () => {
     if (!isAgent) return "happy";
     if (matchTaps === 0) return "happy";
-    const idx = Math.min(matchTaps - 1, MATCH_REJECTIONS.length - 1);
-    return MATCH_REJECTIONS[idx].expression;
+    const idx = Math.min(matchTaps - 1, matchRejections.length - 1);
+    return matchRejections[idx].expression;
   };
   const cyonyExpr = getCyonyExpression();
 
   // Handle Match button tap — rejections until final, then lets you in
   const handleMatchTap = useCallback(() => {
-    if (matchTaps >= MATCH_REJECTIONS.length) {
+    if (matchTaps >= matchRejections.length) {
       // After all rejections, finally let them in (she gave up resisting)
       setZooming(true);
       setTimeout(() => onSelect(card.view), 650);
@@ -78,16 +70,18 @@ export function MenuCards({ onSelect, onClose }: MenuCardsProps) {
     setFlashRed(true);
     setTimeout(() => setFlashRed(false), 400);
     // Show rejection message
-    const rejection = MATCH_REJECTIONS[matchTaps];
+    const rejection = matchRejections[matchTaps];
     setRejectionMsg(rejection.msg);
     setMatchTaps((t) => t + 1);
-    // Play rejection audio clip
-    const audio = new Audio(`/audio/reject-${matchTaps + 1}.ogg`);
-    audio.play().catch(() => {});
+    // Play rejection audio clip (skip if no audio generated yet)
+    if (rejection.audio) {
+      const audio = new Audio(`/audio/${rejection.audio}`);
+      audio.play().catch(() => {});
+    }
     // Auto-dismiss rejection after 2.5s
     if (rejectionTimeout.current) clearTimeout(rejectionTimeout.current);
     rejectionTimeout.current = setTimeout(() => setRejectionMsg(null), 2500);
-  }, [matchTaps, card.view, onSelect]);
+  }, [matchTaps, matchRejections.length, card.view, onSelect]);
 
   // The "behind" cards: left = previous, right = next (both lurk when idle)
   const behindRightIndex = (currentIndex + 1) % MENU_CARDS.length;
