@@ -235,6 +235,14 @@ export async function createChatSession(title?: string): Promise<ChatSession> {
   return api("/api/chat/sessions", { method: "POST", body: JSON.stringify({ title }) });
 }
 
+export async function archiveChatSession(sessionId: string): Promise<void> {
+  await api(`/api/chat/sessions/${sessionId}`, { method: "PUT", body: JSON.stringify({ archived: true }) });
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  await api(`/api/chat/sessions/${sessionId}`, { method: "DELETE" });
+}
+
 export async function getChatMessagesForSession(sessionId: string): Promise<ChatMessage[]> {
   return api(`/api/chat?session_id=${sessionId}`);
 }
@@ -242,5 +250,4 @@ export async function getChatMessagesForSession(sessionId: string): Promise<Chat
 export async function searchChatMessages(query: string): Promise<Array<ChatMessage & { session_title: string }>> {
   return api(`/api/chat/search?q=${encodeURIComponent(query)}`);
 }
-
 

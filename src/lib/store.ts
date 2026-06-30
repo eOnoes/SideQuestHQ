@@ -371,6 +371,14 @@ export async function createChatSession(title?: string): Promise<ChatSession> {
   return api.createChatSession(title);
 }
 
+export async function archiveChatSession(sessionId: string): Promise<void> {
+  return api.archiveChatSession(sessionId);
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  return api.deleteChatSession(sessionId);
+}
+
 export async function getChatMessagesForSession(sessionId: string): Promise<ChatMessage[]> {
   return api.getChatMessagesForSession(sessionId);
 }

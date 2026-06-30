@@ -70,10 +70,17 @@
   gap: 2px;
 }
 .workspace-back {
-  background: none; border: none; color: #555; font-size: 18px;
-  cursor: pointer; padding: 4px 0; font-family: 'JetBrains Mono', monospace;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: -1px;
 }
-.workspace-back:hover { color: #888; }
+.workspace-back:hover { color: #ccc; }
 .workspace-title-row {
   display: flex; justify-content: space-between; align-items: center; margin-top: 4px;
 }

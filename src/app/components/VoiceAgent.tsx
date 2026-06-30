@@ -5,6 +5,8 @@ import {
   addChatMessage,
   getChatSessions,
   createChatSession,
+  archiveChatSession,
+  deleteChatSession,
   getChatMessagesForSession,
   searchChatMessages,
   type ChatMessage,
@@ -75,7 +77,7 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
   const [showMoodPicker, setShowMoodPicker] = useState(false)
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
   const [micPermission, setMicPermission] = useState<'prompt' | 'granted' | 'denied' | 'unavailable'>('prompt')
-  const [responseMode, setResponseMode] = useState<'text' | 'voice'>('text')
+  const [responseMode, setResponseMode] = useState<'text' | 'voice'>('voice')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [errorCountdown, setErrorCountdown] = useState(5)
   const [showJumpBtn, setShowJumpBtn] = useState(false)
@@ -188,6 +190,12 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
 
   // Start a new chat session
   const startNewChat = async () => {
+    const isEmptySession = messages.length === 0 || (messages.length === 1 && messages[0].role === 'user')
+    if (currentSessionId && isEmptySession) {
+      try {
+        await deleteChatSession(currentSessionId)
+      } catch { /* silent */ }
+    }
     try {
       const sess = await createChatSession()
       setCurrentSessionId(sess.id)
@@ -208,7 +216,13 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
   }
 
   // Go back to landing
-  const goToLanding = () => {
+  const goToLanding = async () => {
+    const isEmptySession = messages.length === 0 || (messages.length === 1 && messages[0].role === 'user')
+    if (currentSessionId && isEmptySession) {
+      try {
+        await deleteChatSession(currentSessionId)
+      } catch { /* silent */ }
+    }
     setView('landing')
     setCurrentSessionId(null)
     setMessages([])
@@ -313,6 +327,23 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
   }
 
+  const toggleResponseMode = () => {
+    const next = responseMode === 'text' ? 'voice' : 'text'
+    setResponseMode(next)
+    onModeChange?.(next)
+  }
+
+  const handleArchiveSession = async (sessionId: string) => {
+    await archiveChatSession(sessionId)
+    loadSessions()
+  }
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm("Delete this conversation forever?")) return
+    await deleteChatSession(sessionId)
+    loadSessions()
+  }
+
   // ─── LANDING VIEW ─────────────────────────────────
   if (view === 'landing') {
     return (
@@ -323,15 +354,18 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
         <div className="va-header" data-mode={responseMode}>
           <div className="va-header-left">
             {onBack && (
-              <button className="workspace-back" onClick={onBack} type="button">←</button>
+              <button className="workspace-back" onClick={onBack} type="button">«</button>
             )}
             <img src="/cyony-avatar.png" alt="Cyony" className="va-avatar-img" />
             <h2 className="va-title">Cyony</h2>
             <span className="va-status">online</span>
           </div>
-          <div className="va-mode-toggle">
-            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
-            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
+          <div className="va-mode-toggle" onClick={toggleResponseMode}>
+            <div className={`va-mode-slider ${responseMode === 'voice' ? 'voice' : 'text'}`}>
+              <span className="va-mode-label-left">📝</span>
+              <span className="va-mode-label-right">🔊</span>
+              <div className="va-mode-knob" />
+            </div>
           </div>
         </div>
 
@@ -400,6 +434,10 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
                       {s.last_message && (
                         <div className="va-history-preview">{s.last_message.slice(0, 60)}{s.last_message.length > 60 ? '...' : ''}</div>
                       )}
+                      <div className="va-history-actions" onClick={e => e.stopPropagation()}>
+                        <button className="va-history-action-btn" onClick={() => handleArchiveSession(s.id)} type="button">📦 Archive</button>
+                        <button className="va-history-action-btn delete" onClick={() => handleDeleteSession(s.id)} type="button">🗑️ Delete</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -427,16 +465,19 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
       {/* Sticky header */}
       <div className="va-header" data-mode={responseMode}>
         <div className="va-header-left">
-          <button className="workspace-back" onClick={goToLanding} type="button">←</button>
+          <button className="workspace-back" onClick={goToLanding} type="button">«</button>
           <img src="/cyony-avatar.png" alt="Cyony" className="va-avatar-img" />
           <h2 className="va-title">Cyony</h2>
           <span className="va-status">online</span>
         </div>
         <div className="va-header-right">
           <button className={`va-new-btn${messages.length === 0 ? ' va-disabled' : ''}`} onClick={messages.length === 0 ? undefined : startNewChat} title={messages.length === 0 ? 'Already in new chat' : 'New Chat'} type="button" style={messages.length === 0 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}>+</button>
-          <div className="va-mode-toggle">
-            <button className={`va-mode-btn ${responseMode === 'text' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('text'); onModeChange?.('text') }}>📝</button>
-            <button className={`va-mode-btn ${responseMode === 'voice' ? 'active' : ''}`} onMouseDown={e => e.preventDefault()} onClick={() => { setResponseMode('voice'); onModeChange?.('voice') }}>🔊</button>
+          <div className="va-mode-toggle" onClick={toggleResponseMode}>
+            <div className={`va-mode-slider ${responseMode === 'voice' ? 'voice' : 'text'}`}>
+              <span className="va-mode-label-left">📝</span>
+              <span className="va-mode-label-right">🔊</span>
+              <div className="va-mode-knob" />
+            </div>
           </div>
         </div>
       </div>
