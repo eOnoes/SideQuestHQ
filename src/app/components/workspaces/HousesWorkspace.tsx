@@ -88,7 +88,7 @@ export function HousesWorkspace({ onBack }: { onBack: () => void }) {
   return (
     <div className="workspace-page">
       <div className="workspace-header">
-        <button className="workspace-back" onClick={onBack} type="button">←</button>
+        <button className="workspace-back" onClick={onBack} type="button">«</button>
         <div className="workspace-title-row">
           <span className="workspace-title">◆ assets .houses</span>
         </div>

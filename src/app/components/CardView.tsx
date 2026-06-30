@@ -103,7 +103,7 @@ export function CardView({ initialCategory = "all", onBack, onViewDetails }: Car
     return (
       <div className="card-view">
         <div className="card-view-top">
-          <button className="card-view-back" onClick={onBack} type="button">← Back</button>
+          <button className="card-view-back" onClick={onBack} type="button">« Back</button>
           <div className="card-view-filters">
             {categories.map((cat) => (
               <button
@@ -130,7 +130,7 @@ export function CardView({ initialCategory = "all", onBack, onViewDetails }: Car
     <div className="card-view">
       {/* Top bar */}
       <div className="card-view-top">
-        <button className="card-view-back" onClick={onBack} type="button">← Back</button>
+        <button className="card-view-back" onClick={onBack} type="button">« Back</button>
         <div className="card-view-filters">
           {categories.map((cat) => (
             <button
