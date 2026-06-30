@@ -12,6 +12,7 @@ import {
   type ChatMessage,
   type ChatSession,
 } from '@/lib/store'
+import { SwipeableCard } from './SwipeableCard'
 
 declare var SpeechRecognition: any
 declare var webkitSpeechRecognition: any
@@ -339,7 +340,6 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
   }
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!window.confirm("Delete this conversation forever?")) return
     await deleteChatSession(sessionId)
     loadSessions()
   }
@@ -420,25 +420,43 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
                 <div className="va-history">
                   <div className="va-history-label">Recent Conversations</div>
                   {sessions.map(s => (
-                    <div key={s.id} className="va-history-item" onClick={() => resumeSession(s.id)}>
-                      <div className="va-history-title">
-                        {s.title}
-                        {pendingSessions.has(s.id) && (
-                          <span className="va-pending-badge" title="Cyony is responding...">⚡</span>
+                    <SwipeableCard
+                      key={s.id}
+                      onTap={() => resumeSession(s.id)}
+                      onSwipeRight={() => handleArchiveSession(s.id)}
+                      onSwipeLeft={() => handleDeleteSession(s.id)}
+                      rightAction={{
+                        direction: "right",
+                        label: "Archive",
+                        icon: "📦",
+                        color: "#fff",
+                        bgColor: "rgba(234,179,8,0.9)",
+                      }}
+                      leftAction={{
+                        direction: "left",
+                        label: "Delete",
+                        icon: "🗑️",
+                        color: "#fff",
+                        bgColor: "rgba(239,68,68,0.9)",
+                      }}
+                      className="va-history-item-swipe"
+                    >
+                      <div className="va-history-item">
+                        <div className="va-history-title">
+                          {s.title}
+                          {pendingSessions.has(s.id) && (
+                            <span className="va-pending-badge" title="Cyony is responding...">⚡</span>
+                          )}
+                        </div>
+                        <div className="va-history-meta">
+                          <span>{s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
+                          <span>{formatDate(s.updated_at)}</span>
+                        </div>
+                        {s.last_message && (
+                          <div className="va-history-preview">{s.last_message.slice(0, 60)}{s.last_message.length > 60 ? '...' : ''}</div>
                         )}
                       </div>
-                      <div className="va-history-meta">
-                        <span>{s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
-                        <span>{formatDate(s.updated_at)}</span>
-                      </div>
-                      {s.last_message && (
-                        <div className="va-history-preview">{s.last_message.slice(0, 60)}{s.last_message.length > 60 ? '...' : ''}</div>
-                      )}
-                      <div className="va-history-actions" onClick={e => e.stopPropagation()}>
-                        <button className="va-history-action-btn" onClick={() => handleArchiveSession(s.id)} type="button">📦 Archive</button>
-                        <button className="va-history-action-btn delete" onClick={() => handleDeleteSession(s.id)} type="button">🗑️ Delete</button>
-                      </div>
-                    </div>
+                    </SwipeableCard>
                   ))}
                 </div>
               )}
