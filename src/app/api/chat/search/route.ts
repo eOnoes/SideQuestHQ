@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     id: r.id,
     session_id: r.session_id,
     session_title: r.session_title || "New Chat",
-    role: r.role,
+    role: r.role === "scout" ? "cyony" : r.role,
     text: r.text,
     timestamp: r.timestamp,
   })));

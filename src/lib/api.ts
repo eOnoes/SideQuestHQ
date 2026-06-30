@@ -160,7 +160,7 @@ export async function getChatMessages(sessionId?: string): Promise<ChatMessage[]
   return api(`/api/chat${qs}`);
 }
 
-export async function addChatMessage(role: "user" | "scout", text: string, sessionId?: string): Promise<ChatMessage> {
+export async function addChatMessage(role: "user" | "cyony", text: string, sessionId?: string): Promise<ChatMessage> {
   return api("/api/chat", { method: "POST", body: JSON.stringify({ role, text, session_id: sessionId }) });
 }
 

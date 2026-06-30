@@ -24,7 +24,7 @@ import * as api from "./api";
 export type ChatMessage = {
   id: string;
   session_id?: string;
-  role: "user" | "scout";
+  role: "user" | "cyony";
   text: string;
   timestamp: number;
 };

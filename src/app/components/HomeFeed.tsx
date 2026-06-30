@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import type { AppView, Quest, Reminder } from "../types";
 import { getReminders, getQuests, getPaperTrailQueue, toggleReminder } from "@/lib/store";
 import { SwipeableCard } from "./SwipeableCard";
-import { playRandomScoutQuip, getScoutAudio, playScoutAudio } from "@/lib/scout-audio";
+import { playRandomCyonyQuip, getCyonyAudio, playCyonyAudio } from "@/lib/cyony-audio";
 
-/* ─── Scout greeting per scenario ─────────────────── */
+/* ─── Cyony greeting per scenario ─────────────────── */
 
 type FeedMood = "calm" | "annoyed" | "playful" | "chill" | "doting" | "unhinged" | "smug" | "groggy" | "sassy" | "whisper" | "mischievous" | "confident";
 
@@ -21,7 +21,7 @@ interface FeedDatum {
   category: "rental" | "garage" | "investment" | "customer" | "general";
 }
 
-const SCOUT_GREETINGS: Record<string, string[]> = {
+const CYONY_GREETINGS: Record<string, string[]> = {
   calm: [
     "Good afternoon, Eddie.",
     "Evening. Let's see what we've got.",
@@ -84,7 +84,7 @@ const SCOUT_GREETINGS: Record<string, string[]> = {
   ],
 };
 
-const SCOUT_COMPLETE_QUIPS = [
+const CYONY_COMPLETE_QUIPS = [
   "Well look at you being productive.",
   "One down. How many to go? ...Don't ask.",
   "Done. Filed. Forgotten. By me, not by you probably.",
@@ -92,7 +92,7 @@ const SCOUT_COMPLETE_QUIPS = [
   "And THAT is how it's done. *dusts hands*",
 ];
 
-const SCOUT_DISMISS_QUIPS = [
+const CYONY_DISMISS_QUIPS = [
   "Wow, unreal. I will just remind you again...",
   "*rubs bridge of nose* Did you just?? NM, I will remind you again later...",
   "Snoozed. I'll bring it back when you're ready to be an adult.",
@@ -247,7 +247,7 @@ async function speakWithTTS(
 }
 
 function pickGreeting(mood: string): string {
-  const pool = SCOUT_GREETINGS[mood];
+  const pool = CYONY_GREETINGS[mood];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -270,7 +270,7 @@ async function playInterruptionClip(
     currentAudioRef.current = null;
   }
   // Play a short "hmph" clip
-  await playRandomScoutQuip("int", 6, currentAudioRef);
+  await playRandomCyonyQuip("int", 6, currentAudioRef);
 }
 
 /** Schedule a quip. If already pending → interrupt (grunt + immediate new quip). If first → play immediately. */
@@ -334,7 +334,7 @@ function getCategoryForReminder(reminder: Reminder): FeedDatum["category"] {
   return "general";
 }
 
-function buildScoutBody(reminder: Reminder, mood: FeedMood, overdueDays: number): string {
+function buildCyonyBody(reminder: Reminder, mood: FeedMood, overdueDays: number): string {
   const label = reminder.label;
   const quest = reminder.quest;
 
@@ -482,7 +482,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
 
     const mood = getMoodForReminder(reminder, overdueDays);
     const category = getCategoryForReminder(reminder);
-    const body = buildScoutBody(reminder, mood, overdueDays);
+    const body = buildCyonyBody(reminder, mood, overdueDays);
 
     feedItems.push({
       id: `reminder-${reminder.label}-${reminder.quest}`,
@@ -496,7 +496,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
     });
   }
 
-  // Pick overall greeting mood — Scout reads the room
+  // Pick overall greeting mood — Cyony reads the room
   const [completedCount, setCompletedCount] = useState(0);
   const sessionStart = useRef(Date.now());
 
@@ -543,7 +543,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
     setCompletedIds((prev) => new Set(prev).add(item.id));
     setCompletedCount((c) => c + 1);
     completedCountRef.current += 1;
-    setActionQuip(pickQuip(SCOUT_COMPLETE_QUIPS));
+    setActionQuip(pickQuip(CYONY_COMPLETE_QUIPS));
     setQuipType("complete");
     setTimeout(() => { setActionQuip(null); setQuipType(null); }, 4000);
 
@@ -558,7 +558,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
     const gen = ++audioGenerationRef.current;
 
     scheduleDelayedQuip(
-      async () => { if (audioGenerationRef.current === gen) playRandomScoutQuip("c", 5, currentAudioRef); },
+      async () => { if (audioGenerationRef.current === gen) playRandomCyonyQuip("c", 5, currentAudioRef); },
       pendingQuipTimer,
       pendingQuipFn,
       interruptionCount,
@@ -621,7 +621,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
     scheduleDelayedQuip(
       async () => {
         if (audioGenerationRef.current !== gen) return; // stale — another action fired
-        playRandomScoutQuip(audioPrefix, audioPoolSize, currentAudioRef).then((played) => {
+        playRandomCyonyQuip(audioPrefix, audioPoolSize, currentAudioRef).then((played) => {
           if (audioGenerationRef.current !== gen) return; // stale again (double-check)
           if (!played) speakWithTTS(text, currentAudioRef);
         });
@@ -636,7 +636,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
       remaining,
     );
 
-    // Log snooze server-side (for Scout accountability ping)
+    // Log snooze server-side (for Cyony accountability ping)
     fetch("/api/snooze-log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

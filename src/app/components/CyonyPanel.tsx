@@ -7,7 +7,7 @@ const FONT_MIN = 12
 const FONT_MAX = 22
 const FONT_DEFAULT = 15
 
-type ScoutPanelProps = {
+type CyonyPanelProps = {
   onClose: () => void;
   onOpenMenu: () => void;
   onRequestSent: (mode: "text" | "voice") => void;
@@ -15,11 +15,11 @@ type ScoutPanelProps = {
   onMoodChange?: (mood: string) => void;
 };
 
-export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalMood, onMoodChange }: ScoutPanelProps) {
+export function CyonyPanel({ onClose, onOpenMenu, onRequestSent, mood: externalMood, onMoodChange }: CyonyPanelProps) {
   const [mode, setMode] = useState<"choose" | "compose" | "options">("choose");
   const [input, setInput] = useState(() => {
     if (typeof window === 'undefined') return ''
-    return localStorage.getItem('sqhq-scout-draft') || ''
+    return localStorage.getItem('sqhq-cyony-draft') || ''
   });
   const [voiceMode, setVoiceMode] = useState<"text" | "voice">("text");
   const [sending, setSending] = useState(false);
@@ -30,7 +30,7 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
   })
   // Persist draft
   useEffect(() => {
-    if (input) localStorage.setItem('sqhq-scout-draft', input)
+    if (input) localStorage.setItem('sqhq-cyony-draft', input)
   }, [input])
   const pendingRef = useRef(false);
 
@@ -49,13 +49,13 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
     const text = input.trim();
     if (!text || pendingRef.current) return;
     setInput("");
-    localStorage.removeItem('sqhq-scout-draft');
+    localStorage.removeItem('sqhq-cyony-draft');
     setSending(true);
     pendingRef.current = true;
-    sendToScout(text);
+    sendToCyony(text);
   }
 
-  async function sendToScout(text: string) {
+  async function sendToCyony(text: string) {
     // Save user message
     addChatMessage("user", text);
 
@@ -64,7 +64,7 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
       const label = text.replace(/^(remind me|remind|add reminder)( to|:|,)?\s*/i, "").trim();
       if (label) {
         addReminder({ label, quest: "Side Quest", due: "Soon", priority: "Normal", done: false });
-        addChatMessage("scout", `Done. Added '${label}' to your reminders. You're welcome. 😏`);
+        addChatMessage("cyony", `Done. Added '${label}' to your reminders. You're welcome. 😏`);
       }
       pendingRef.current = false;
       setSending(false);
@@ -81,7 +81,7 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
       });
       if (res.ok) {
         const data = await res.json();
-        addChatMessage("scout", data.text || "...I got nothing. That's rare.");
+        addChatMessage("cyony", data.text || "...I got nothing. That's rare.");
 
         // If voice mode, play the audio response
         if (voiceMode === "voice" && data.audio) {
@@ -89,10 +89,10 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
           audio.play().catch(() => {});
         }
       } else {
-        addChatMessage("scout", "API's being stubborn. Try me again in a bit. 🙄");
+        addChatMessage("cyony", "API's being stubborn. Try me again in a bit. 🙄");
       }
     } catch {
-      addChatMessage("scout", "I couldn't reach the brain. Made a note though.");
+      addChatMessage("cyony", "I couldn't reach the brain. Made a note though.");
     }
 
     pendingRef.current = false;
@@ -102,10 +102,10 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
 
   if (sending) {
     return (
-      <div className="scout-panel scout-panel-sending">
-        <div className="scout-sending-indicator">
-          <span className="scout-sending-label">Scout</span>
-          <span className="scout-sending-dots">
+      <div className="cyony-panel cyony-panel-sending">
+        <div className="cyony-sending-indicator">
+          <span className="cyony-sending-label">Cyony</span>
+          <span className="cyony-sending-dots">
             <span className="fab-dot" />
             <span className="fab-dot" />
             <span className="fab-dot" />
@@ -117,21 +117,21 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
 
   if (mode === "choose") {
     return (
-      <div className="scout-panel scout-panel-choose">
-        <div className="scout-mood-bar" data-mood="playful">
+      <div className="cyony-panel cyony-panel-choose">
+        <div className="cyony-mood-bar" data-mood="playful">
           <p>"What can I do for you, sugar?"</p>
         </div>
-        <div className="scout-choices">
-          <button className="scout-choice-btn" onClick={() => { setMode("compose"); }} type="button">
+        <div className="cyony-choices">
+          <button className="cyony-choice-btn" onClick={() => { setMode("compose"); }} type="button">
             ✦ Make a Request
           </button>
-          <button className="scout-choice-btn" onClick={onOpenMenu} type="button">
+          <button className="cyony-choice-btn" onClick={onOpenMenu} type="button">
             ☰ Open Menu
           </button>
-          <button className="scout-choice-btn" onClick={() => setMode("options")} type="button">
+          <button className="cyony-choice-btn" onClick={() => setMode("options")} type="button">
             ⚙️ Options
           </button>
-          <button className="scout-choice-btn scout-choice-cancel" onClick={onClose} type="button">
+          <button className="cyony-choice-btn cyony-choice-cancel" onClick={onClose} type="button">
             Never mind
           </button>
         </div>
@@ -155,26 +155,26 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
     ]
 
     return (
-      <div className="scout-panel scout-panel-options">
-        <div className="scout-mood-bar" data-mood="calm">
+      <div className="cyony-panel cyony-panel-options">
+        <div className="cyony-mood-bar" data-mood="calm">
           <p>"Dial it in, sugar."</p>
         </div>
-        <div className="scout-options-content">
-          <div className="scout-option-row">
-            <span className="scout-option-label">Font Size</span>
-            <div className="scout-font-controls">
-              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize - 1)} disabled={fontSize <= FONT_MIN} type="button">A-</button>
-              <span className="scout-font-value">{fontSize}px</span>
-              <button className="scout-font-btn" onClick={() => applyFontSize(fontSize + 1)} disabled={fontSize >= FONT_MAX} type="button">A+</button>
+        <div className="cyony-options-content">
+          <div className="cyony-option-row">
+            <span className="cyony-option-label">Font Size</span>
+            <div className="cyony-font-controls">
+              <button className="cyony-font-btn" onClick={() => applyFontSize(fontSize - 1)} disabled={fontSize <= FONT_MIN} type="button">A-</button>
+              <span className="cyony-font-value">{fontSize}px</span>
+              <button className="cyony-font-btn" onClick={() => applyFontSize(fontSize + 1)} disabled={fontSize >= FONT_MAX} type="button">A+</button>
             </div>
           </div>
-          <div className="scout-option-row">
-            <span className="scout-option-label">Mood</span>
-            <div className="scout-mood-grid">
+          <div className="cyony-option-row">
+            <span className="cyony-option-label">Mood</span>
+            <div className="cyony-mood-grid">
               {MOOD_OPTIONS.map(m => (
                 <button
                   key={m.id}
-                  className={`scout-mood-chip${currentMood === m.id ? ' active' : ''}`}
+                  className={`cyony-mood-chip${currentMood === m.id ? ' active' : ''}`}
                   onClick={() => onMoodChange?.(m.id)}
                   type="button"
                 >
@@ -184,46 +184,46 @@ export function ScoutPanel({ onClose, onOpenMenu, onRequestSent, mood: externalM
             </div>
           </div>
         </div>
-        <button className="scout-compose-cancel" onClick={() => setMode("choose")} type="button">← Back</button>
+        <button className="cyony-compose-cancel" onClick={() => setMode("choose")} type="button">← Back</button>
       </div>
     )
   }
 
   return (
-    <div className="scout-panel scout-panel-compose">
-      <div className="scout-mood-bar" data-mood="calm">
+    <div className="cyony-panel cyony-panel-compose">
+      <div className="cyony-mood-bar" data-mood="calm">
         <p>"Tell me what you need."</p>
       </div>
 
-      <div className="scout-toggle-row">
+      <div className="cyony-toggle-row">
         <button
-          className="scout-mode-toggle"
+          className="cyony-mode-toggle"
           data-active={voiceMode === "text"}
           onClick={() => setVoiceMode("text")}
           type="button"
         >📝 Text</button>
         <button
-          className="scout-mode-toggle"
+          className="cyony-mode-toggle"
           data-active={voiceMode === "voice"}
           onClick={() => setVoiceMode("voice")}
           type="button"
         >🔊 Voice</button>
       </div>
 
-      <form className="scout-compose-form" onSubmit={handleSubmit}>
+      <form className="cyony-compose-form" onSubmit={handleSubmit}>
         <textarea
-          className="scout-compose-input"
+          className="cyony-compose-input"
           placeholder='Remind me to check the power bill...'
           value={input}
           onChange={(e) => setInput(e.target.value)}
           rows={3}
           autoFocus
         />
-        <button className="scout-compose-send" type="submit" disabled={!input.trim() || sending}>
-          {sending ? <span className="scout-sending-label">✎ Sending...</span> : "Send"}
+        <button className="cyony-compose-send" type="submit" disabled={!input.trim() || sending}>
+          {sending ? <span className="cyony-sending-label">✎ Sending...</span> : "Send"}
         </button>
       </form>
-      <button className="scout-compose-cancel" onClick={onClose} type="button">Cancel</button>
+      <button className="cyony-compose-cancel" onClick={onClose} type="button">Cancel</button>
     </div>
   );
 }

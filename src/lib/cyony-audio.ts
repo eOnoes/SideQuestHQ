@@ -1,5 +1,5 @@
 /**
- * Scout Audio Cache — pre-generated MiMo TTS voice clips
+ * Cyony Audio Cache — pre-generated MiMo TTS voice clips
  *
  * Maps quip keys to cached OGG files in /public/audio/scout/
  * Falls back to null if not cached (caller uses live MiMo TTS instead)
@@ -17,17 +17,17 @@
  *   af = agent filler ("interesting, give me a second...")
  */
 
-type ScoutAudioEntry = {
+type CyonyAudioEntry = {
   ogg: string;
   text: string;
   category?: string;
 };
 
-type ScoutAudioManifest = Record<string, ScoutAudioEntry>;
+type CyonyAudioManifest = Record<string, CyonyAudioEntry>;
 
-let manifestCache: ScoutAudioManifest | null = null;
+let manifestCache: CyonyAudioManifest | null = null;
 
-async function loadManifest(): Promise<ScoutAudioManifest> {
+async function loadManifest(): Promise<CyonyAudioManifest> {
   if (manifestCache) return manifestCache;
   try {
     const res = await fetch("/audio/scout/manifest.json");
@@ -40,10 +40,10 @@ async function loadManifest(): Promise<ScoutAudioManifest> {
 }
 
 /**
- * Get cached audio URL for a Scout quip key.
+ * Get cached audio URL for a Cyony quip key.
  * Returns the OGG URL if available, null otherwise.
  */
-export async function getScoutAudio(key: string): Promise<string | null> {
+export async function getCyonyAudio(key: string): Promise<string | null> {
   const manifest = await loadManifest();
   const entry = manifest[key];
   if (entry) {
@@ -53,11 +53,11 @@ export async function getScoutAudio(key: string): Promise<string | null> {
 }
 
 /**
- * Play a cached Scout audio clip.
+ * Play a cached Cyony audio clip.
  * Stops any currently playing audio first.
  * Returns true if audio was played, false if not cached.
  */
-export async function playScoutAudio(
+export async function playCyonyAudio(
   key: string,
   currentAudioRef?: React.MutableRefObject<HTMLAudioElement | null>
 ): Promise<boolean> {
@@ -71,7 +71,7 @@ export async function playScoutAudio(
     currentAudioRef.current = audio; // tracked BEFORE manifest fetch
   }
 
-  const url = await getScoutAudio(key);
+  const url = await getCyonyAudio(key);
   if (!url) {
     if (currentAudioRef?.current === audio) currentAudioRef.current = null;
     return false;
@@ -92,17 +92,17 @@ export async function playScoutAudio(
 
 /**
  * Pick a random quip key from a numbered pool and play it.
- * e.g. playRandomScoutQuip("s0", 5) tries s0_1 through s0_5
+ * e.g. playRandomCyonyQuip("s0", 5) tries s0_1 through s0_5
  * Returns the key that was played, or null if none cached.
  */
-export async function playRandomScoutQuip(
+export async function playRandomCyonyQuip(
   prefix: string,
   count: number,
   currentAudioRef?: React.MutableRefObject<HTMLAudioElement | null>
 ): Promise<string | null> {
   const idx = Math.floor(Math.random() * count) + 1;
   const key = `${prefix}_${idx}`;
-  const played = await playScoutAudio(key, currentAudioRef);
+  const played = await playCyonyAudio(key, currentAudioRef);
   return played ? key : null;
 }
 
@@ -116,7 +116,7 @@ export async function playRandomFromKeys(
 ): Promise<string | null> {
   const shuffled = [...keys].sort(() => Math.random() - 0.5);
   for (const key of shuffled) {
-    const played = await playScoutAudio(key, currentAudioRef);
+    const played = await playCyonyAudio(key, currentAudioRef);
     if (played) return key;
   }
   return null;

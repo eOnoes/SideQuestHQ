@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(rows.map(r => ({
     id: r.id,
     session_id: r.session_id,
-    role: r.role,
+    role: r.role === "scout" ? "cyony" : r.role,
     text: r.text,
     timestamp: r.timestamp,
   })));

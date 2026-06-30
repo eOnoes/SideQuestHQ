@@ -302,7 +302,7 @@ function initSchema(db: Database.Database) {
       notes TEXT NOT NULL DEFAULT ''
     );
 
-    -- Snooze log (Scout accountability)
+    -- Snooze log (Cyony accountability)
     CREATE TABLE IF NOT EXISTS snooze_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       reminder_label TEXT NOT NULL,

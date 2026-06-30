@@ -263,13 +263,13 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
 
-      addChatMessage('scout', data.text || '...', sessionId!)
+      addChatMessage('cyony', data.text || '...', sessionId!)
       // Always update messages, even if user navigated away
       setMessages(prev => {
         // Only add if not already present (avoid duplicates)
-        const exists = prev.some(m => m.role === 'scout' && m.text === data.text)
+        const exists = prev.some(m => m.role === 'cyony' && m.text === data.text)
         if (exists) return prev
-        return [...prev, { id: `resp-${Date.now()}`, role: 'scout', text: data.text || '...', timestamp: Date.now() }]
+        return [...prev, { id: `resp-${Date.now()}`, role: 'cyony', text: data.text || '...', timestamp: Date.now() }]
       })
 
       if (responseMode === 'voice' && data.audio && audioRef.current) {
@@ -513,7 +513,7 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
         {messages.map(msg => (
           <div key={msg.id} className={`va-msg ${msg.role}`}>
             <div className="va-msg-avatar">
-              {msg.role === 'scout' ? (
+              {msg.role === 'cyony' ? (
                 <img src="/cyony-avatar.png" alt="C" className="va-msg-avatar-img" />
               ) : 'E'}
             </div>
@@ -525,7 +525,7 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
         ))}
 
         {loading && (
-          <div className="va-msg scout">
+          <div className="va-msg cyony">
             <div className="va-msg-avatar">
               <img src="/cyony-avatar.png" alt="C" className="va-msg-avatar-img" />
             </div>
@@ -540,7 +540,7 @@ export function VoiceAgent({ onBack, onModeChange, mood: externalMood, onMoodCha
         )}
 
         {errorMessage && (
-          <div className="va-msg scout va-error-msg">
+          <div className="va-msg cyony va-error-msg">
             <div className="va-msg-avatar">
               <img src="/cyony-avatar.png" alt="C" className="va-msg-avatar-img" />
             </div>

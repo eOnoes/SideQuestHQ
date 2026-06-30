@@ -10,7 +10,7 @@ import { LedgerWorkspace } from "../components/workspaces/LedgerWorkspace";
 import { PaperTrailWorkspace } from "../components/workspaces/PaperTrailWorkspace";
 import { ConnectsWorkspace } from "../components/workspaces/ConnectsWorkspace";
 import { MenuCards } from "../components/MenuCards";
-import { ScoutPanel } from "../components/ScoutPanel";
+import { CyonyPanel } from "../components/CyonyPanel";
 import { QuestWorkspace } from "../components/QuestWorkspace";
 import { VoiceAgent } from "../components/VoiceAgent";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -84,9 +84,9 @@ export default function AppShell() {
   const [appMode, setAppMode] = useState<"feed" | "cards" | "detail">("feed");
   const [activeView, setActiveView] = useState<AppView>("Command");
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
-  const [showScout, setShowScout] = useState(false);
+  const [showCyony, setShowCyony] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [scoutBusy, setScoutBusy] = useState<"text" | "voice" | null>(null);
+  const [cyonyBusy, setCyonyBusy] = useState<"text" | "voice" | null>(null);
   const [agentMode, setAgentMode] = useState<"text" | "voice">("text");
   const [latestReply, setLatestReply] = useState<ChatMessage | null>(null);
   const [messageCount, setMessageCount] = useState(getChatMessages().length);
@@ -185,33 +185,33 @@ export default function AppShell() {
   }
 
   function handleOpenMenu() {
-    setShowScout(false);
+    setShowCyony(false);
     setShowMenu(true);
   }
 
   function handleRequestSent(mode: "text" | "voice") {
-    setShowScout(false);
-    setScoutBusy(mode);
+    setShowCyony(false);
+    setCyonyBusy(mode);
 
-    // Watch for the user's message — once it gets a scout reply, show the bubble
+    // Watch for the user's message — once it gets a cyony reply, show the bubble
     const userText = getChatMessages().at(-1)?.text ?? "";
     const pollInterval = setInterval(() => {
       const msgs = getChatMessages();
-      // Look for a scout message that appears AFTER the user's last message
+      // Look for a cyony message that appears AFTER the user's last message
       const found = msgs.find(
-        (m) => m.role === "scout" && msgs.indexOf(m) > msgs.length - 3
+        (m) => m.role === "cyony" && msgs.indexOf(m) > msgs.length - 3
       );
       if (found && found.text !== userText) {
         setLatestReply(found);
         setMessageCount(msgs.length);
-        setScoutBusy(null);
+        setCyonyBusy(null);
         clearInterval(pollInterval);
       }
     }, 400);
 
     setTimeout(() => {
       clearInterval(pollInterval);
-      setScoutBusy(null);
+      setCyonyBusy(null);
     }, 25000);
   }
 
@@ -330,9 +330,9 @@ export default function AppShell() {
 
       {/* FAB + indicator + bubble — only on non-Agent views */}
       <div className="fab-container">
-        {scoutBusy && (
-          <div className="fab-indicator" data-mode={scoutBusy}>
-            <span className="fab-scout-name">Scout</span>
+        {cyonyBusy && (
+          <div className="fab-indicator" data-mode={cyonyBusy}>
+            <span className="fab-cyony-name">Cyony</span>
             <span className="fab-dots">
               <span className="fab-dot" />
               <span className="fab-dot" />
@@ -340,7 +340,7 @@ export default function AppShell() {
             </span>
           </div>
         )}
-        {latestReply && !scoutBusy && (
+        {latestReply && !cyonyBusy && (
           <div className="fab-bubble" onClick={() => { setLatestReply(null); setActiveView("Agent"); }}>
             <p>{latestReply.text.length > 100 ? latestReply.text.slice(0, 100) + "..." : latestReply.text}</p>
           </div>
@@ -355,17 +355,17 @@ export default function AppShell() {
         >
           {responseMode === "text" ? "📝" : "🎙️"}
         </button>
-        <button className="fab-button" onClick={() => setShowScout(true)} type="button" aria-label="Scout">
+        <button className="fab-button" onClick={() => setShowCyony(true)} type="button" aria-label="Cyony">
             🔧
           </button>
       </div>
 
-      {/* Scout overlay */}
-      {showScout && (
-        <div className="scout-overlay" onClick={() => setShowScout(false)}>
+      {/* Cyony overlay */}
+      {showCyony && (
+        <div className="cyony-overlay" onClick={() => setShowCyony(false)}>
           <div onClick={(e) => e.stopPropagation()}>
-            <ScoutPanel
-              onClose={() => setShowScout(false)}
+            <CyonyPanel
+              onClose={() => setShowCyony(false)}
               onOpenMenu={handleOpenMenu}
               onRequestSent={handleRequestSent}
               mood={mood}

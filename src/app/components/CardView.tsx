@@ -120,7 +120,7 @@ export function CardView({ initialCategory = "all", onBack, onViewDetails }: Car
         </div>
         <div className="card-view-empty">
           <p>All clear in this category.</p>
-          <p className="muted">Scout's proud of you. Don't let it go to your head.</p>
+          <p className="muted">Cyony's proud of you. Don't let it go to your head.</p>
         </div>
       </div>
     );

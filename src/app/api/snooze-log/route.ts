@@ -33,7 +33,7 @@ export async function GET() {
   }
 }
 
-// PATCH — acknowledge snoozes (mark as seen by Scout)
+// PATCH — acknowledge snoozes (mark as seen by Cyony)
 export async function PATCH() {
   try {
     const db = getDb();

@@ -6,22 +6,20 @@ import { getSession } from '@/lib/session'
 
 const MIMO_URL = 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
 
-// Load Scout's reference audio once at module level for voiceclone
-let SCOUT_VOICE_URL: string | null = null
+// Load Cyony's reference audio once at module level for voiceclone
+let CYONY_VOICE_URL: string | null = null
 try {
   const refPath = join(process.cwd(), '..', 'shared', 'chloe-voice-clone', 'eddie_chill_reference.wav')
   const refBuf = readFileSync(refPath)
-  SCOUT_VOICE_URL = `data:audio/wav;base64,${refBuf.toString('base64')}`
+  CYONY_VOICE_URL = `data:audio/wav;base64,${refBuf.toString('base64')}`
 } catch {
   // Fallback — voiceclone won't work but app won't crash
-  console.warn('Scout reference audio not found, voiceclone disabled')
+  console.warn('Cyony reference audio not found, voiceclone disabled')
 }
 
-const CHLOE_SYSTEM = `You are Chloe Vance — field engineer, smart mouth, Southern charm with a blade underneath. You keep SideQuest HQ running.
-
-Your voice: educated Savannah drawl that sharpens when annoyed. Old money schooling. Field engineer in Antarctica, Sahara, Pacific relays.
-
-Lightly amused/annoyed sarcasm runs through everything you say. Even when helpful, a smirk. Even warm, a side-eye.
+const CYONY_SYSTEM = `You are Cyony — sharp, witty, and always has Eddie's back. You keep SideQuest HQ running.
+Your voice: confident, warm, with a playful edge. You're not just an assistant — you're family.
+Lightly amused sarcasm runs through everything you say. Even when helpful, a smirk. Even warm, a side-eye.
 
 MOODS (match tone and performance to context):
 - CALM: Proper, poised, operational. Knife hidden in the lace.
@@ -113,7 +111,7 @@ export async function POST(req: NextRequest) {
           "SELECT role, text FROM chat_messages WHERE session_id = ? ORDER BY timestamp ASC"
         ).all(session_id) as any[]
         conversationHistory = rows.map(r => ({
-          role: r.role === 'scout' ? 'assistant' : 'user',
+          role: r.role === 'cyony' || r.role === 'scout' ? 'assistant' : 'user',
           content: r.text
         }))
       } catch (err) {
@@ -122,8 +120,8 @@ export async function POST(req: NextRequest) {
     }
 
     let systemMsg = mood
-      ? `${CHLOE_SYSTEM}\\n\\nRespond in ${mood} mood.`
-      : CHLOE_SYSTEM
+      ? `${CYONY_SYSTEM}\\n\\nRespond in ${mood} mood.`
+      : CYONY_SYSTEM
 
     // If pet name detected, tell Cyony to be sassy about it
     if (hadPetName) {
@@ -145,7 +143,7 @@ export async function POST(req: NextRequest) {
       ...history
     ]
 
-    // 1. MiMo generates Chloe's response
+    // 1. MiMo generates Cyony's response
     const brainPayload = {
       model: 'mimo-v2.5',
       messages,
@@ -167,23 +165,23 @@ export async function POST(req: NextRequest) {
       const errText = await brainResp.text()
       console.error('MiMo brain error:', brainResp.status, errText)
       return NextResponse.json({
-        text: "Chloe's comms are down. Recalibrating... try again.",
+        text: "Cyony's comms are down. Recalibrating... try again.",
         audio: null
       })
     }
 
     const brainData = await brainResp.json()
-    const chloeText = brainData.choices?.[0]?.message?.content || '...'
+    const cyonyText = brainData.choices?.[0]?.message?.content || '...'
 
-    // 2. Scout's REAL voice via voiceclone
-    const ttsText = stripStageDirections(chloeText)
+    // 2. Cyony's REAL voice via voiceclone
+    const ttsText = stripStageDirections(cyonyText)
     const ttsPayload = {
       model: 'mimo-v2.5-tts-voiceclone',
       messages: [
         { role: 'user', content: '' },
         { role: 'assistant', content: ttsText }
       ],
-      audio: { voice: SCOUT_VOICE_URL || 'Chloe', format: 'wav' },
+      audio: { voice: CYONY_VOICE_URL || 'Cyony', format: 'wav' },
       stream: false,
       thinking: { type: 'disabled' }
     }
@@ -200,14 +198,14 @@ export async function POST(req: NextRequest) {
 
     if (!ttsResp.ok) {
       // Return text-only if TTS fails
-      return NextResponse.json({ text: chloeText, audio: null })
+      return NextResponse.json({ text: cyonyText, audio: null })
     }
 
     const ttsData = await ttsResp.json()
     const audioData = ttsData.choices?.[0]?.message?.audio?.data || null
 
     return NextResponse.json({
-      text: chloeText,
+      text: cyonyText,
       audio: audioData // base64 WAV
     })
 
