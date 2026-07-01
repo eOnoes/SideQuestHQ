@@ -16,6 +16,8 @@ export function getDb(): Database.Database {
 }
 
 function initSchema(db: Database.Database) {
+  const defaultPasswordHash = bcrypt.hashSync("hualslx", 12);
+
   db.exec(`
     -- Users (single-user app, but future-proof)
     CREATE TABLE IF NOT EXISTS users (
@@ -356,7 +358,7 @@ function initSchema(db: Database.Database) {
     -- Seed default user if not exists
     -- bcrypt hash of 'hualslx' (cost 12)
     INSERT OR IGNORE INTO users (id, password_hash, name)
-    VALUES ('eddie', '$2b$12$WVMZPQpl.6z1ls0c2YSLfux7gMUAMSgQU92dy.Uh7DqtvNX3PPk2S', 'Eddie');
+    VALUES ('eddie', '${defaultPasswordHash}', 'Eddie');
   `);
 }
 
