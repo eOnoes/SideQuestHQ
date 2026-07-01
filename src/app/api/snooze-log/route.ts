@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getSession } from "@/lib/session";
 
 // POST — log a snooze event
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session.isLoggedIn) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { label, quest } = await req.json();
     if (!label) {
       return NextResponse.json({ error: "label required" }, { status: 400 });
@@ -21,6 +27,11 @@ export async function POST(req: NextRequest) {
 // GET — fetch unacknowledged snoozes (for Hermes cron polling)
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session.isLoggedIn) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const db = getDb();
     const rows = db
       .prepare(
@@ -36,6 +47,11 @@ export async function GET() {
 // PATCH — acknowledge snoozes (mark as seen by Cyony)
 export async function PATCH() {
   try {
+    const session = await getSession();
+    if (!session.isLoggedIn) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const db = getDb();
     db.prepare("UPDATE snooze_log SET acknowledged = 1 WHERE acknowledged = 0").run();
     return NextResponse.json({ ok: true });

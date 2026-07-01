@@ -4,7 +4,7 @@ import { join } from 'path'
 import { getDb } from '@/lib/db'
 import { getSession } from '@/lib/session'
 
-const MIMO_URL = 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
+const MIMO_URL = process.env.MIMO_API_URL || 'https://token-plan-sgp.xiaomimimo.com/v1/chat/completions'
 
 // Load Cyony's reference audio once at module level for voiceclone
 let CYONY_VOICE_URL: string | null = null
