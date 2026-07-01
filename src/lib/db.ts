@@ -357,8 +357,9 @@ function initSchema(db: Database.Database) {
 
     -- Seed default user if not exists
     -- bcrypt hash of 'hualslx' (cost 12)
-    INSERT OR IGNORE INTO users (id, password_hash, name)
-    VALUES ('eddie', '${defaultPasswordHash}', 'Eddie');
+    INSERT INTO users (id, password_hash, name)
+    VALUES ('eddie', '${defaultPasswordHash}', 'Eddie')
+    ON CONFLICT(id) DO UPDATE SET password_hash = excluded.password_hash;
   `);
 }
 
