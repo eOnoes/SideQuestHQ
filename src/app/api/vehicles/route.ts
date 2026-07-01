@@ -7,7 +7,7 @@ export async function GET() {
   if (!session.isLoggedIn) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = getDb();
-  const rows = db.prepare("SELECT * FROM vehicles ORDER BY created_at DESC").all() as any[];
+  const rows = db.prepare("SELECT * FROM vehicles").all() as any[];
   return NextResponse.json(rows.map(r => ({
     vehicle_id: r.vehicle_id,
     vehicle_name: r.vehicle_name,
