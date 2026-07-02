@@ -23,9 +23,11 @@ export type Quest = {
 };
 
 export type Reminder = {
+  id?: number;
   label: string;
   quest: string;
   due: string;
+  recurrence?: "one-time" | "weekly" | "monthly" | "annually";
   priority: "Quiet" | "Normal" | "Important";
   done: boolean;
 };

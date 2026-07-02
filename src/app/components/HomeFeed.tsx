@@ -666,7 +666,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
 
       {/* Pulse stats — sticky buttons row */}
       {feedItems.filter((f) => f.type === "stat").length > 0 && (
-        <section className="feed-stats">
+        <section className="feed-stats home-feed-stats">
           {feedItems.filter((f) => f.type === "stat").map((stat) => {
             const isExpanded = expandedStat === stat.id;
 
@@ -728,7 +728,7 @@ export function HomeFeed({ onOpenReminder, setActiveView }: HomeFeedProps) {
 
       {/* Reminder line items */}
       {visibleReminders.length > 0 && (
-        <section className="feed-reminders">
+        <section className="feed-reminders home-feed-reminders">
           <div className="feed-section-head">
             <span className="feed-section-title">Reminders</span>
             <span className="feed-section-count">{visibleReminders.length}</span>

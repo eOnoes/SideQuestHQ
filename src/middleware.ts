@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getIronSession } from "iron-session";
 import { NextRequest, NextResponse } from "next/server";
 import { sessionOptions, type SessionData } from "./lib/session";

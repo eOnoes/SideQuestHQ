@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import * as api from "@/lib/api";
 
-/* ─── Vehicle display type ──────────────────── */
 type VehicleDisplay = {
   id: string;
   year: string;
-  name: string;
-  briefTag: string;
+  makeModel: string;
+  tag: string;
+  insurance: string;
   color: string;
   statusPills: Array<{ label: string; color: string }>;
   data: Array<{ key: string; val: string; color?: string }>;
@@ -21,10 +21,19 @@ const VEHICLE_COLORS: Record<string, string> = {
   Van: "#3498db",
 };
 
+function formatShortDate(value: string | undefined) {
+  if (!value) return "insurance --";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" });
+}
+
 function mapVehicle(v: any): VehicleDisplay {
   const color = VEHICLE_COLORS[v.vehicle_type] || "#95a5a6";
-  const name = v.vehicle_name || [v.make, v.model].filter(Boolean).join(" ") || "Unknown Vehicle";
+  const makeModel = [v.make, v.model].filter(Boolean).join(" | ") || v.vehicle_name || "Unknown";
   const year = v.model_year ? String(v.model_year).slice(-2) : "??";
+  const tag = v.tag_number || v.license_plate || v.plate || "Tag --";
+  const insurance = formatShortDate(v.insurance_renewal_date || v.insurance_date || v.insurance_due);
 
   const statusPills = [
     {
@@ -38,26 +47,34 @@ function mapVehicle(v: any): VehicleDisplay {
   ];
 
   const data = [
+    { key: "name", val: v.vehicle_name || "—" },
     { key: "make", val: v.make || "—" },
     { key: "model", val: v.model || "—" },
+    { key: "year", val: v.model_year || "—" },
     { key: "type", val: v.vehicle_type || "Car" },
-    { key: "status", val: v.availability_status || "available", color: v.availability_status === "available" ? "green" : "red" },
+    { key: "ownership", val: v.owned_or_leased || "owned" },
+    { key: "availability", val: v.availability_status || "available", color: v.availability_status === "available" ? "green" : "red" },
+    { key: "tag", val: tag },
+    { key: "insurance", val: insurance },
   ];
 
   if (v.notes) data.push({ key: "notes", val: v.notes });
 
-  return { id: v.vehicle_id, year, name, briefTag: [v.make, v.model].filter(Boolean).join(" "), color, statusPills, data };
+  return { id: v.vehicle_id || `${makeModel}-${year}`, year, makeModel, tag, insurance, color, statusPills, data };
 }
 
-/* ─── Component ──────────────────────────────── */
 export function GarageWorkspace({ onBack }: { onBack: () => void }) {
   const [vehicles, setVehicles] = useState<VehicleDisplay[]>([]);
-  const [expanded, setExpanded] = useState<number | null>(0);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    vehicle_name: "", make: "", model: "", model_year: "",
-    vehicle_type: "Car", availability_status: "available",
+    vehicle_name: "",
+    make: "",
+    model: "",
+    model_year: "",
+    vehicle_type: "Car",
+    availability_status: "available",
   });
 
   useEffect(() => { loadVehicles(); }, []);
@@ -66,8 +83,11 @@ export function GarageWorkspace({ onBack }: { onBack: () => void }) {
     try {
       const data = await api.getVehicles();
       setVehicles(data.map(mapVehicle));
-    } catch (e) { console.error("Failed to load vehicles:", e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error("Failed to load vehicles:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleAdd() {
@@ -78,93 +98,73 @@ export function GarageWorkspace({ onBack }: { onBack: () => void }) {
       setShowForm(false);
       setLoading(true);
       await loadVehicles();
-    } catch (e) { console.error("Failed to add vehicle:", e); }
+    } catch (e) {
+      console.error("Failed to add vehicle:", e);
+    }
   }
 
-  const fleetLabel = vehicles.length > 0 ? `${vehicles.length} vehicle${vehicles.length !== 1 ? "s" : ""}` : "no vehicles";
-
   return (
-    <div className="workspace-page">
+    <div className="workspace-page single-header">
       <div className="workspace-header">
-        <button className="workspace-back" onClick={onBack} type="button">«</button>
-        <div className="workspace-title-row">
-          <span className="workspace-title">◆ garage .focus</span>
+        <div className="workspace-header-row">
+          <button className="workspace-back" onClick={onBack} type="button">«</button>
+          <div className="workspace-title-row">
+            <span className="workspace-title">Garage - Mobile Assets</span>
+          </div>
+          <button className="workspace-add-btn" onClick={() => setShowForm((open) => !open)} type="button">
+            {showForm ? "✕ Close" : "+ Add"}
+          </button>
         </div>
       </div>
 
-      <div className="workspace-scoreboard">
-        <div className="scoreboard-main">
-          <span className="scoreboard-label">fleet</span>
-          <span className="scoreboard-value green">{fleetLabel}</span>
-        </div>
-        <div className="scoreboard-stats">
-          {vehicles.map((v) => (
-            <span key={v.id} className="scoreboard-stat">
-              <span className="ws-dot" style={{ background: v.color }} />{v.name}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="action-bar">
-        <button className="csv-btn" onClick={() => setShowForm(!showForm)} type="button">
-          {showForm ? "✕ Cancel" : "+ Add Vehicle"}
-        </button>
-      </div>
-
-      {showForm && (
-        <div style={{ background: "#111", borderRadius: 10, padding: 14, marginTop: 8, border: "1px solid #1a1a1a" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input placeholder="Vehicle name" value={form.vehicle_name} onChange={e => setForm({ ...form, vehicle_name: e.target.value })}
-              style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
-            <div style={{ display: "flex", gap: 8 }}>
-              <input placeholder="Make" value={form.make} onChange={e => setForm({ ...form, make: e.target.value })}
-                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
-              <input placeholder="Model" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })}
-                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
+      <div className="workspace-scroll">
+        {showForm && (
+          <div className="add-form">
+            <input className="form-input" placeholder="Vehicle name" value={form.vehicle_name} onChange={(e) => setForm({ ...form, vehicle_name: e.target.value })} />
+            <div className="form-row-split">
+              <input className="form-input" placeholder="Make" value={form.make} onChange={(e) => setForm({ ...form, make: e.target.value })} />
+              <input className="form-input" placeholder="Model" value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input placeholder="Year" value={form.model_year} onChange={e => setForm({ ...form, model_year: e.target.value })}
-                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }} />
-              <select value={form.vehicle_type} onChange={e => setForm({ ...form, vehicle_type: e.target.value })}
-                style={{ flex: 1, background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
+            <div className="form-row-split">
+              <input className="form-input" placeholder="Year" value={form.model_year} onChange={(e) => setForm({ ...form, model_year: e.target.value })} />
+              <select className="form-input" value={form.vehicle_type} onChange={(e) => setForm({ ...form, vehicle_type: e.target.value })}>
                 <option value="Car">Car</option>
                 <option value="Truck">Truck</option>
                 <option value="Motorcycle">Motorcycle</option>
                 <option value="Van">Van</option>
               </select>
             </div>
-            <select value={form.availability_status} onChange={e => setForm({ ...form, availability_status: e.target.value })}
-              style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, padding: "8px 10px", color: "#e8e8e8", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
+            <select className="form-input" value={form.availability_status} onChange={(e) => setForm({ ...form, availability_status: e.target.value })}>
               <option value="available">Available</option>
               <option value="unavailable">Unavailable</option>
             </select>
-            <button className="filter-apply-btn" onClick={handleAdd} type="button">Save Vehicle</button>
+            <button className="form-submit" onClick={handleAdd} type="button">Save Vehicle</button>
           </div>
-        </div>
-      )}
+        )}
 
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 40, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555" }}>loading...</div>
-      ) : vehicles.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555" }}>no vehicles yet — add one above</div>
-      ) : (
-        <div className="accordion-stack">
-          {vehicles.map((v, i) => {
-            const isOpen = expanded === i;
-            return (
-              <div key={v.id + i} className={`accordion-card${isOpen ? " expanded" : ""}`}
-                onClick={() => setExpanded(isOpen ? null : i)}>
-                <div className="accordion-line" style={{ background: v.color }} />
-                <div className="accordion-header">
-                  <span className="accordion-year">{v.year}</span>
-                  <div className="accordion-info">
-                    <div className="accordion-name">{v.name}</div>
-                    <div className="accordion-brief">{v.briefTag}</div>
+        {loading ? (
+          <div className="workspace-loading">loading...</div>
+        ) : vehicles.length === 0 ? (
+          <div className="workspace-empty">no vehicles yet</div>
+        ) : (
+          <div className="accordion-stack">
+            {vehicles.map((v, i) => {
+              const cardId = `${v.id}-${i}`;
+              const isOpen = expanded === cardId;
+              return (
+                <div key={cardId} className={`accordion-card card-cut${isOpen ? " expanded" : ""}`} onClick={() => setExpanded(isOpen ? null : cardId)}>
+                  <div className="accordion-line" style={{ background: v.color }} />
+                  <div className="accordion-header">
+                    <span className="accordion-year">{v.year}</span>
+                    <div className="accordion-info">
+                      <div className="accordion-name">{v.makeModel}</div>
+                      <div className="accordion-brief">mobile asset</div>
+                    </div>
+                    <div className="card-right">
+                      <span className="card-right-main">{v.tag}</span>
+                      <span className="card-right-sub">{v.insurance}</span>
+                    </div>
                   </div>
-                  <span className="accordion-arrow">{isOpen ? "▲" : "▼"}</span>
-                </div>
-                {isOpen && (
                   <div className="accordion-details">
                     <div className="accordion-pills">
                       {v.statusPills.map((p) => (
@@ -180,13 +180,12 @@ export function GarageWorkspace({ onBack }: { onBack: () => void }) {
                       ))}
                     </div>
                   </div>
-                )}
-                <span className="accordion-index">{String(i + 1).padStart(3, "0")}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

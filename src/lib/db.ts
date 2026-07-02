@@ -35,6 +35,16 @@ function initSchema(db: Database.Database) {
       expires_at TEXT NOT NULL
     );
 
+    -- WebAuthn passkeys
+    CREATE TABLE IF NOT EXISTS passkeys (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      public_key TEXT NOT NULL,
+      counter INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
     -- Quests
     CREATE TABLE IF NOT EXISTS quests (
       name TEXT PRIMARY KEY,
@@ -62,6 +72,7 @@ function initSchema(db: Database.Database) {
       label TEXT NOT NULL,
       quest TEXT NOT NULL DEFAULT '',
       due TEXT NOT NULL DEFAULT '',
+      recurrence TEXT NOT NULL DEFAULT 'one-time',
       priority TEXT NOT NULL DEFAULT 'Normal',
       done INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -361,6 +372,11 @@ function initSchema(db: Database.Database) {
     VALUES ('eddie', '${defaultPasswordHash}', 'Eddie')
     ON CONFLICT(id) DO UPDATE SET password_hash = excluded.password_hash;
   `);
+
+  const reminderColumns = db.prepare("PRAGMA table_info(reminders)").all() as Array<{ name: string }>;
+  if (!reminderColumns.some((column) => column.name === "recurrence")) {
+    db.prepare("ALTER TABLE reminders ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'one-time'").run();
+  }
 }
 
 // Helper: JSON parse with fallback

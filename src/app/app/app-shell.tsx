@@ -9,11 +9,13 @@ import { HousesWorkspace } from "../components/workspaces/HousesWorkspace";
 import { LedgerWorkspace } from "../components/workspaces/LedgerWorkspace";
 import { PaperTrailWorkspace } from "../components/workspaces/PaperTrailWorkspace";
 import { ConnectsWorkspace } from "../components/workspaces/ConnectsWorkspace";
+import { RemindersWorkspace } from "../components/workspaces/RemindersWorkspace";
 import { MenuCards } from "../components/MenuCards";
 import { CyonyPanel } from "../components/CyonyPanel";
 import { QuestWorkspace } from "../components/QuestWorkspace";
 import { VoiceAgent } from "../components/VoiceAgent";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Icon } from "../components/Icon";
 import type { AppView, LedgerState } from "../types";
 import { addChatMessage, getChatMessages, loadAll, isLoaded, subscribe, type ChatMessage } from "@/lib/store";
 import {
@@ -36,6 +38,17 @@ import {
 type LedgerDraft = { label: string; amount: string; state: LedgerState };
 type PaperDraft = { label: string; meta: string; state: string };
 type PersonDraft = { name: string; role: string; nextTouch: string };
+type RailView = Exclude<AppView, "Agent" | "Quests">;
+
+const DESKTOP_NAV_ITEMS: Array<{ view: RailView; label: string; icon: Parameters<typeof Icon>[0]["name"] }> = [
+  { view: "Command", label: "Command", icon: "home" },
+  { view: "Garage", label: "Garage", icon: "grid" },
+  { view: "Assets", label: "Houses", icon: "home" },
+  { view: "Ledger", label: "Ledger", icon: "dollar" },
+  { view: "Paper Trail", label: "Paper Trail", icon: "file" },
+  { view: "Reminders", label: "Reminders", icon: "bell" },
+  { view: "People", label: "People", icon: "people" },
+];
 
 const emptyQuest = {
   name: "Welcome", type: "Side Quest" as const, status: "Discovery",
@@ -86,6 +99,7 @@ export default function AppShell() {
   const [selectedQuestIndex, setSelectedQuestIndex] = useState(0);
   const [showCyony, setShowCyony] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [cyonyBusy, setCyonyBusy] = useState<"text" | "voice" | null>(null);
   const [agentMode, setAgentMode] = useState<"text" | "voice">("text");
   const [latestReply, setLatestReply] = useState<ChatMessage | null>(null);
@@ -103,6 +117,15 @@ export default function AppShell() {
     }, 5000);
     return () => clearTimeout(timer);
   }, [latestReply]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateDesktop = () => setIsDesktop(mediaQuery.matches);
+
+    updateDesktop();
+    mediaQuery.addEventListener("change", updateDesktop);
+    return () => mediaQuery.removeEventListener("change", updateDesktop);
+  }, []);
 
   // ─── Drafts for detail view ─────────────────────
 
@@ -184,7 +207,17 @@ export default function AppShell() {
     setAppMode("feed");
   }
 
+  function handleSelectView(view: AppView) {
+    setShowMenu(false);
+    setAppMode("feed");
+    setActiveView(view);
+  }
+
   function handleOpenMenu() {
+    if (isDesktop) {
+      setShowCyony(false);
+      return;
+    }
     setShowCyony(false);
     setShowMenu(true);
   }
@@ -248,12 +281,12 @@ export default function AppShell() {
     return <VoiceAgent onBack={() => setActiveView("Command")} onModeChange={setAgentMode} mood={mood} onMoodChange={setMood} />;
   }
 
-  return (
-    <div className="app-shell" data-mode={responseMode}>
-      <div className="workspace" data-view={appMode === "detail" ? "quest" : "feed"} data-agent-mode={agentMode}>
+  const workspaceContent = (
+    <div className="workspace" data-view={appMode === "detail" ? "quest" : "feed"} data-agent-mode={agentMode}>
 
-        {appMode === "detail" ? (
-          <div>
+      {appMode === "detail" ? (
+        <div>
+          {!isDesktop && (
             <button
               className="card-view-back"
               onClick={() => setAppMode("feed")}
@@ -262,71 +295,130 @@ export default function AppShell() {
             >
               ← Back to feed
             </button>
-            <QuestWorkspace
-            key={refreshKey}
-            ledgerDraft={ledgerDraft}
-            noteDraft={noteDraft}
-            onAddLedgerEntry={detailHandlers.addLedgerEntry}
-            onAddNote={detailHandlers.addNote}
-            onAddPaperItem={detailHandlers.addPaperItem}
-            onAddPerson={detailHandlers.addPerson}
-            onAdvanceStep={detailHandlers.advanceStep}
-            onCycleLedgerState={detailHandlers.cycleLedgerState}
-            onCyclePaperState={detailHandlers.cyclePaperState}
-            onCyclePersonStatus={detailHandlers.cyclePersonStatus}
-            onLedgerDraftChange={setLedgerDraft}
-            onNoteDraftChange={setNoteDraft}
-            onPaperDraftChange={setPaperDraft}
-            onPersonDraftChange={setPersonDraft}
-            onRemoveLedgerEntry={detailHandlers.removeLedgerEntry}
-            onRemoveNote={detailHandlers.removeNote}
-            onRemovePaperItem={detailHandlers.removePaperItem}
-            onRemovePerson={detailHandlers.removePerson}
-            onSelectedQuestIndexChange={detailHandlers.selectQuest}
-            paperDraft={paperDraft}
-            personDraft={personDraft}
-            questList={questList}
-            selectedPeople={selectedPeople}
-            selectedQuest={selectedQuest}
-            selectedQuestIndex={selectedQuestIndex}
+          )}
+          <QuestWorkspace
+          key={refreshKey}
+          ledgerDraft={ledgerDraft}
+          noteDraft={noteDraft}
+          onAddLedgerEntry={detailHandlers.addLedgerEntry}
+          onAddNote={detailHandlers.addNote}
+          onAddPaperItem={detailHandlers.addPaperItem}
+          onAddPerson={detailHandlers.addPerson}
+          onAdvanceStep={detailHandlers.advanceStep}
+          onCycleLedgerState={detailHandlers.cycleLedgerState}
+          onCyclePaperState={detailHandlers.cyclePaperState}
+          onCyclePersonStatus={detailHandlers.cyclePersonStatus}
+          onLedgerDraftChange={setLedgerDraft}
+          onNoteDraftChange={setNoteDraft}
+          onPaperDraftChange={setPaperDraft}
+          onPersonDraftChange={setPersonDraft}
+          onRemoveLedgerEntry={detailHandlers.removeLedgerEntry}
+          onRemoveNote={detailHandlers.removeNote}
+          onRemovePaperItem={detailHandlers.removePaperItem}
+          onRemovePerson={detailHandlers.removePerson}
+          onSelectedQuestIndexChange={detailHandlers.selectQuest}
+          paperDraft={paperDraft}
+          personDraft={personDraft}
+          questList={questList}
+          selectedPeople={selectedPeople}
+          selectedQuest={selectedQuest}
+          selectedQuestIndex={selectedQuestIndex}
+        />
+        </div>
+      ) : activeView === "Command" ? (
+        <HomeFeed
+          onOpenReminder={handleOpenReminder}
+          setActiveView={setActiveView}
+        />
+      ) : activeView === "Garage" ? (
+        <ErrorBoundary name="Garage" onRetry={() => setRefreshKey(k => k + 1)}>
+          <GarageWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : activeView === "Assets" ? (
+        <ErrorBoundary name="Houses" onRetry={() => setRefreshKey(k => k + 1)}>
+          <HousesWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : activeView === "Ledger" ? (
+        <ErrorBoundary name="Ledger" onRetry={() => setRefreshKey(k => k + 1)}>
+          <LedgerWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : activeView === "Paper Trail" ? (
+        <ErrorBoundary name="PaperTrail" onRetry={() => setRefreshKey(k => k + 1)}>
+          <PaperTrailWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : activeView === "Reminders" ? (
+        <ErrorBoundary name="Reminders" onRetry={() => setRefreshKey(k => k + 1)}>
+          <RemindersWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : activeView === "People" ? (
+        <ErrorBoundary name="Connects" onRetry={() => setRefreshKey(k => k + 1)}>
+          <ConnectsWorkspace onBack={isDesktop ? () => {} : () => setActiveView("Command")} />
+        </ErrorBoundary>
+      ) : (
+        <ErrorBoundary name="Cards" onRetry={() => setRefreshKey(k => k + 1)}>
+          <CardView
+            key={activeView}
+            initialCategory={viewToCategory(activeView)}
+            onBack={isDesktop ? () => {} : () => setActiveView("Command")}
+            onViewDetails={handleViewDetails}
           />
+        </ErrorBoundary>
+      )}
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="app-shell app-shell-desktop" data-mode={responseMode}>
+        <nav className="desktop-rail" aria-label="Workspace navigation">
+          {DESKTOP_NAV_ITEMS.map((item) => (
+            <button
+              key={item.view}
+              className={`rail-icon${activeView === item.view && appMode !== "detail" ? " active" : ""}`}
+              onClick={() => handleSelectView(item.view)}
+              type="button"
+              aria-label={item.label}
+              title={item.label}
+            >
+              <Icon name={item.icon} />
+            </button>
+          ))}
+          <div className="rail-spacer" />
+          <button
+            className={`rail-icon rail-cyony${showCyony ? " active" : ""}`}
+            onClick={() => setShowCyony(true)}
+            type="button"
+            aria-label="Cyony"
+            title="Cyony"
+          >
+            🔧
+          </button>
+        </nav>
+
+        <main className="desktop-content">
+          {workspaceContent}
+        </main>
+
+        {showCyony && (
+          <div className="cyony-overlay" onClick={() => setShowCyony(false)}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <CyonyPanel
+                onClose={() => setShowCyony(false)}
+                onOpenMenu={handleOpenMenu}
+                onRequestSent={handleRequestSent}
+                mood={mood}
+                onMoodChange={setMood}
+              />
+            </div>
           </div>
-        ) : activeView === "Command" ? (
-          <HomeFeed
-            onOpenReminder={handleOpenReminder}
-            setActiveView={setActiveView}
-          />
-        ) : activeView === "Garage" ? (
-          <ErrorBoundary name="Garage" onRetry={() => setRefreshKey(k => k + 1)}>
-            <GarageWorkspace onBack={() => setActiveView("Command")} />
-          </ErrorBoundary>
-        ) : activeView === "Assets" ? (
-          <ErrorBoundary name="Houses" onRetry={() => setRefreshKey(k => k + 1)}>
-            <HousesWorkspace onBack={() => setActiveView("Command")} />
-          </ErrorBoundary>
-        ) : activeView === "Ledger" ? (
-          <ErrorBoundary name="Ledger" onRetry={() => setRefreshKey(k => k + 1)}>
-            <LedgerWorkspace onBack={() => setActiveView("Command")} />
-          </ErrorBoundary>
-        ) : activeView === "Paper Trail" ? (
-          <ErrorBoundary name="PaperTrail" onRetry={() => setRefreshKey(k => k + 1)}>
-            <PaperTrailWorkspace onBack={() => setActiveView("Command")} />
-          </ErrorBoundary>
-        ) : activeView === "People" ? (
-          <ErrorBoundary name="Connects" onRetry={() => setRefreshKey(k => k + 1)}>
-            <ConnectsWorkspace onBack={() => setActiveView("Command")} />
-          </ErrorBoundary>
-        ) : (
-          <ErrorBoundary name="Cards" onRetry={() => setRefreshKey(k => k + 1)}>
-            <CardView
-              key={activeView}
-              initialCategory={viewToCategory(activeView)}
-              onBack={() => setActiveView("Command")}
-              onViewDetails={handleViewDetails}
-            />
-          </ErrorBoundary>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="app-shell" data-mode={responseMode}>
+      {workspaceContent}
 
       {/* FAB + indicator + bubble — only on non-Agent views */}
       <div className="fab-container">
@@ -378,7 +470,7 @@ export default function AppShell() {
       {/* Menu cards */}
       {showMenu && (
         <MenuCards
-          onSelect={(view) => { setShowMenu(false); setActiveView(view); }}
+          onSelect={handleSelectView}
           onClose={() => setShowMenu(false)}
         />
       )}

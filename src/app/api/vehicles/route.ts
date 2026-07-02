@@ -52,3 +52,24 @@ export async function POST(req: NextRequest) {
   );
   return NextResponse.json({ vehicle_id: uid, ...body }, { status: 201 });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session.isLoggedIn) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const { vehicle_id, ...fields } = body;
+  if (!vehicle_id) return NextResponse.json({ error: "vehicle_id required" }, { status: 400 });
+
+  const db = getDb();
+  const setClauses: string[] = [];
+  const values: any[] = [];
+  for (const [key, val] of Object.entries(fields)) {
+    setClauses.push(`${key} = ?`);
+    values.push(val);
+  }
+  if (setClauses.length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  values.push(vehicle_id);
+  db.prepare(`UPDATE vehicles SET ${setClauses.join(", ")} WHERE vehicle_id = ?`).run(...values);
+  return NextResponse.json({ success: true, vehicle_id });
+}
